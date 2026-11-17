@@ -1,12 +1,14 @@
 """윈도우 리소스(.syso) 만들기: 아이콘 + DPI 매니페스트 + 버전정보(1.0, 제작 K)
 
-    python tools/make_res.py frames/idle_0.png pc/rsrc_windows_amd64.syso
+    python tools/make_res.py frames/idle_0.png pc/rsrc_windows_amd64.syso [파일설명] [원래파일이름]
 Go 빌드할 때 같은 폴더의 .syso 가 자동으로 exe 에 들어갑니다.
 """
 import struct,io,sys
 from PIL import Image
 src=sys.argv[1]
 dst=sys.argv[2] if len(sys.argv)>2 else 'rsrc_windows_amd64.syso'
+DESC=sys.argv[3] if len(sys.argv)>3 else "우땅이"            # 파일 설명 (설치 프로그램은 "우땅이 설치")
+ORIG=sys.argv[4] if len(sys.argv)>4 else "Woottangi.exe"     # 원래 파일 이름
 im=Image.open(src).convert('RGBA');w,h=im.size;S=max(w,h)
 sq=Image.new('RGBA',(S,S),(0,0,0,0));sq.paste(im,((S-w)//2,(S-h)//2))
 ico=sq.resize((256,256),Image.LANCZOS)
@@ -38,8 +40,8 @@ def _blk(key, val=b'', typ=1, children=b'', vlen=None):
 def _s(key, v):
     return _pad(_blk(key, (v + '\0').encode('utf-16-le')))
 VER = "1.0.0.0"
-strs = b''.join(_s(k, v) for k, v in [("CompanyName", "K"), ("FileDescription", "우땅이"), ("FileVersion", "1.0"),
-    ("InternalName", "Woottangi"), ("OriginalFilename", "Woottangi.exe"), ("ProductName", "우땅이"), ("ProductVersion", "1.0")])
+strs = b''.join(_s(k, v) for k, v in [("CompanyName", "K"), ("FileDescription", DESC), ("FileVersion", "1.0"),
+    ("InternalName", "Woottangi"), ("OriginalFilename", ORIG), ("ProductName", "우땅이"), ("ProductVersion", "1.0")])
 st = _blk("041204b0", typ=1, children=strs, vlen=0)
 sfi = _blk("StringFileInfo", typ=1, children=st, vlen=0)
 var = _blk("Translation", struct.pack('<HH', 0x0412, 0x04b0), typ=0)

@@ -80,6 +80,7 @@ Woottangi_source/
 │  ├─ acc/                 꾸미기 아이템 그림 (accessories.py 결과)
 │  ├─ shop_test.go         go test → 상점 동작 확인 + test_worn.png 미리보기
 │  └─ game_template.html   바나나 받기 게임 화면 (build_web.py 가 game.html 로 만듦)
+├─ installer/            설치 프로그램 (Go) — 설치·업데이트·삭제, build.py setup 으로 만듦
 ├─ web/
 │  ├─ template.html        휴대폰용 화면 원본
 │  └─ woottangi_mobile.html  완성본 (build_web.py 결과)
@@ -102,7 +103,12 @@ PC exe 를 만들려면 Go 1.22 이상 (https://go.dev/dl). 윈도우·맥·리�
 | `python build.py frames` | 프레임만 처음부터 다시 그림 (표정 → 동작 → 스티커) |
 | `python build.py web` | 휴대폰 HTML + 게임 페이지만 |
 | `python build.py exe` | exe 만 |
-| `python build.py all` | 전부 처음부터 |
+| `python build.py all` | 전부 처음부터 (+ 배포 파일) |
+| `python build.py setup` | **배포용**: exe + 설치 프로그램 `dist/Woottangi_Setup_v1.0.exe` + 압축 파일 `dist/Woottangi_v1.0_portable.zip` |
+
+설치 프로그램(`installer/`)은 관리자 권한 없이 `%LOCALAPPDATA%\Programs\Woottangi` 에 설치하고,
+시작 메뉴·바탕화면 바로가기와 "설정 > 앱" 제거 항목을 만듭니다. 이미 설치돼 있으면 업데이트하고, 기록(`%AppData%\Woottangi`)은 그대로 둡니다.
+`/S` 조용히 설치 · `uninstall.exe /uninstall /S` 조용히 삭제 (`/PURGE` 를 붙이면 기록도 삭제). 버전은 `build.py` 의 `VERSION`.
 
 동작 하나만 다시 그려 보려면:
 ```python

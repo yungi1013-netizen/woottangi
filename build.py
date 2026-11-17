@@ -4,6 +4,7 @@
     python build.py frames     # 프레임부터 다시 그림 (머리 표정 → 동작 → 스티커)
     python build.py web        # 휴대폰용 HTML + PC 게임 페이지만
     python build.py exe        # PC exe만 (Go 필요)
+    python build.py setup      # 배포용: exe + 설치 프로그램 + 압축 파일
     python build.py all        # 처음부터 끝까지 전부
 
 결과물
@@ -55,6 +56,46 @@ def step_exe():
     print("exe: dist/Woottangi.exe")
 
 
+VERSION = "1.0"
+
+
+def setup_art(out):
+    """설치 화면 왼쪽 그림: 왕관 쓰고 손 흔드는 우땅이 (312px 폭, 2배 해상도)"""
+    from PIL import Image
+    sys.path.insert(0, str(ROOT / "tools"))
+    import accessories as A
+    anc = A.anchors()
+    f = Image.open(ROOT / "frames" / "wave_2.png").convert("RGBA")
+    A.put(f, Image.open(A.OUT / "crown.png").convert("RGBA"), anc["wave"][2])
+    f = f.crop(f.getbbox())
+    f.resize((312, round(f.height * 312 / f.width)), Image.LANCZOS).save(out)
+
+
+def step_setup():
+    """배포용: 설치 프로그램 + 압축 파일 (dist/)"""
+    import zipfile
+    step_exe()
+    inst = ROOT / "installer"
+    (inst / "payload").mkdir(exist_ok=True)
+    shutil.copy2(ROOT / "dist" / "Woottangi.exe", inst / "payload" / "Woottangi.exe")
+    setup_art(inst / "art.png")
+    run([PY, ROOT / "tools" / "make_res.py", ROOT / "frames" / "idle_0.png", inst / "rsrc_windows_amd64.syso",
+         "우땅이 설치", f"Woottangi_Setup_v{VERSION}.exe"])
+    go = shutil.which("go")
+    if not go:
+        print("! Go 가 없어서 설치 프로그램 빌드는 건너뜀")
+        return
+    env = dict(os.environ, GOOS="windows", GOARCH="amd64", CGO_ENABLED="0")
+    setup = ROOT / "dist" / f"Woottangi_Setup_v{VERSION}.exe"
+    run([go, "build", "-ldflags", f"-H windowsgui -s -w -X main.version={VERSION}", "-o", setup, "."], cwd=inst, env=env)
+    # 설치 없이 쓰는 사람용 압축 파일
+    z = ROOT / "dist" / f"Woottangi_v{VERSION}_portable.zip"
+    with zipfile.ZipFile(z, "w", zipfile.ZIP_DEFLATED) as zf:
+        zf.write(ROOT / "dist" / "Woottangi.exe", "Woottangi.exe")
+    print("setup:", setup.relative_to(ROOT))
+    print("zip:  ", z.relative_to(ROOT))
+
+
 if __name__ == "__main__":
     what = sys.argv[1] if len(sys.argv) > 1 else "default"
     if what in ("frames", "all"):
@@ -63,3 +104,5 @@ if __name__ == "__main__":
         step_web()
     if what in ("exe", "all", "default"):
         step_exe()
+    if what in ("setup", "all"):
+        step_setup()

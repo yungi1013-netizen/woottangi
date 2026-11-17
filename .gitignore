@@ -7,7 +7,12 @@ pc/game.html
 pc/match.html
 pc/rsrc_windows_amd64.syso
 
+installer/payload/
+installer/art.png
+installer/rsrc_windows_amd64.syso
+
 # 테스트·미리보기 출력
+installer/test_setup*.png
 pc/test_worn.png
 pc/test_book.html
 preview_acc.png
