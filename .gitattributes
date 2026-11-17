@@ -1,0 +1,3 @@
+# build_web.py 가 만든 결과물 (그림이 base64 로 들어 있음) → GitHub 언어 통계에서 제외
+web/woottangi_mobile.html linguist-generated=true
+pc/anchors.go linguist-generated=true
