@@ -1,0 +1,17 @@
+# 빌드 결과물 (exe 는 GitHub Releases 로 배포)
+dist/
+
+# build.py 가 매번 만드는 파일
+pc/frames/
+pc/game.html
+pc/match.html
+pc/rsrc_windows_amd64.syso
+
+# 테스트·미리보기 출력
+pc/test_worn.png
+pc/test_book.html
+preview_acc.png
+
+# 파이썬
+__pycache__/
+*.pyc

@@ -1,0 +1,561 @@
+<title>우땅이 키우기</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&display=swap">
+<style>
+/* 한 화면짜리 방: 위는 하늘(원본 바탕화면의 하늘색), 아래는 바나나빛 마룻바닥, 맨 아래 돌보기 버튼 줄 */
+:root{
+  --sky:#bfe6f6; --sky-deep:#8fd0ea; --sun:#ffe78a;
+  --floor:#f3d27e; --floor-line:#e2b85c;
+  --ink:#2b1d16; --card:#fffaf0; --muted:#7d6556;
+  --brown:#c98f6f; --pink:#ff8fa3; --warn:#e8604c;
+  --display:"Jua","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  color-scheme:light;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--sky);color:var(--ink);font-family:var(--display);-webkit-user-select:none;user-select:none;overflow:hidden;touch-action:manipulation}
+.app{height:100%;display:flex;flex-direction:column;max-width:560px;margin:0 auto;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px 12px;gap:10px}
+header{display:flex;align-items:center;gap:10px}
+header h1{margin:0;font-size:24px;font-weight:400;flex:1;letter-spacing:-.5px}
+header .who{font-size:14px;color:var(--muted)}
+.icon-btn{border:3px solid var(--ink);background:var(--card);border-radius:12px;width:40px;height:40px;font:inherit;font-size:16px;color:var(--ink);cursor:pointer;box-shadow:2px 3px 0 var(--ink)}
+.icon-btn:focus-visible,.act:focus-visible,.sheet button:focus-visible{outline:3px solid #2b7bd6;outline-offset:2px}
+
+.room{position:relative;flex:1;min-height:260px;border:4px solid var(--ink);border-radius:24px;overflow:hidden;box-shadow:3px 5px 0 var(--ink);
+  background:radial-gradient(circle at 78% 18%,var(--sun) 0 9%,transparent 9.5%),linear-gradient(var(--sky) 0 62%,var(--sky-deep) 62% 62.6%,var(--floor) 62.6%)}
+.room::before{content:"";position:absolute;left:0;right:0;top:66%;height:4px;background:repeating-linear-gradient(90deg,var(--floor-line) 0 34px,transparent 34px 52px);opacity:.8}
+.room::after{content:"";position:absolute;left:0;right:0;top:80%;height:4px;background:repeating-linear-gradient(90deg,transparent 0 20px,var(--floor-line) 20px 54px);opacity:.6}
+.cloud{position:absolute;height:22px;border-radius:20px;background:#fff;opacity:.9;animation:drift 38s linear infinite}
+.cloud::before{content:"";position:absolute;left:18%;top:-12px;width:44%;height:26px;border-radius:50%;background:#fff}
+@keyframes drift{from{transform:translateX(-140px)}to{transform:translateX(620px)}}
+.room.night{background:radial-gradient(circle at 78% 18%,#fff6c8 0 7%,transparent 7.5%),linear-gradient(#1c2c55 0 62%,#14203f 62% 62.6%,#6d5a3a 62.6%)}
+.room.night .cloud{opacity:.15}
+
+.pet{position:absolute;bottom:3%;width:62%;max-width:320px;aspect-ratio:4/5;transform:translateX(-50%);z-index:3;cursor:pointer}
+.pet img{width:100%;height:100%;display:block;pointer-events:none;-webkit-user-drag:none}
+.pet.flip img{transform:scaleX(-1)}
+.bubble{position:absolute;z-index:5;transform:translate(-50%,-100%);max-width:70%;background:#fff;border:3px solid var(--ink);border-radius:18px;padding:8px 14px;font-size:17px;text-align:center;box-shadow:2px 3px 0 var(--ink);transition:opacity .25s;white-space:normal}
+.bubble::after{content:"";position:absolute;left:50%;bottom:-11px;width:15px;height:15px;background:#fff;border-right:3px solid var(--ink);border-bottom:3px solid var(--ink);transform:translateX(-50%) rotate(45deg)}
+.bubble.hide{opacity:0;pointer-events:none}
+.clock{position:absolute;left:12px;top:10px;z-index:4;background:#ffffffcc;border:2px solid var(--ink);border-radius:10px;padding:2px 8px;font-size:14px;font-variant-numeric:tabular-nums}
+
+.actions{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.act{border:3px solid var(--ink);border-radius:16px;background:var(--card);padding:8px 2px 6px;font:inherit;font-size:14px;color:var(--ink);cursor:pointer;box-shadow:2px 4px 0 var(--ink);display:flex;flex-direction:column;align-items:center;gap:2px}
+.act b{font-size:24px;line-height:1.1;font-weight:400}
+.act:active{transform:translateY(3px);box-shadow:1px 1px 0 var(--ink)}
+.act.scold{background:#ffe9e4}
+.more{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.more button{border:2px solid var(--ink);border-radius:12px;background:#ffffffb3;font:inherit;font-size:14px;padding:7px 2px;color:var(--ink);cursor:pointer}
+
+[hidden]{display:none!important}
+.modal{position:fixed;inset:0;z-index:20;background:#2b1d1699;display:grid;place-items:center;padding:16px}
+.sheet{width:min(360px,100%);background:var(--card);border:4px solid var(--ink);border-radius:22px;padding:18px;box-shadow:4px 6px 0 var(--ink);text-align:center;display:grid;gap:12px}
+.sheet{position:relative}
+.sheet .back{position:absolute;left:10px;top:10px;width:38px;height:38px;padding:0;border-radius:50%;background:#fff;font-size:26px;line-height:1;display:grid;place-items:center}
+.sheet h2{margin:0;font-size:22px;font-weight:400}
+.sheet p{margin:0;color:var(--muted);font-size:15px}
+.sheet input{font:inherit;font-size:20px;padding:10px 12px;border:3px solid var(--ink);border-radius:12px;text-align:center;width:100%;box-sizing:border-box;background:#fff;color:var(--ink)}
+.sheet button{font:inherit;font-size:18px;padding:10px;border:3px solid var(--ink);border-radius:12px;background:var(--sun);color:var(--ink);cursor:pointer}
+.sheet img{width:120px;margin:0 auto}
+.top{display:flex;align-items:center;gap:8px}
+.bananas{border:3px solid var(--ink);background:var(--card);border-radius:999px;padding:4px 12px;font-size:17px;box-shadow:2px 3px 0 var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+.gauges{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.gauge{background:var(--card);border:3px solid var(--ink);border-radius:14px;padding:5px 10px;font-size:14px;display:grid;gap:4px}
+.gauge .row{display:flex;justify-content:space-between}
+.gauge .bar{height:10px;border:2px solid var(--ink);border-radius:8px;overflow:hidden;background:#f1e4d2}
+.gauge .fill{height:100%;border-radius:4px;transition:width .5s,background .5s}
+.gauge.low{animation:low 1.1s infinite}
+@keyframes low{50%{background:#ffe1d6}}
+.sheet .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.snack{border:3px solid var(--ink);border-radius:14px;background:#fff;padding:10px 2px;font:inherit;font-size:14px;line-height:1.25;color:var(--ink);cursor:pointer;display:grid;gap:2px}
+.snack b{font-size:30px;font-weight:400}
+.snack small{color:var(--muted);font-size:12px}
+.snack:disabled{opacity:.4;cursor:default}
+.sheet .ghost{background:#fff}
+.stamps{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.stamp{aspect-ratio:1;border:2px dashed var(--muted);border-radius:50%;display:grid;place-items:center;font-size:12px;color:var(--muted)}
+.stamp.on{border:3px solid var(--warn);color:var(--warn);background:#fff1ec;font-size:18px;transform:rotate(-8deg)}
+.fortune{font-size:20px;line-height:1.5;color:var(--ink)}
+.luck{font-size:15px;color:var(--muted)}
+/* 미니게임 */
+.game{position:absolute;inset:0;z-index:8;background:linear-gradient(#c6ecfa,#e9f8ff 70%,#f3d27e 70%)}
+.game canvas{width:100%;height:100%;display:block;touch-action:none}
+.gback{position:absolute;left:10px;top:7px;z-index:5;font:inherit;font-size:15px;padding:3px 12px;border:2px solid var(--ink);border-radius:10px;background:#fff;color:var(--ink);cursor:pointer}
+.ghud{position:absolute;left:96px;right:10px;top:8px;display:flex;justify-content:space-between;z-index:2;pointer-events:none;font-size:17px}
+.ghud span{background:#fff;border:2px solid var(--ink);border-radius:10px;padding:2px 10px}
+.gstart{position:absolute;inset:0;z-index:3;display:grid;place-content:center;text-align:center;gap:10px;background:#ffffffcc;padding:16px}
+.gstart p{margin:0;font-size:16px;color:var(--muted);line-height:1.6}
+.gstart button{font:inherit;font-size:20px;padding:10px 24px;border:3px solid var(--ink);border-radius:14px;background:var(--sun);color:var(--ink);cursor:pointer;box-shadow:2px 4px 0 var(--ink)}
+.toast{position:absolute;left:50%;top:44px;transform:translateX(-50%);z-index:9;background:var(--ink);color:#fff;border-radius:12px;padding:6px 14px;font-size:15px;white-space:nowrap;transition:opacity .3s}
+.toast.hide{opacity:0}
+@media (prefers-reduced-motion:reduce){.cloud{animation:none}}
+</style>
+
+<div class="app">
+  <header>
+    <h1>우땅이 키우기</h1>
+    <div class="top">
+      <span class="bananas" id="bananas" aria-label="가진 바나나">🍌 0</span>
+      <button class="icon-btn" id="stampBtn" aria-label="출석 도장">📅</button>
+      <button class="icon-btn" id="nameBtn" aria-label="이름 바꾸기">✎</button>
+    </div>
+  </header>
+  <div class="gauges">
+    <div class="gauge" id="gFull"><div class="row"><span>🍌 배부름</span><span class="v"></span></div><div class="bar"><div class="fill"></div></div></div>
+    <div class="gauge" id="gMood"><div class="row"><span>💛 기분</span><span class="v"></span></div><div class="bar"><div class="fill"></div></div></div>
+  </div>
+
+  <div class="room" id="room">
+    <div class="cloud" style="top:12%;width:70px;animation-delay:-8s"></div>
+    <div class="cloud" style="top:26%;width:52px;animation-delay:-24s;animation-duration:52s"></div>
+    <div class="clock" id="clock">--:--</div>
+    <div class="pet" id="pet" role="button" aria-label="우땅이 부르기"><img id="woo" alt="우땅이"></div>
+    <div class="bubble hide" id="bubble"></div>
+    <div class="toast hide" id="toast"></div>
+    <div class="game" id="game" hidden>
+      <button class="gback" id="gBack" aria-label="뒤로">‹ 뒤로</button>
+      <div class="ghud"><span>🍌 <b id="gScore">0</b></span><span>⏱ <b id="gTime">30</b></span></div>
+      <canvas id="cv"></canvas>
+      <div class="gstart" id="gStart">
+        <h2 style="margin:0;font-weight:400;font-size:24px">바나나 받기</h2>
+        <p>손가락으로 우땅이를 좌우로 움직여<br>떨어지는 바나나를 받아요.<br>🍌 +1 · 🌟 +3 · 🌶️ −2</p>
+        <button id="gGo">시작!</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="act" id="aFeed"><b>🍽️</b>간식 주기</button>
+    <button class="act" id="aPlay"><b>🎮</b>놀아주기</button>
+    <button class="act" id="aPet"><b>🤚</b>쓰다듬기</button>
+    <button class="act scold" id="aScold"><b>💢</b>혼내기</button>
+  </div>
+  <div class="more">
+    <button id="mWalk">걷기</button>
+    <button id="mSit">앉기</button>
+    <button id="mSleep">자기</button>
+    <button id="mLuck">🔮 운세</button>
+  </div>
+</div>
+
+<div class="modal" id="nameModal" hidden>
+  <form class="sheet" id="nameForm">
+    <button type="button" class="back" data-close="nameModal" aria-label="뒤로">‹</button>
+    <img id="nameImg" alt="">
+    <h2>안녕! 나는 우땅이야.</h2>
+    <p>이름이 뭐야?</p>
+    <input id="nameInput" maxlength="12" placeholder="예: YG" autocomplete="off">
+    <button type="submit">알려주기</button>
+  </form>
+</div>
+
+<div class="modal" id="snackModal" hidden>
+  <div class="sheet">
+    <button type="button" class="back" data-close="snackModal" aria-label="뒤로">‹</button>
+    <h2>뭐 먹을까?</h2>
+    <p>바나나로 간식을 사 줄 수 있어요.</p>
+    <div class="grid3" id="snacks"></div>
+    <button class="ghost" id="snackClose">닫기</button>
+  </div>
+</div>
+
+<div class="modal" id="stampModal" hidden>
+  <div class="sheet">
+    <button type="button" class="back" data-close="stampModal" aria-label="뒤로">‹</button>
+    <h2>출석 도장</h2>
+    <p id="stampMsg"></p>
+    <div class="stamps" id="stamps"></div>
+    <button id="stampClose">좋아!</button>
+  </div>
+</div>
+
+<div class="modal" id="luckModal" hidden>
+  <div class="sheet">
+    <button type="button" class="back" data-close="luckModal" aria-label="뒤로">‹</button>
+    <img id="luckImg" alt="">
+    <h2 id="luckTitle">오늘의 운세</h2>
+    <div class="fortune" id="luckText"></div>
+    <div class="luck" id="luckItem"></div>
+    <button id="luckClose">고마워 우땅이!</button>
+  </div>
+</div>
+
+<script>
+const F = __FRAMES__;
+const $ = id => document.getElementById(id);
+const layers = []; let skipPop = 0, canHist = true;
+function openL(id) {
+  $(id).hidden = false;
+  if (!layers.includes(id)) { layers.push(id); try { history.pushState({ woo: id }, ""); } catch (e) { canHist = false; } }
+}
+function hideL(id) {
+  $(id).hidden = true;
+  if (id === "game" && G) { G = null; say("다음에 또 놀자!", 2.5); }
+  if (id === "nameModal" && !owner) setOwner("주인님");
+}
+function closeL(id) {
+  const i = layers.indexOf(id);
+  hideL(id);
+  if (i >= 0) { layers.splice(i, 1); if (canHist) { skipPop++; try { history.back(); } catch (e) { skipPop--; } } }
+}
+const rnd = (a,b) => a + Math.random()*(b-a);
+const pick = a => a[Math.floor(Math.random()*a.length)];
+// 프레임 미리 불러오기
+for (const k in F) F[k].forEach(s => { const i = new Image(); i.src = s; });
+
+/* ── 이름 & 반말 호칭 ── */
+let owner = "";
+try { owner = localStorage.getItem("woo-name") || ""; } catch (e) {}
+function voc() {
+  if (!owner) return "친구야";
+  const c = owner.charCodeAt(owner.length-1);
+  if (c >= 0xAC00 && c <= 0xD7A3) return owner + ((c-0xAC00)%28 ? "아" : "야");
+  return owner;
+}
+function setOwner(n) {
+  owner = n; try { localStorage.setItem("woo-name", n); } catch (e) {}
+
+}
+
+/* ── 키우기 상태 (이 휴대폰 브라우저에 저장) ── */
+const SKEY = "woo-state-v1";
+const today = () => { const d = new Date(); return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate(); };
+let S = { bananas: 10, full: 70, mood: 70, last: Date.now(), day: "", streak: 0, luckDay: "", best: 0 };
+try { Object.assign(S, JSON.parse(localStorage.getItem(SKEY) || "{}")); } catch (e) {}
+function save() { S.last = Date.now(); try { localStorage.setItem(SKEY, JSON.stringify(S)); } catch (e) {} }
+const clamp = v => Math.max(0, Math.min(100, v));
+// 자리 비운 동안 천천히 줄어듦 (최대 12시간치)
+(function away() {
+  const h = Math.min((Date.now() - (S.last || Date.now())) / 3600000, 12);
+  S.full = clamp(S.full - h * 6); S.mood = clamp(S.mood - h * 4);
+})();
+function color(v) { return v < 30 ? "var(--warn)" : v < 60 ? "#f2b84b" : "#6cc56a"; }
+function drawStats() {
+  $("bananas").textContent = "🍌 " + S.bananas;
+  for (const [id, v] of [["gFull", S.full], ["gMood", S.mood]]) {
+    const g = $(id); g.querySelector(".v").textContent = Math.round(v);
+    const f = g.querySelector(".fill"); f.style.width = v + "%"; f.style.background = color(v);
+    g.classList.toggle("low", v < 30);
+  }
+}
+let toastT;
+function toast(t) { const el = $("toast"); el.textContent = t; el.classList.remove("hide"); clearTimeout(toastT); toastT = setTimeout(() => el.classList.add("hide"), 2200); }
+
+/* ── 상태 ── */
+const FPS = {walk:11, idle:5, laugh:12, sit:5, sleep:6, eat:6, eat_milk:6, eat_cake:6, shy:7, punish:8, wave:8,
+  st_surprise:9, st_lounge:4, st_cry:9, st_me:9, st_bow:5};
+let mode = "st_bow", modeStart = performance.now(), modeUntil = modeStart + 2200;
+let x = 0.5, dir = 1, stay = false, last = performance.now();
+let blinkAt = performance.now() + 3000, blinkTill = 0;
+function setMode(m, sec) { mode = m; modeStart = performance.now(); modeUntil = modeStart + sec*1000; }
+
+function next() {
+  switch (mode) {
+    case "st_bow": return setMode("wave", rnd(2.5,3.2));
+    case "st_cry": say(pick(["으앙… 벌 서고 있을게…", "팔 아파… 흑흑"]), 3); return setMode("punish", rnd(4.5,5.5));
+    case "punish": say("다시는 안 그럴게… " + voc() + "…", 3); return setMode("idle", rnd(2,3));
+    case "sleep": return setMode("sit", rnd(2,4));
+    case "sit": { const r = Math.random(); return r < .35 ? setMode("sleep", rnd(12,25)) : r < .55 ? setMode("sit", rnd(4,8)) : setMode("idle", rnd(1.5,3)); }
+    case "laugh": case "shy": case "eat": case "eat_milk": case "eat_cake": case "wave": case "st_surprise": case "st_lounge": case "st_me":
+      return setMode("idle", rnd(1.5,3));
+  }
+  if (stay) return setMode("idle", rnd(3,5));
+  const r = Math.random();
+  if (mode === "walk" && r < .45) return setMode("idle", rnd(2,4));
+  if (r < .08) return setMode("st_lounge", rnd(5,9));
+  if (r < .12) return setMode("wave", rnd(2.5,3.5));
+  if (r < .18) return setMode("laugh", rnd(1.6,2.6));
+  if (r < .34) return setMode("sit", rnd(6,12));
+  if (Math.random() < .4) dir = -dir;
+  setMode("walk", rnd(4,9));
+}
+
+function frame(now) {
+  const t = (now - modeStart)/1000;
+  const seq = s => F[s][Math.floor(t*FPS[s]) % F[s].length];
+  if (now > blinkAt) { blinkTill = now + 140; blinkAt = now + rnd(2500,6000); }
+  const blink = now < blinkTill;
+  if (mode === "idle") return blink ? F.blink[0] : seq("idle");
+  if (mode === "sit") return blink ? F.sitblink[0] : seq("sit");
+  return seq(mode);
+}
+
+/* ── 말풍선 ── */
+let bubbleUntil = 0;
+function say(text, sec) {
+  if (!text) return;
+  const b = $("bubble"); b.textContent = text; b.classList.remove("hide");
+  bubbleUntil = performance.now() + sec*1000;
+}
+
+/* ── 시간대 대사 (휴대폰 시계 기준) ── */
+const SLOTS = [
+  [9*60, 10*60, n => [n+" 좋은 아침!", n+" 아침 먹었어?"]],
+  [11*60+30, 12*60, n => [n+" 점심 뭐 먹어?", "배고프다… "+n+" 밥 먹으러 가자!", n+" 나도 밥줘"]],
+  [13*60, 13*60+30, n => [n+" 일하자", n+" 졸리면 기지개 쭉~"]],
+  [17*60+30, 18*60, n => [n+" 오늘도 수고했어!", n+" 집에 갈 준비하자!"]],
+  [19*60, 20*60, n => [n+" 퇴근 언제 해?"]],
+  [22*60, 24*60, n => [n+" 너무 늦었어. 이제 자자~", "하암… "+n+" 졸리지?"]],
+];
+function slotNow() {
+  const d = new Date(), m = d.getHours()*60 + d.getMinutes();
+  return SLOTS.findIndex(s => m >= s[0] && m < s[1]);
+}
+let lastSlot = "", nextTalk = performance.now() + 25000;
+try { lastSlot = sessionStorage.getItem("woo-slot") || ""; } catch (e) {}
+function randomLine() {
+  const n = voc(), i = slotNow();
+  if (S.full < 30 && Math.random() < .7) return pick([n+" 배고파… 🍌", "꼬르륵… "+n+" 간식 줘~", "바나나 먹고 싶다…"]);
+  if (S.mood < 30 && Math.random() < .7) return pick([n+" 심심해…", n+" 나랑 놀아줘…", "시무룩…"]);
+  if (i >= 0 && Math.random() < .6) return pick(SLOTS[i][2](n));
+  return pick([n+" 화이팅!", n+" 물 한 잔 마셔~", n+" 사랑해 ♥", n+" 뭐 해?", n+" 잠깐 쉬었다 해~",
+    "우땅! "+(owner||"친구")+" 최고!", n+" 허리 쭉 펴!", n+" 나 여기 있어~"]);
+}
+function talkTick(now) {
+  if (!owner || mode === "st_bow") return;
+  const i = slotNow();
+  if (i >= 0) {
+    const key = new Date().toDateString() + "#" + i;
+    if (key !== lastSlot && mode !== "sleep") {
+      lastSlot = key; try { sessionStorage.setItem("woo-slot", key); } catch (e) {}
+      say(pick(SLOTS[i][2](voc())), 5);
+      if (mode === "idle" || mode === "walk") setMode("wave", rnd(2.5,3.5));
+      nextTalk = now + rnd(60,150)*1000; return;
+    }
+  }
+  if (now > nextTalk) {
+    nextTalk = now + rnd(60,150)*1000;
+    if (mode === "sleep") return say(pick(["쿨쿨… "+voc()+"…", "음냐음냐… 바나나…", "Zzz…"]), 3);
+    say(randomLine(), 4.5);
+    if ((mode === "idle" || mode === "walk") && Math.random() < .5) setMode("wave", rnd(2.5,3.5));
+  }
+}
+
+let lastDecay = performance.now();
+/* ── 그리기 루프 ── */
+const pet = $("pet"), woo = $("woo"), room = $("room"), bubble = $("bubble");
+function loop(now) {
+  const dt = Math.min((now - last)/1000, .1); last = now;
+  if (mode === "walk") {
+    const rw = room.clientWidth, pw = pet.clientWidth;
+    x += dir * (42 / Math.max(rw,1)) * dt * (pw/150);
+    const lo = (pw*0.35)/rw, hi = 1 - lo;
+    if (x < lo) { x = lo; dir = 1; } if (x > hi) { x = hi; dir = -1; }
+  }
+  if (now > modeUntil) next();
+  const src = frame(now); if (woo.src !== src) woo.src = src;
+  pet.style.left = (x*100) + "%";
+  pet.classList.toggle("flip", mode === "walk" && dir < 0);
+  room.classList.toggle("night", mode === "sleep");
+  if (!bubble.classList.contains("hide")) {
+    if (now > bubbleUntil) bubble.classList.add("hide");
+    const r = room.getBoundingClientRect(), p = pet.getBoundingClientRect();
+    let bx = p.left + p.width/2 - r.left;
+    const bw = bubble.offsetWidth/2 + 8; bx = Math.max(bw, Math.min(r.width - bw, bx));
+    bubble.style.left = bx + "px";
+    bubble.style.top = Math.max(bubble.offsetHeight + 6, p.top - r.top + p.height*0.3) + "px";
+  }
+  talkTick(now);
+  if (now - lastDecay > 60000) {             // 1분마다 조금씩
+    lastDecay = now;
+    S.full = clamp(S.full - (mode === "sleep" ? .3 : 1));
+    S.mood = clamp(S.mood - (mode === "sleep" ? .2 : .7));
+    save(); drawStats();
+  }
+  requestAnimationFrame(loop);
+}
+
+/* ── 버튼 ── */
+const busy = () => mode === "st_bow" && !owner;
+const SNACKS = [
+  { e: "🍌", n: "바나나", cost: 1, full: 25, mood: 4, m: "eat", l: ["냠냠! 바나나 최고!", "와 바나나다! 냠냠"] },
+  { e: "🥛", n: "바나나우유", cost: 3, full: 18, mood: 12, m: "eat_milk", l: ["꿀꺽꿀꺽~ 바나나우유 맛있다!", "우유 좋아! 쪼옥~"] },
+  { e: "🍰", n: "바나나케이크", cost: 6, full: 30, mood: 25, m: "eat_cake", l: ["케이크다!! 사랑해 ♥", "생일도 아닌데 케이크! 히히 냠냠"] },
+];
+function openSnacks() {
+  const box = $("snacks"); box.innerHTML = "";
+  SNACKS.forEach(f => {
+    const b = document.createElement("button"); b.className = "snack"; b.disabled = S.bananas < f.cost;
+    b.innerHTML = `<b>${f.e}</b>${f.n.replace(/^바나나(.+)/, "바나나<br>$1")}<small>🍌 ${f.cost}개</small>`;
+    b.onclick = () => { closeL("snackModal"); feed(f); };
+    box.appendChild(b);
+  });
+  openL("snackModal");
+}
+function feed(f) {
+  if (S.full >= 95) { setMode("st_me", 1.6); return say("배불러! 이제 못 먹어~", 2.5); }
+  S.bananas -= f.cost; S.full = clamp(S.full + f.full); S.mood = clamp(S.mood + f.mood); save(); drawStats();
+  setMode(f.m, rnd(5,6.5));
+  say(pick(f.l.concat(["고마워 "+voc()+"! 냠냠"])), 3.5);
+}
+$("aFeed").onclick = () => {
+  if (S.bananas <= 0) { setMode("st_cry", 2); return say("바나나가 없어… 놀아주면 모을 수 있어!", 3.5); }
+  openSnacks();
+};
+$("snackClose").onclick = () => closeL("snackModal");
+let petCount = 0, petDay = "";
+$("aPet").onclick = () => {
+  setMode("shy", rnd(3.2,4.2)); say(pick(["헤헤… 부끄러워…", "히히 간지러워~", voc()+" 좋아… ♥", "에헤헤…"]), 3);
+  if (petDay !== today()) { petDay = today(); petCount = 0; }
+  if (petCount++ < 10) { S.mood = clamp(S.mood + 6); save(); drawStats(); }
+};
+$("aScold").onclick = () => { setMode("st_cry", 2.5); say(pick(["잘못했어… 흑", "미안해 "+voc()+"…"]), 2.5); S.mood = clamp(S.mood - 12); save(); drawStats(); };
+$("mWalk").onclick = () => { stay = false; setMode("walk", rnd(6,10)); };
+$("mSit").onclick = () => setMode("sit", rnd(10,16));
+$("mSleep").onclick = () => setMode("sleep", rnd(20,35));
+/* ── 오늘의 운세 (하루 하나, 날짜로 고정) ── */
+const LUCK = [
+  ["대박! 오늘은 바나나가 주렁주렁 열리는 날이야!", "행운의 간식: 바나나케이크"],
+  ["생각지도 못한 칭찬을 듣게 될 거야.", "행운의 색: 노랑"],
+  ["오늘은 천천히 가도 괜찮아. 쉬어가는 날!", "행운의 행동: 기지개 쭉~"],
+  ["점심 메뉴 고민 끝! 처음 떠오른 걸 먹어!", "행운의 시간: 11시 30분"],
+  ["오랜만에 연락 온 친구가 좋은 소식을 줄 거야.", "행운의 숫자: 7"],
+  ["작은 실수가 있어도 금방 해결돼. 걱정 마!", "행운의 물건: 물 한 잔"],
+  ["오늘 한 일은 다 잘될 거야. 우땅이가 응원해!", "행운의 말: 할 수 있다!"],
+  ["퇴근길에 기분 좋은 일이 기다리고 있어.", "행운의 간식: 바나나우유"],
+  ["새로운 걸 시작하기 딱 좋은 날이야.", "행운의 방향: 오른쪽"],
+  ["오늘은 웃을 일이 세 번 생길 거야. 세어 봐!", "행운의 표정: 히히"],
+];
+function hashDay(s) { let h = 7; for (const c of s + owner) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h; }
+$("mLuck").onclick = () => {
+  const [txt, item] = LUCK[hashDay(today()) % LUCK.length];
+  $("luckImg").src = F.wave[2];
+  $("luckTitle").textContent = "오늘의 운세";
+  $("luckText").textContent = txt; $("luckItem").textContent = item;
+  openL("luckModal");
+  if (S.luckDay !== today()) { S.luckDay = today(); S.mood = clamp(S.mood + 5); save(); drawStats(); }
+  setMode("wave", 3);
+};
+$("luckClose").onclick = () => closeL("luckModal");
+
+/* ── 출석 도장 ── */
+function showStamps(msg) {
+  const box = $("stamps"); box.innerHTML = "";
+  const n = ((S.streak - 1) % 7) + 1;
+  for (let i = 1; i <= 7; i++) {
+    const d = document.createElement("div"); d.className = "stamp" + (i <= n ? " on" : "");
+    d.textContent = i <= n ? "🐵" : i; box.appendChild(d);
+  }
+  $("stampMsg").textContent = msg || `연속 ${S.streak}일째 만나는 중! 7일마다 바나나 15개 보너스.`;
+  openL("stampModal");
+}
+$("stampBtn").onclick = () => showStamps();
+$("stampClose").onclick = () => closeL("stampModal");
+function checkIn() {
+  const t = today(); if (S.day === t) return false;
+  const y = new Date(Date.now() - 86400000); const ys = y.getFullYear()+"-"+(y.getMonth()+1)+"-"+y.getDate();
+  S.streak = S.day === ys ? S.streak + 1 : 1; S.day = t;
+  let gain = 5; if (S.streak % 7 === 0) gain += 15;
+  S.bananas += gain; save(); drawStats();
+  showStamps(`오늘 출석! 바나나 ${gain}개를 받았어요.` + (S.streak % 7 === 0 ? " 7일 연속 보너스!" : ""));
+  return true;
+}
+
+/* ── 바나나 받기 게임 ── */
+const cv = $("cv"); let G = null;
+const gimg = new Image(); gimg.src = F.laugh[2];
+$("aPlay").onclick = () => {
+  if (S.full < 15) { setMode("st_lounge", 4); return say("배고파서 못 놀겠어… 간식 먼저!", 3); }
+  openL("game"); $("gStart").hidden = false;
+  $("gScore").textContent = 0; $("gTime").textContent = 30;
+};
+$("gGo").onclick = () => {
+  $("gStart").hidden = true;
+  const r = cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  cv.width = r.width * dpr; cv.height = r.height * dpr;
+  G = { W: cv.width, H: cv.height, dpr, x: cv.width/2, tx: cv.width/2, items: [], score: 0, time: 30, spawn: 0, last: performance.now(), yum: 0, ouch: 0 };
+  requestAnimationFrame(gloop);
+};
+function gmove(e) { if (!G) return; const r = cv.getBoundingClientRect(); G.tx = (e.clientX - r.left) / r.width * G.W; }
+cv.addEventListener("pointerdown", e => { cv.setPointerCapture(e.pointerId); gmove(e); });
+cv.addEventListener("pointermove", gmove);
+function gloop(now) {
+  if (!G) return;
+  const dt = Math.min((now - G.last) / 1000, .05); G.last = now;
+  const c = cv.getContext("2d"), { W, H, dpr } = G;
+  const pw = Math.min(W * .36, 200 * dpr), ph = pw * 1.25, py = H * .97;
+  G.time -= dt; G.spawn -= dt;
+  G.x += (G.tx - G.x) * Math.min(1, dt * 14); G.x = Math.max(pw/2, Math.min(W - pw/2, G.x));
+  const fast = G.time < 10 ? 1.4 : 1;
+  if (G.spawn <= 0) {
+    G.spawn = rnd(.32, .62) / fast; const t = Math.random();
+    G.items.push({ x: rnd(W*.06, W*.94), y: -30*dpr, v: H * rnd(.32, .5) * fast, k: t < .1 ? "star" : t < .27 ? "pep" : "ban", r: rnd(0, 6) });
+  }
+  c.clearRect(0, 0, W, H);
+  c.font = `${30*dpr}px sans-serif`; c.textAlign = "center"; c.textBaseline = "middle";
+  for (const it of G.items) {
+    it.y += it.v * dt; it.r += dt * 3;
+    c.save(); c.translate(it.x, it.y); c.rotate(Math.sin(it.r) * .4);
+    c.fillText(it.k === "ban" ? "🍌" : it.k === "star" ? "🌟" : "🌶️", 0, 0); c.restore();
+    const top = py - ph * .78;
+    if (!it.hit && it.y > top && it.y < top + ph * .35 && Math.abs(it.x - G.x) < pw * .42) {
+      it.hit = true;
+      if (it.k === "pep") { G.score = Math.max(0, G.score - 2); G.ouch = .6; }
+      else { G.score += it.k === "star" ? 3 : 1; G.yum = .25; }
+      $("gScore").textContent = G.score;
+    }
+  }
+  G.items = G.items.filter(it => !it.hit && it.y < H + 40 * dpr);
+  c.save(); c.translate(G.x, py);
+  if (G.ouch > 0) { G.ouch -= dt; c.rotate(Math.sin(now / 30) * .1); }
+  const bob = G.yum > 0 ? (G.yum -= dt, -ph * .05) : 0;
+  if (gimg.complete) c.drawImage(gimg, -pw/2, -ph + bob, pw, ph);
+  c.restore();
+  if (G.ouch > 0) { c.font = `${20*dpr}px sans-serif`; c.fillText("매워!", G.x, py - ph * .9); }
+  $("gTime").textContent = Math.max(0, Math.ceil(G.time));
+  if (G.time <= 0) return endGame();
+  requestAnimationFrame(gloop);
+}
+function endGame() {
+  const sc = G.score; G = null; closeL("game");
+  const isBest = sc > (S.best || 0); if (isBest) S.best = sc;
+  S.bananas += sc; S.mood = clamp(S.mood + Math.min(35, 10 + sc * 2)); S.full = clamp(S.full - 8); save(); drawStats();
+  setMode(sc >= 10 ? "laugh" : "wave", 3);
+  say(sc >= 15 ? `우와 ${sc}개! 최고야 ${voc()}!` : sc >= 6 ? `${sc}개 받았다! 재밌어!` : "헤헤 재밌었어! 또 하자!", 4);
+  toast(`바나나 +${sc}` + (isBest ? " · 최고 기록!" : ""));
+}
+pet.onclick = () => {
+  if (mode === "sleep") { setMode("sit", rnd(2,4)); return say("하암… 잘 잤다!", 2.5); }
+  if (Math.random() < .3) { setMode("st_surprise", 1.8); return say(pick(["깜짝이야!", "앗! 놀랐잖아~", "헉!"]), 2); }
+  setMode("st_me", 2.2);
+  if (Math.random() < .5) say(pick(["응! "+voc()+"!", "불렀어?", "나 여기 있어!"]), 2.2);
+};
+
+/* ── 이름 묻기 ── */
+function askName() {
+  $("nameImg").src = F.wave[2]; $("nameInput").value = owner;
+  openL("nameModal"); setTimeout(() => $("nameInput").focus(), 50);
+}
+$("nameBtn").onclick = askName;
+$("nameForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const n = $("nameInput").value.trim(); if (!n) return;
+  setOwner(n); closeL("nameModal");
+  setMode("wave", rnd(2.5,3.2)); say("반가워 "+voc()+"! 나는 우땅이야!", 5);
+  nextTalk = performance.now() + rnd(40,80)*1000;
+  setTimeout(checkIn, 3200);
+});
+
+/* ── 시계 ── */
+function tickClock() { const d = new Date(); $("clock").textContent = String(d.getHours()).padStart(2,"0") + ":" + String(d.getMinutes()).padStart(2,"0"); }
+setInterval(tickClock, 10000); tickClock();
+
+/* ── 시작: 꾸벅 인사 ── */
+setOwner(owner);
+drawStats();
+setMode("st_bow", 2.2);
+if (owner) { say("안녕 "+voc()+"! 우땅이 왔어!", 4); setTimeout(checkIn, 2600); }
+else setTimeout(askName, 1600);
+requestAnimationFrame(loop);
+
+/* ── 뒤로가기: 창(모달·게임) 닫기 + 휴대폰 뒤로 버튼 ── */
+addEventListener("popstate", () => {
+  if (skipPop > 0) { skipPop--; return; }
+  const id = layers.pop(); if (id) hideL(id);
+});
+document.querySelectorAll("[data-close]").forEach(b => b.onclick = () => closeL(b.dataset.close));
+document.querySelectorAll(".modal").forEach(m => m.addEventListener("click", e => { if (e.target === m) closeL(m.id); }));
+$("gBack").onclick = () => closeL("game");
+</script>
