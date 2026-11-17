@@ -6,9 +6,10 @@
 걷고, 앉고, 졸고, 간식을 먹고, 이름을 불러 주고, 시간 맞춰 말을 걸어요.
 바나나를 모아 간식을 주고 모자도 씌워 주면서 함께 레벨을 올려 보세요.
 
-### ⬇️ [Woottangi.exe 내려받기 (v1.0)](https://github.com/yungi1013-netizen/woottangi/releases/latest)
+### ⬇️ [설치 프로그램 내려받기 (v1.0)](https://github.com/yungi1013-netizen/woottangi/releases/latest/download/Woottangi_Setup_v1.0.exe)
 
-Windows 10/11 · 설치 필요 없음 · exe 하나만 실행하면 끝.
+Windows 10/11 · 관리자 권한 필요 없음. 설치하면 시작 메뉴·바탕화면에 "우땅이"가 생기고, 설정 > 앱 에서 지울 수 있어요.
+설치 없이 쓰고 싶다면 [포터블 zip](https://github.com/yungi1013-netizen/woottangi/releases/latest/download/Woottangi_v1.0_portable.zip) 을 받아 압축을 풀고 실행하세요.
 처음 실행할 때 SmartScreen 경고가 뜨면 **추가 정보 → 실행**을 눌러 주세요 (서명하지 않은 exe라서 그래요).
 
 ## 할 수 있는 것
