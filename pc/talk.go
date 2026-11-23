@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -92,7 +93,7 @@ func createBubble(inst uintptr) {
 }
 
 func say(text string, d time.Duration) {
-	if bubHwnd == 0 || text == "" {
+	if bubHwnd == 0 || text == "" || hiddenFS {
 		return
 	}
 	bubText = text
@@ -196,6 +197,9 @@ func talkTick() {
 	if ownerName == "" || mode == "drag" || mode == "fall" {
 		return
 	}
+	if focusing() { // 집중하는 동안은 조용히
+		return
+	}
 	slotTick()
 	if now.After(nextTalk) {
 		nextTalk = now.Add(rd(60, 150))
@@ -219,6 +223,9 @@ type slot struct {
 }
 
 var slots = []slot{
+	{0, 6 * 60, func(n string) []string {
+		return []string{"벌써 새벽이야… " + n + " 이제 자자", "하암… " + n + " 안 졸려?"}
+	}},
 	{9 * 60, 10 * 60, func(n string) []string { return []string{n + " 좋은 아침!", n + " 아침 먹었어?"} }},
 	{11*60 + 30, 12 * 60, func(n string) []string {
 		return []string{n + " 점심 뭐 먹어?", "배고프다… " + n + " 밥 먹으러 가자!", n + " 나도 밥줘"}
@@ -275,6 +282,9 @@ func randomLine() string {
 	}
 	if rng.Float64() < 0.2 {
 		return affectionLine()
+	}
+	if rng.Float64() < 0.15 {
+		return seasonLine()
 	}
 	n := voc()
 	if i, ok := currentSlot(); ok && rng.Float64() < 0.6 {
@@ -421,6 +431,10 @@ var greeted, quitting bool
 
 func doClick() {
 	if quitting {
+		return
+	}
+	if focusing() {
+		say(fmt.Sprintf("쉿, 집중 중이야! %d분 남았어", focusLeft()), 2500*time.Millisecond)
 		return
 	}
 	if rng.Float64() < 0.3 {

@@ -47,12 +47,19 @@ var items = []item{
 	// 가격 0 = 팔지 않는 선물 (ach.go 의 출석 업적으로 받음)
 	{"rainbow", "무지개 핀", 0, slotHead, "무지개처럼 반짝반짝!"},
 	{"bananaband", "바나나 머리띠", 0, slotHead, "100일 동안 고마워! 바나나 왕이다!"},
+	// 날짜 이벤트 선물 (season.go)
+	{"rudolph", "루돌프 뿔", 0, slotHead, "루돌프 사슴 우땅이~ 메리 크리스마스!"},
+	{"witch", "마녀 모자", 0, slotHead, "수리수리 바나나~ 얍!"},
+	{"bokjumeoni", "복주머니", 0, slotNeck, "복 많이 받아! 복주머니 짤랑짤랑~"},
 }
 
 // 선물 아이템을 받는 방법 (메뉴·수첩 표시용)
 var giftFrom = map[string]string{
 	"rainbow":    "누적 출석 30일 선물",
 	"bananaband": "누적 출석 100일 선물",
+	"rudolph":    "크리스마스 선물",
+	"witch":      "할로윈 선물",
+	"bokjumeoni": "설날·추석 선물",
 }
 
 // 아이템을 그냥 손에 넣음 (선물). 이미 있으면 false
@@ -242,6 +249,9 @@ func appendShopMenu(m uintptr) {
 
 // 프레임 좌표(fx, fy: 연속 좌표)에서 착용 아이템 색을 dst 위에 덧칠 (premultiplied)
 func drawWorn(fr *Sprite, fx, fy float64, dst *[4]float32) {
+	if dirtSprite != nil && dirtyShown() && !noFaceSeq[fr.Seq] { // 얼룩은 아이템 아래
+		drawLayer(fr, dirtSprite, fx, fy, dst)
+	}
 	for s := 0; s < slotCount; s++ {
 		if worn[s] != nil && !(s == slotFace && noFaceSeq[fr.Seq]) {
 			drawLayer(fr, worn[s], fx, fy, dst)

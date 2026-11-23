@@ -9,6 +9,9 @@ src=sys.argv[1]
 dst=sys.argv[2] if len(sys.argv)>2 else 'rsrc_windows_amd64.syso'
 DESC=sys.argv[3] if len(sys.argv)>3 else "우땅이"            # 파일 설명 (설치 프로그램은 "우땅이 설치")
 ORIG=sys.argv[4] if len(sys.argv)>4 else "Woottangi.exe"     # 원래 파일 이름
+import os
+APPVER=os.environ.get("WOO_VERSION","1.1")                 # build.py 의 VERSION
+_mj,_mn=(int(x) for x in (APPVER.split(".")+["0"])[:2])
 im=Image.open(src).convert('RGBA');w,h=im.size;S=max(w,h)
 sq=Image.new('RGBA',(S,S),(0,0,0,0));sq.paste(im,((S-w)//2,(S-h)//2))
 ico=sq.resize((256,256),Image.LANCZOS)
@@ -40,13 +43,13 @@ def _blk(key, val=b'', typ=1, children=b'', vlen=None):
 def _s(key, v):
     return _pad(_blk(key, (v + '\0').encode('utf-16-le')))
 VER = "1.0.0.0"
-strs = b''.join(_s(k, v) for k, v in [("CompanyName", "K"), ("FileDescription", DESC), ("FileVersion", "1.0"),
-    ("InternalName", "Woottangi"), ("OriginalFilename", ORIG), ("ProductName", "우땅이"), ("ProductVersion", "1.0")])
+strs = b''.join(_s(k, v) for k, v in [("CompanyName", "K"), ("FileDescription", DESC), ("FileVersion", APPVER),
+    ("InternalName", "Woottangi"), ("OriginalFilename", ORIG), ("ProductName", "우땅이"), ("ProductVersion", APPVER)])
 st = _blk("041204b0", typ=1, children=strs, vlen=0)
 sfi = _blk("StringFileInfo", typ=1, children=st, vlen=0)
 var = _blk("Translation", struct.pack('<HH', 0x0412, 0x04b0), typ=0)
 vfi = _blk("VarFileInfo", typ=1, children=_pad(var), vlen=0)
-ffi = struct.pack('<13I', 0xFEEF04BD, 0x00010000, 0x00010000, 0, 0x00010000, 0, 0x3F, 0, 0x40004, 1, 0, 0, 0)
+ffi = struct.pack('<13I', 0xFEEF04BD, 0x00010000, (_mj<<16)|_mn, 0, (_mj<<16)|_mn, 0, 0x3F, 0, 0x40004, 1, 0, 0, 0)
 VERSION_RES = _blk("VS_VERSION_INFO", ffi, typ=0, children=_pad(sfi) + _pad(vfi), vlen=len(ffi))
 
 types=[(3,[(i+1,e[6]) for i,e in enumerate(ents)]),(14,[(1,grp)]),(16,[(1,VERSION_RES)]),(24,[(1,manifest)])]

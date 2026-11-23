@@ -20,3 +20,5 @@ preview_acc.png
 # 파이썬
 __pycache__/
 *.pyc
+pc/test_care.png
+preview_fx.png

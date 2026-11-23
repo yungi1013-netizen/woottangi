@@ -96,7 +96,7 @@ func addTray(icon uintptr) {
 	d.Flags = NIF_MESSAGE | NIF_ICON | NIF_TIP
 	d.CallbackMessage = WM_TRAY
 	d.Icon = icon
-	copyU16(d.Tip[:], "우땅이 v1.0")
+	copyU16(d.Tip[:], "우땅이 v"+appVersion)
 	r, _, _ := pShellNotifyIconW.Call(NIM_ADD, uintptr(unsafe.Pointer(&d)))
 	trayAdded = r != 0
 }

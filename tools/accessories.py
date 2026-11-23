@@ -248,11 +248,76 @@ def banana_band():
     return p.done()
 
 
+def rudolph():
+    """크리스마스 선물: 루돌프 뿔 머리띠"""
+    p = Pen()
+    brown, dark = (170, 112, 66, 255), (120, 74, 40, 255)
+    band = arc_pts(0, -112, 140, 124, 198, 342)
+    p.line(band, 20)
+    p.line(band, 11, (232, 52, 60, 255))
+    for sgn in (-1, 1):
+        def X(x):
+            return x * sgn
+        main = [(X(58), -226), (X(70), -268), (X(92), -300), (X(108), -318)]
+        p.line(main, 17)
+        p.line(main, 9, brown)
+        for a, b in (((X(72), -272), (X(46), -298)), ((X(90), -298), (X(126), -300)), ((X(66), -250), (X(96), -262))):
+            p.line([a, b], 15)
+            p.line([a, b], 7, brown)
+        p.ell(X(58), -226, 12, 9, dark)
+    for x in (-34, 34):                      # 방울
+        p.ell(x, -238, 9, 9, (255, 214, 77, 255))
+    return p.done()
+
+
+def witch():
+    """할로윈 선물: 마녀 모자"""
+    p = Pen()
+    hat, band = (96, 66, 150, 255), (255, 150, 52, 255)
+    p.ell(0, -206, 172, 30, (78, 52, 124, 255))
+    cone = [(-96, -214), (-62, -280), (-20, -340), (24, -372), (70, -380), (52, -356), (40, -318), (88, -214)]
+    p.poly(cone, hat)
+    p.poly([(-94, -218), (88, -218), (78, -246), (-82, -246)], band)
+    star = [(52 + 13 * math.cos(math.radians(-90 + k * 36)) * (1 if k % 2 == 0 else 0.45),
+             -296 + 13 * math.sin(math.radians(-90 + k * 36)) * (1 if k % 2 == 0 else 0.45)) for k in range(10)]
+    p.poly(star, (255, 226, 80, 255), 3)
+    p.ell(-36, -286, 9, 9, (255, 226, 80, 255), 3)
+    return p.done()
+
+
+def bokjumeoni():
+    """설날·추석 선물: 복주머니 (목)"""
+    p = Pen()
+    red, pink, gold = (232, 60, 84, 255), (255, 140, 160, 255), (255, 206, 64, 255)
+    cy = 34
+    p.line([(-40, cy - 30), (0, cy - 18), (40, cy - 30)], 6, gold)
+    body = arc_pts(0, cy + 22, 40, 30, -10, 190) + [(-20, cy - 2), (-26, cy - 14), (0, cy - 6), (26, cy - 14), (20, cy - 2)]
+    p.poly(body, red)
+    p.poly([(-24, cy - 14), (-14, cy - 30), (0, cy - 22), (14, cy - 30), (24, cy - 14), (0, cy - 6)], pink)
+    p.ell(0, cy - 4, 7, 6, gold, 3)
+    p.ell(0, cy + 26, 15, 15, gold, 3.5)
+    p.ell(0, cy + 26, 7, 7, red, 0)
+    return p.done()
+
+
+def dirt():
+    """꼬질꼬질할 때 얼굴에 묻은 얼룩 (외곽선 없음, 반투명)"""
+    p = Pen()
+    mud = (96, 66, 40, 165)
+    for x, y, rx, ry in ((-84, -146, 16, 11), (-70, -156, 7, 5), (86, -80, 15, 10), (100, -70, 6, 4),
+                         (-30, -64, 9, 6), (-66, -206, 18, 10), (60, -212, 9, 6), (-104, -40, 10, 7)):
+        p.ell(x, y, rx, ry, mud, 0)
+    for x, y in ((-96, -132), (40, -142), (74, -98)):   # 점 몇 개
+        p.ell(x, y, 3.5, 3, mud, 0)
+    return p.done()
+
+
 # id: (그림 함수)  — 이름·가격·자리는 pc/shop.go 에 있음
 ITEMS = {
     "ribbon": ribbon, "flower": flower, "sprout": sprout, "crown": crown,
     "beanie": beanie, "santa": santa, "glasses": glasses, "sunglasses": sunglasses, "bowtie": bowtie,
     "rainbow": rainbow, "bananaband": banana_band,
+    "rudolph": rudolph, "witch": witch, "bokjumeoni": bokjumeoni, "dirt": dirt,
 }
 FACE_ITEMS = {"glasses", "sunglasses"}
 

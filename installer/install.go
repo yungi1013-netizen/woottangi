@@ -20,7 +20,7 @@ import (
 	"unsafe"
 )
 
-var version = "1.0" // build.py 가 -ldflags "-X main.version=..." 로 넣음
+var version = "1.1" // build.py 가 -ldflags "-X main.version=..." 로 넣음
 
 const (
 	appName    = "우땅이"

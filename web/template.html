@@ -1,3 +1,7 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>우땅이 키우기</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,7 +22,7 @@ body{background:var(--sky);color:var(--ink);font-family:var(--display);-webkit-u
 .app{height:100%;display:flex;flex-direction:column;max-width:560px;margin:0 auto;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px 12px;gap:10px}
 header{display:flex;align-items:center;gap:10px}
-header h1{margin:0;font-size:24px;font-weight:400;flex:1;letter-spacing:-.5px}
+header h1{margin:0;font-size:clamp(18px,5.6vw,24px);font-weight:400;flex:1;letter-spacing:-.5px;white-space:nowrap}
 header .who{font-size:14px;color:var(--muted)}
 .icon-btn{border:3px solid var(--ink);background:var(--card);border-radius:12px;width:40px;height:40px;font:inherit;font-size:16px;color:var(--ink);cursor:pointer;box-shadow:2px 3px 0 var(--ink)}
 .icon-btn:focus-visible,.act:focus-visible,.sheet button:focus-visible{outline:3px solid #2b7bd6;outline-offset:2px}
@@ -34,8 +38,10 @@ header .who{font-size:14px;color:var(--muted)}
 .room.night .cloud{opacity:.15}
 
 .pet{position:absolute;bottom:3%;width:62%;max-width:320px;aspect-ratio:4/5;transform:translateX(-50%);z-index:3;cursor:pointer}
+.pet .inner{position:absolute;inset:0}
 .pet img{width:100%;height:100%;display:block;pointer-events:none;-webkit-user-drag:none}
-.pet.flip img{transform:scaleX(-1)}
+.pet.flip .inner{transform:scaleX(-1)}
+.pet img.acc{position:absolute;left:0;top:0;width:400px;height:400px;max-width:none;transform-origin:0 0}
 .bubble{position:absolute;z-index:5;transform:translate(-50%,-100%);max-width:70%;background:#fff;border:3px solid var(--ink);border-radius:18px;padding:8px 14px;font-size:17px;text-align:center;box-shadow:2px 3px 0 var(--ink);transition:opacity .25s;white-space:normal}
 .bubble::after{content:"";position:absolute;left:50%;bottom:-11px;width:15px;height:15px;background:#fff;border-right:3px solid var(--ink);border-bottom:3px solid var(--ink);transform:translateX(-50%) rotate(45deg)}
 .bubble.hide{opacity:0;pointer-events:none}
@@ -90,6 +96,48 @@ header .who{font-size:14px;color:var(--muted)}
 .gstart button{font:inherit;font-size:20px;padding:10px 24px;border:3px solid var(--ink);border-radius:14px;background:var(--sun);color:var(--ink);cursor:pointer;box-shadow:2px 4px 0 var(--ink)}
 .toast{position:absolute;left:50%;top:44px;transform:translateX(-50%);z-index:9;background:var(--ink);color:#fff;border-radius:12px;padding:6px 14px;font-size:15px;white-space:nowrap;transition:opacity .3s}
 .toast.hide{opacity:0}
+/* 레벨 · 꾸미기 · 수첩 · 짝 맞추기 · 집중 */
+.lv{border:3px solid var(--ink);background:var(--card);border-radius:999px;padding:4px 10px;font:inherit;font-size:15px;color:var(--ink);box-shadow:2px 3px 0 var(--ink);cursor:pointer;white-space:nowrap}
+.focusb{position:absolute;right:12px;top:10px;z-index:4;background:#fff;border:2px solid var(--ink);border-radius:10px;padding:2px 8px;font-size:14px;font-variant-numeric:tabular-nums}
+.sheet.tall{max-height:86vh;overflow:auto;text-align:left;width:min(420px,100%)}
+.sheet.tall h2,.sheet.tall>p{text-align:center}
+.sheet h3{margin:6px 0 0;font-size:18px;font-weight:400;display:flex;justify-content:space-between}
+.sheet h3 small{color:var(--muted);font-size:14px}
+.items{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.item{border:3px solid var(--ink);border-radius:14px;background:#fff;padding:6px 4px;font:inherit;font-size:13px;line-height:1.25;color:var(--ink);cursor:pointer;display:grid;gap:2px;text-align:center}
+.item img{width:100%;aspect-ratio:200/270;object-fit:contain}
+.item small{color:var(--muted);font-size:12px}
+.item.on{background:#fff3c4}.item.on small{color:var(--ink)}
+.item.lock{background:#f1e9d8;border-style:dashed;cursor:default}
+.item.lock img{filter:brightness(0);opacity:.28}
+.item:disabled{opacity:.45;cursor:default}
+.bk-top{display:flex;gap:10px;align-items:center;background:#fff;border:3px solid var(--ink);border-radius:16px;padding:10px}
+.bk-top img{width:72px;flex:none}.bk-top b{font-size:20px;font-weight:400}.bk-top p{margin:2px 0;font-size:13px;text-align:left}
+.xbar{height:12px;border:2px solid var(--ink);border-radius:8px;background:#fff;overflow:hidden;margin-top:4px}.xbar i{display:block;height:100%;background:var(--sun)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.stats div{background:#fff;border:2px solid var(--ink);border-radius:10px;padding:4px 8px;font-size:12px;color:var(--muted)}.stats b{display:block;font-size:16px;font-weight:400;color:var(--ink)}
+.achs{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.ach{display:flex;gap:6px;align-items:center;background:#fff;border:2px solid var(--ink);border-radius:10px;padding:6px;font-size:13px}
+.ach i{font-style:normal;font-size:22px}.ach span{display:block;font-size:11px;color:var(--muted)}
+.ach.no{background:#f1e9d8;border-style:dashed;color:#9c8b7c}.ach.no i{filter:grayscale(1);opacity:.45}
+.pick2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pick2 button{display:grid;gap:4px;padding:12px 4px}.pick2 b{font-size:30px;font-weight:400}
+.match .mgrid{position:absolute;left:8px;right:8px;top:40px;bottom:8px;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(4,1fr);gap:6px}
+.mc{position:relative;perspective:500px;cursor:pointer;min-height:0}
+.mc .in{position:absolute;inset:0;transition:transform .3s;transform-style:preserve-3d}
+.mc.up .in,.mc.done .in{transform:rotateY(180deg)}
+.mc .f{position:absolute;inset:0;backface-visibility:hidden;border:2px solid var(--ink);border-radius:10px;display:grid;place-items:center;overflow:hidden}
+.mc .bk{background:repeating-linear-gradient(45deg,#ffd84d 0 10px,#ffe27a 10px 20px);font-size:22px}
+.mc .fr{background:#fff;transform:rotateY(180deg)}.mc .fr img{width:100%;height:100%;object-fit:contain}
+.mc.done .fr{background:#e9ffd9;border-color:#4a9a2a}
+/* 계절 · 돌봄 · 일기 */
+.gauge{padding:3px 9px;gap:2px}.gauge .bar{height:8px}
+.fxc{position:absolute;inset:0;width:100%;height:100%;z-index:4;pointer-events:none}
+.pet img.acc2{position:absolute;left:0;top:0;width:400px;height:400px;max-width:none;transform-origin:0 0}
+.pet img.blanket{position:absolute;inset:0}
+.dy{background:#fff;border:2px solid var(--ink);border-radius:12px;padding:8px 10px;text-align:left}
+.dh{display:flex;justify-content:space-between;align-items:center;font-size:15px}.dh span{font-size:20px}
+.dy p{margin:2px 0 0;font-size:14px;line-height:22px;color:var(--ink);background:repeating-linear-gradient(transparent 0 21px,#f1e3c4 21px 22px)}
 @media (prefers-reduced-motion:reduce){.cloud{animation:none}}
 </style>
 
@@ -97,6 +145,7 @@ header .who{font-size:14px;color:var(--muted)}
   <header>
     <h1>우땅이 키우기</h1>
     <div class="top">
+      <button class="lv" id="lvBtn" aria-label="레벨 · 우땅이 수첩">Lv.1</button>
       <span class="bananas" id="bananas" aria-label="가진 바나나">🍌 0</span>
       <button class="icon-btn" id="stampBtn" aria-label="출석 도장">📅</button>
       <button class="icon-btn" id="nameBtn" aria-label="이름 바꾸기">✎</button>
@@ -105,13 +154,17 @@ header .who{font-size:14px;color:var(--muted)}
   <div class="gauges">
     <div class="gauge" id="gFull"><div class="row"><span>🍌 배부름</span><span class="v"></span></div><div class="bar"><div class="fill"></div></div></div>
     <div class="gauge" id="gMood"><div class="row"><span>💛 기분</span><span class="v"></span></div><div class="bar"><div class="fill"></div></div></div>
+    <div class="gauge" id="gClean"><div class="row"><span>🫧 청결</span><span class="v"></span></div><div class="bar"><div class="fill"></div></div></div>
+    <div class="gauge" id="gEnergy"><div class="row"><span>⚡ 기운</span><span class="v"></span></div><div class="bar"><div class="fill"></div></div></div>
   </div>
 
   <div class="room" id="room">
     <div class="cloud" style="top:12%;width:70px;animation-delay:-8s"></div>
     <div class="cloud" style="top:26%;width:52px;animation-delay:-24s;animation-duration:52s"></div>
     <div class="clock" id="clock">--:--</div>
-    <div class="pet" id="pet" role="button" aria-label="우땅이 부르기"><img id="woo" alt="우땅이"></div>
+    <div class="focusb" id="focusB" hidden></div>
+    <div class="pet" id="pet" role="button" aria-label="우땅이 부르기"><div class="inner"><img id="woo" alt="우땅이"><img class="acc2" id="dirtImg" alt="" hidden><img class="acc" alt="" hidden><img class="acc" alt="" hidden><img class="acc" alt="" hidden><img class="blanket" id="blanketImg" alt="" hidden></div></div>
+    <canvas class="fxc" id="fxc"></canvas>
     <div class="bubble hide" id="bubble"></div>
     <div class="toast hide" id="toast"></div>
     <div class="game" id="game" hidden>
@@ -122,6 +175,16 @@ header .who{font-size:14px;color:var(--muted)}
         <h2 style="margin:0;font-weight:400;font-size:24px">바나나 받기</h2>
         <p>손가락으로 우땅이를 좌우로 움직여<br>떨어지는 바나나를 받아요.<br>🍌 +1 · 🌟 +3 · 🌶️ −2</p>
         <button id="gGo">시작!</button>
+      </div>
+    </div>
+    <div class="game match" id="match" hidden>
+      <button class="gback" id="mBack" aria-label="뒤로">‹ 뒤로</button>
+      <div class="ghud"><span>🔄 <b id="mMoves">0</b>번</span><span>✨ <b id="mPairs">0</b>/8</span></div>
+      <div class="mgrid" id="mGrid"></div>
+      <div class="gstart" id="mStart">
+        <h2 style="margin:0;font-weight:400;font-size:24px">짝 맞추기</h2>
+        <p>카드 두 장씩 뒤집어 같은 우땅이를 찾아요.<br>적게 뒤집을수록 바나나를 많이 받아요!<br>(8번 만에 다 맞히면 18개)</p>
+        <button id="mGo">시작!</button>
       </div>
     </div>
   </div>
@@ -137,6 +200,14 @@ header .who{font-size:14px;color:var(--muted)}
     <button id="mSit">앉기</button>
     <button id="mSleep">자기</button>
     <button id="mLuck">🔮 운세</button>
+    <button id="mShop">🎀 꾸미기</button>
+    <button id="mBook">📒 수첩</button>
+    <button id="mFocus">⏱️ 집중</button>
+    <button id="mInfo">ℹ️ 정보</button>
+    <button id="mBath">🫧 씻기기</button>
+    <button id="mTuck">🛏️ 재우기</button>
+    <button id="mDiary">📔 일기</button>
+    <button id="mSeason">🌸 계절</button>
   </div>
 </div>
 
@@ -182,6 +253,50 @@ header .who{font-size:14px;color:var(--muted)}
   </div>
 </div>
 
+<div class="modal" id="playModal" hidden>
+  <div class="sheet">
+    <button type="button" class="back" data-close="playModal" aria-label="뒤로">‹</button>
+    <h2>뭐 하고 놀까?</h2>
+    <div class="pick2"><button id="pCatch"><b>🧺</b>바나나 받기</button><button id="pMatch"><b>🃏</b>짝 맞추기</button></div>
+  </div>
+</div>
+
+<div class="modal" id="shopModal" hidden>
+  <div class="sheet tall">
+    <button type="button" class="back" data-close="shopModal" aria-label="뒤로">‹</button>
+    <h2>꾸미기</h2>
+    <p id="shopMsg">바나나로 사서 씌워 줘요. 한 번 더 누르면 벗어요.</p>
+    <div id="shopList"></div>
+    <button class="ghost" id="takeOff">모두 벗기</button>
+  </div>
+</div>
+
+<div class="modal" id="bookModal" hidden>
+  <div class="sheet tall">
+    <button type="button" class="back" data-close="bookModal" aria-label="뒤로">‹</button>
+    <h2>우땅이 수첩</h2>
+    <div id="bookBody"></div>
+  </div>
+</div>
+
+<div class="modal" id="diaryModal" hidden>
+  <div class="sheet tall">
+    <button type="button" class="back" data-close="diaryModal" aria-label="뒤로">‹</button>
+    <h2>우땅이 그림일기 <small id="diaryCount" style="font-size:14px;color:var(--muted)"></small></h2>
+    <div id="diaryBody" style="display:grid;gap:8px"></div>
+  </div>
+</div>
+
+<div class="modal" id="focusModal" hidden>
+  <div class="sheet">
+    <button type="button" class="back" data-close="focusModal" aria-label="뒤로">‹</button>
+    <h2>집중 타이머</h2>
+    <p id="focusMsg"></p>
+    <div class="pick2" id="focusPick"><button data-min="25"><b>25분</b>바나나 5개</button><button data-min="50"><b>50분</b>바나나 10개</button></div>
+    <button class="ghost" id="focusStop">그만하기</button>
+  </div>
+</div>
+
 <script>
 const F = __FRAMES__;
 const $ = id => document.getElementById(id);
@@ -193,6 +308,7 @@ function openL(id) {
 function hideL(id) {
   $(id).hidden = true;
   if (id === "game" && G) { G = null; say("다음에 또 놀자!", 2.5); }
+  if (id === "match" && M) { M = null; say("다음에 또 놀자!", 2.5); }
   if (id === "nameModal" && !owner) setOwner("주인님");
 }
 function closeL(id) {
@@ -222,19 +338,24 @@ function setOwner(n) {
 /* ── 키우기 상태 (이 휴대폰 브라우저에 저장) ── */
 const SKEY = "woo-state-v1";
 const today = () => { const d = new Date(); return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate(); };
-let S = { bananas: 10, full: 70, mood: 70, last: Date.now(), day: "", streak: 0, luckDay: "", best: 0 };
+let S = { bananas: 10, full: 70, mood: 70, last: Date.now(), day: "", streak: 0, luckDay: "", best: 0,
+  exp: 0, lvShown: 0, sinceTs: 0, owned: [], wear: ["", "", ""], ach: {}, attendTotal: 0, snackCnt: 0, petTotal: 0,
+  playCnt: 0, matchCnt: 0, bestMatch: 0, focusCnt: 0, focusMin: 0, focusUntil: 0, focusLen: 0,
+  dirt: 0, tired: 0, bathCnt: 0, tuckCnt: 0, bathDay: "", tuckDay: "", eventDay: "", eventCnt: 0, noWeather: false, seenFx: [], diary: [] };
 try { Object.assign(S, JSON.parse(localStorage.getItem(SKEY) || "{}")); } catch (e) {}
 function save() { S.last = Date.now(); try { localStorage.setItem(SKEY, JSON.stringify(S)); } catch (e) {} }
 const clamp = v => Math.max(0, Math.min(100, v));
 // 자리 비운 동안 천천히 줄어듦 (최대 12시간치)
+let AWAY_H = 0;
 (function away() {
-  const h = Math.min((Date.now() - (S.last || Date.now())) / 3600000, 12);
+  const h = Math.min((Date.now() - (S.last || Date.now())) / 3600000, 12); AWAY_H = h;
   S.full = clamp(S.full - h * 6); S.mood = clamp(S.mood - h * 4);
 })();
 function color(v) { return v < 30 ? "var(--warn)" : v < 60 ? "#f2b84b" : "#6cc56a"; }
 function drawStats() {
   $("bananas").textContent = "🍌 " + S.bananas;
-  for (const [id, v] of [["gFull", S.full], ["gMood", S.mood]]) {
+  if (typeof lvNow === "function") $("lvBtn").textContent = "Lv." + lvNow();
+  for (const [id, v] of [["gFull", S.full], ["gMood", S.mood], ["gClean", 100 - S.dirt], ["gEnergy", 100 - S.tired]]) {
     const g = $(id); g.querySelector(".v").textContent = Math.round(v);
     const f = g.querySelector(".fill"); f.style.width = v + "%"; f.style.background = color(v);
     g.classList.toggle("low", v < 30);
@@ -252,6 +373,9 @@ let blinkAt = performance.now() + 3000, blinkTill = 0;
 function setMode(m, sec) { mode = m; modeStart = performance.now(); modeUntil = modeStart + sec*1000; }
 
 function next() {
+  if (bathing) { modeUntil = performance.now() + 3600e3; return; }
+  if (mode === "sleep" && tucked) return wakeTucked();
+  if (focusing() && ["sit","sleep","idle","walk","laugh","shy","wave","st_me","st_surprise","st_lounge"].includes(mode)) return setMode("sit", rnd(20,40));
   switch (mode) {
     case "st_bow": return setMode("wave", rnd(2.5,3.2));
     case "st_cry": say(pick(["으앙… 벌 서고 있을게…", "팔 아파… 흑흑"]), 3); return setMode("punish", rnd(4.5,5.5));
@@ -262,6 +386,9 @@ function next() {
       return setMode("idle", rnd(1.5,3));
   }
   if (stay) return setMode("idle", rnd(3,5));
+  if (new Date().getHours() < 6 && Math.random() < .45) return Math.random() < .6 ? setMode("sleep", rnd(15,30)) : setMode("sit", rnd(8,14)); // 새벽엔 졸려
+  if (sleepy() && Math.random() < .35) return setMode(pick(["sleep","sit"]), rnd(10,18)); // 졸려
+  if ((S.mood < 30 || S.full < 20) && Math.random() < .35) return setMode(pick(["st_lounge","sit"]), rnd(6,10)); // 시무룩
   const r = Math.random();
   if (mode === "walk" && r < .45) return setMode("idle", rnd(2,4));
   if (r < .08) return setMode("st_lounge", rnd(5,9));
@@ -272,13 +399,16 @@ function next() {
   setMode("walk", rnd(4,9));
 }
 
+let curSeq = "idle", curIdx = 0; // 지금 프레임 (꾸미기 아이템 위치용)
 function frame(now) {
-  const t = (now - modeStart)/1000;
-  const seq = s => F[s][Math.floor(t*FPS[s]) % F[s].length];
+  const t = Math.max(0, now - modeStart)/1000; // rAF 시각이 setMode 직전일 수 있음 → 음수 번호로 빈 그림이 나오던 문제
+  const one = (s, i) => { curSeq = s; curIdx = i; return F[s][i]; };
+  const seq = s => one(s, Math.floor(t*FPS[s]) % F[s].length);
   if (now > blinkAt) { blinkTill = now + 140; blinkAt = now + rnd(2500,6000); }
   const blink = now < blinkTill;
-  if (mode === "idle") return blink ? F.blink[0] : seq("idle");
-  if (mode === "sit") return blink ? F.sitblink[0] : seq("sit");
+  if (mode === "idle") return blink ? one("blink", 0) : seq("idle");
+  if (mode === "sit") return blink ? one("sitblink", 0) : seq("sit");
+  if (mode === "bath") return now - lastRub < 500 ? seq("shy") : seq("idle");
   return seq(mode);
 }
 
@@ -292,6 +422,7 @@ function say(text, sec) {
 
 /* ── 시간대 대사 (휴대폰 시계 기준) ── */
 const SLOTS = [
+  [0, 6*60, n => ["벌써 새벽이야… "+n+" 이제 자자", "하암… "+n+" 안 졸려?"]],
   [9*60, 10*60, n => [n+" 좋은 아침!", n+" 아침 먹었어?"]],
   [11*60+30, 12*60, n => [n+" 점심 뭐 먹어?", "배고프다… "+n+" 밥 먹으러 가자!", n+" 나도 밥줘"]],
   [13*60, 13*60+30, n => [n+" 일하자", n+" 졸리면 기지개 쭉~"]],
@@ -309,12 +440,16 @@ function randomLine() {
   const n = voc(), i = slotNow();
   if (S.full < 30 && Math.random() < .7) return pick([n+" 배고파… 🍌", "꼬르륵… "+n+" 간식 줘~", "바나나 먹고 싶다…"]);
   if (S.mood < 30 && Math.random() < .7) return pick([n+" 심심해…", n+" 나랑 놀아줘…", "시무룩…"]);
+  { const c = careLine(); if (c) return c; }
+  if (Math.random() < .15) return seasonLine();
+  if (Math.random() < .15) { const w = wearLine(); if (w) return w; }
+  if (Math.random() < .2) return affectionLine();
   if (i >= 0 && Math.random() < .6) return pick(SLOTS[i][2](n));
   return pick([n+" 화이팅!", n+" 물 한 잔 마셔~", n+" 사랑해 ♥", n+" 뭐 해?", n+" 잠깐 쉬었다 해~",
     "우땅! "+(owner||"친구")+" 최고!", n+" 허리 쭉 펴!", n+" 나 여기 있어~"]);
 }
 function talkTick(now) {
-  if (!owner || mode === "st_bow") return;
+  if (!owner || mode === "st_bow" || focusing()) return;
   const i = slotNow();
   if (i >= 0) {
     const key = new Date().toDateString() + "#" + i;
@@ -340,12 +475,15 @@ function loop(now) {
   const dt = Math.min((now - last)/1000, .1); last = now;
   if (mode === "walk") {
     const rw = room.clientWidth, pw = pet.clientWidth;
-    x += dir * (42 / Math.max(rw,1)) * dt * (pw/150);
+    x += dir * (42 / Math.max(rw,1)) * dt * (pw/150) * ((S.mood < 30 || S.full < 20) ? .6 : 1) * (S.tired >= 75 ? .75 : 1);
     const lo = (pw*0.35)/rw, hi = 1 - lo;
     if (x < lo) { x = lo; dir = 1; } if (x > hi) { x = hi; dir = -1; }
   }
   if (now > modeUntil) next();
   const src = frame(now); if (woo.src !== src) woo.src = src;
+  placeAcc(curSeq, curIdx); placeCare(curSeq, curIdx);
+  bathTick(now); tuckTick(now); seasonTick(now);
+  extraTick(now);
   pet.style.left = (x*100) + "%";
   pet.classList.toggle("flip", mode === "walk" && dir < 0);
   room.classList.toggle("night", mode === "sleep");
@@ -355,13 +493,16 @@ function loop(now) {
     let bx = p.left + p.width/2 - r.left;
     const bw = bubble.offsetWidth/2 + 8; bx = Math.max(bw, Math.min(r.width - bw, bx));
     bubble.style.left = bx + "px";
-    bubble.style.top = Math.max(bubble.offsetHeight + 6, p.top - r.top + p.height*0.3) + "px";
+    const hat = S.wear[0] && owns(S.wear[0]) ? 0.12 : 0.3; // 모자를 쓰면 말풍선을 조금 더 위로
+    bubble.style.top = Math.max(bubble.offsetHeight + 6, p.top - r.top + p.height*hat) + "px";
   }
   talkTick(now);
   if (now - lastDecay > 60000) {             // 1분마다 조금씩
     lastDecay = now;
     S.full = clamp(S.full - (mode === "sleep" ? .3 : 1));
     S.mood = clamp(S.mood - (mode === "sleep" ? .2 : .7));
+    if (S.dirt >= 70) S.mood = clamp(S.mood - .3);
+    careMinute(); bump("min");
     save(); drawStats();
   }
   requestAnimationFrame(loop);
@@ -370,9 +511,9 @@ function loop(now) {
 /* ── 버튼 ── */
 const busy = () => mode === "st_bow" && !owner;
 const SNACKS = [
-  { e: "🍌", n: "바나나", cost: 1, full: 25, mood: 4, m: "eat", l: ["냠냠! 바나나 최고!", "와 바나나다! 냠냠"] },
-  { e: "🥛", n: "바나나우유", cost: 3, full: 18, mood: 12, m: "eat_milk", l: ["꿀꺽꿀꺽~ 바나나우유 맛있다!", "우유 좋아! 쪼옥~"] },
-  { e: "🍰", n: "바나나케이크", cost: 6, full: 30, mood: 25, m: "eat_cake", l: ["케이크다!! 사랑해 ♥", "생일도 아닌데 케이크! 히히 냠냠"] },
+  { e: "🍌", n: "바나나", cost: 1, full: 25, mood: 4, x: 3, m: "eat", l: ["냠냠! 바나나 최고!", "와 바나나다! 냠냠"] },
+  { e: "🥛", n: "바나나우유", cost: 3, full: 18, mood: 12, x: 5, m: "eat_milk", l: ["꿀꺽꿀꺽~ 바나나우유 맛있다!", "우유 좋아! 쪼옥~"] },
+  { e: "🍰", n: "바나나케이크", cost: 6, full: 30, mood: 25, x: 8, m: "eat_cake", l: ["케이크다!! 사랑해 ♥", "생일도 아닌데 케이크! 히히 냠냠"] },
 ];
 function openSnacks() {
   const box = $("snacks"); box.innerHTML = "";
@@ -386,7 +527,8 @@ function openSnacks() {
 }
 function feed(f) {
   if (S.full >= 95) { setMode("st_me", 1.6); return say("배불러! 이제 못 먹어~", 2.5); }
-  S.bananas -= f.cost; S.full = clamp(S.full + f.full); S.mood = clamp(S.mood + f.mood); save(); drawStats();
+  S.bananas -= f.cost; S.snackCnt++; bump("snack"); S.dirt = clamp(S.dirt + 2); S.full = clamp(S.full + f.full); S.mood = clamp(S.mood + f.mood); save(); drawStats();
+  addExp(f.x);
   setMode(f.m, rnd(5,6.5));
   say(pick(f.l.concat(["고마워 "+voc()+"! 냠냠"])), 3.5);
 }
@@ -399,7 +541,8 @@ let petCount = 0, petDay = "";
 $("aPet").onclick = () => {
   setMode("shy", rnd(3.2,4.2)); say(pick(["헤헤… 부끄러워…", "히히 간지러워~", voc()+" 좋아… ♥", "에헤헤…"]), 3);
   if (petDay !== today()) { petDay = today(); petCount = 0; }
-  if (petCount++ < 10) { S.mood = clamp(S.mood + 6); save(); drawStats(); }
+  S.petTotal++; bump("pet");
+  if (petCount++ < 10) { S.mood = clamp(S.mood + 6); save(); drawStats(); addExp(2); } else save();
 };
 $("aScold").onclick = () => { setMode("st_cry", 2.5); say(pick(["잘못했어… 흑", "미안해 "+voc()+"…"]), 2.5); S.mood = clamp(S.mood - 12); save(); drawStats(); };
 $("mWalk").onclick = () => { stay = false; setMode("walk", rnd(6,10)); };
@@ -425,7 +568,7 @@ $("mLuck").onclick = () => {
   $("luckTitle").textContent = "오늘의 운세";
   $("luckText").textContent = txt; $("luckItem").textContent = item;
   openL("luckModal");
-  if (S.luckDay !== today()) { S.luckDay = today(); S.mood = clamp(S.mood + 5); save(); drawStats(); }
+  if (S.luckDay !== today()) { S.luckDay = today(); S.mood = clamp(S.mood + 5); save(); drawStats(); addExp(3); }
   setMode("wave", 3);
 };
 $("luckClose").onclick = () => closeL("luckModal");
@@ -438,7 +581,7 @@ function showStamps(msg) {
     const d = document.createElement("div"); d.className = "stamp" + (i <= n ? " on" : "");
     d.textContent = i <= n ? "🐵" : i; box.appendChild(d);
   }
-  $("stampMsg").textContent = msg || `연속 ${S.streak}일째 만나는 중! 7일마다 바나나 15개 보너스.`;
+  $("stampMsg").textContent = (msg || `연속 ${S.streak}일째 만나는 중! 7일마다 바나나 15개 보너스.`) + " " + attendGiftLine();
   openL("stampModal");
 }
 $("stampBtn").onclick = () => showStamps();
@@ -448,7 +591,7 @@ function checkIn() {
   const y = new Date(Date.now() - 86400000); const ys = y.getFullYear()+"-"+(y.getMonth()+1)+"-"+y.getDate();
   S.streak = S.day === ys ? S.streak + 1 : 1; S.day = t;
   let gain = 5; if (S.streak % 7 === 0) gain += 15;
-  S.bananas += gain; save(); drawStats();
+  S.bananas += gain; S.attendTotal++; save(); drawStats(); addExp(10);
   showStamps(`오늘 출석! 바나나 ${gain}개를 받았어요.` + (S.streak % 7 === 0 ? " 7일 연속 보너스!" : ""));
   return true;
 }
@@ -458,9 +601,12 @@ const cv = $("cv"); let G = null;
 const gimg = new Image(); gimg.src = F.laugh[2];
 $("aPlay").onclick = () => {
   if (S.full < 15) { setMode("st_lounge", 4); return say("배고파서 못 놀겠어… 간식 먼저!", 3); }
+  openL("playModal");
+};
+function openCatch() {
   openL("game"); $("gStart").hidden = false;
   $("gScore").textContent = 0; $("gTime").textContent = 30;
-};
+}
 $("gGo").onclick = () => {
   $("gStart").hidden = true;
   const r = cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
@@ -511,12 +657,16 @@ function gloop(now) {
 function endGame() {
   const sc = G.score; G = null; closeL("game");
   const isBest = sc > (S.best || 0); if (isBest) S.best = sc;
-  S.bananas += sc; S.mood = clamp(S.mood + Math.min(35, 10 + sc * 2)); S.full = clamp(S.full - 8); save(); drawStats();
+  S.bananas += sc; S.playCnt++; bump("play"); S.dirt = clamp(S.dirt + 3); S.mood = clamp(S.mood + Math.min(35, 10 + sc * 2)); S.full = clamp(S.full - 8); save(); drawStats();
+  addExp(Math.min(20, 3 + Math.floor(sc / 4)));
   setMode(sc >= 10 ? "laugh" : "wave", 3);
   say(sc >= 15 ? `우와 ${sc}개! 최고야 ${voc()}!` : sc >= 6 ? `${sc}개 받았다! 재밌어!` : "헤헤 재밌었어! 또 하자!", 4);
   toast(`바나나 +${sc}` + (isBest ? " · 최고 기록!" : ""));
 }
-pet.onclick = () => {
+pet.onclick = e => {
+  if (bathing) { const [x, y] = roomPt(e); return rub(x, y); }
+  if (tucked && mode === "sleep") return performance.now() - tuckStart < 15000 ? say(pick(["으음… 5분만 더…", "쿨… 조금만 더 잘래…"]), 2.5) : wakeTucked();
+  if (focusing()) return say(`쉿, 집중 중이야! ${focusLeft()}분 남았어`, 2.5);
   if (mode === "sleep") { setMode("sit", rnd(2,4)); return say("하암… 잘 잤다!", 2.5); }
   if (Math.random() < .3) { setMode("st_surprise", 1.8); return say(pick(["깜짝이야!", "앗! 놀랐잖아~", "헉!"]), 2); }
   setMode("st_me", 2.2);
@@ -542,7 +692,518 @@ $("nameForm").addEventListener("submit", e => {
 function tickClock() { const d = new Date(); $("clock").textContent = String(d.getHours()).padStart(2,"0") + ":" + String(d.getMinutes()).padStart(2,"0"); }
 setInterval(tickClock, 10000); tickClock();
 
+/* ══════════ PC 우땅이와 같은 키우기 콘텐츠 ══════════
+   레벨·친밀도 · 꾸미기 · 업적·누적 출석 선물 · 우땅이 수첩 · 짝 맞추기 · 집중 타이머 */
+const ACC = __ACC__, ANCHORS = __ANCHORS__, NOFACE = __NOFACE__, PREV = __ITEMPREV__;
+const midnight = (d = new Date()) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+function daysTogether() { return Math.round((midnight() - (S.sinceTs || midnight())) / 86400000) + 1; }
+function josa(w, a, b) { const c = w.charCodeAt(w.length - 1); return w + (c >= 0xAC00 && c <= 0xD7A3 && (c - 0xAC00) % 28 ? a : b); }
+const ownerOr = () => owner || "친구";
+
+/* ── 레벨 ── */
+const MAXLV = 50;
+const expNeed = l => 40 + 20 * (l - 1);
+function levelOf(exp) { let lv = 1; while (lv < MAXLV && exp >= expNeed(lv)) { exp -= expNeed(lv); lv++; } return lv === MAXLV ? [lv, 0, 0] : [lv, exp, expNeed(lv)]; }
+const TITLES = [[1, "아기 우땅이"], [3, "꼬마 우땅이"], [5, "장난꾸러기 우땅이"], [8, "단짝 우땅이"], [12, "베프 우땅이"], [16, "바나나 박사 우땅이"], [20, "전설의 우땅이"], [30, "우주 최강 우땅이"], [50, "영원한 가족 우땅이"]];
+const titleOf = lv => TITLES.filter(t => lv >= t[0]).pop()[1];
+const lvNow = () => levelOf(S.exp)[0];
+const notices = []; let pendingLv = 0, lastNotice = 0;
+function addExp(n) { if (n <= 0) return; S.exp += n; const lv = lvNow(); if (lv > S.lvShown) pendingLv = lv; save(); drawStats(); }
+function celebrate(lv) {
+  let gift = 0, newTitle = false;
+  for (let l = S.lvShown + 1; l <= lv; l++) { gift += 2 * l; newTitle = newTitle || TITLES.some(t => t[0] === l && l > 1); }
+  S.lvShown = lv; pendingLv = 0; dayLog().lv = lv; S.bananas += gift; S.mood = clamp(S.mood + 10); save(); drawStats();
+  setMode("laugh", rnd(3, 3.6));
+  say(newTitle ? `레벨 업! Lv.${lv}! 이제 나는 '${titleOf(lv)}'야! 바나나 ${gift}개 선물!` : `레벨 업! Lv.${lv} 됐어! 바나나 ${gift}개 선물!`, 6);
+  toast(`Lv.${lv} · 바나나 +${gift}`);
+}
+function affectionLine() {
+  const lv = lvNow(), n = voc(), L = [n + " 오늘도 와 줘서 고마워!"];
+  if (lv >= 3) L.push(n + " 목소리 들으면 기분 좋아~", `우리 벌써 ${daysTogether()}일이나 같이 있었어!`);
+  if (lv >= 5) L.push(n + " 힘들면 나한테 말해!", "히히 " + n + " 옆이 제일 좋아");
+  if (lv >= 8) L.push(josa(ownerOr(), "은", "는") + " 내 단짝이야!", n + " 오늘 뭐 했는지 궁금해~");
+  if (lv >= 12) L.push("세상에서 " + josa(ownerOr(), "이", "가") + " 제일 좋아 ♥", n + " 없으면 심심해서 못 살아~");
+  if (lv >= 20) L.push(n + " 우리 평생 같이 있자!", "전설의 우땅이가 된 건 다 " + ownerOr() + " 덕분이야!");
+  return pick(L);
+}
+
+/* ── 꾸미기 ── */
+const SLOTS3 = ["머리", "얼굴", "목"];
+const ITEMS = [
+  ["ribbon", "빨간 리본", 8, 0, "리본 예뻐? 히히"], ["flower", "꽃 핀", 10, 0, "꽃 냄새 난다~ 향기롭지?"],
+  ["sprout", "새싹", 12, 0, "머리에서 새싹이 났어! 쑥쑥 클게!"], ["beanie", "털모자", 25, 0, "따뜻하다~ 겨울 준비 끝!"],
+  ["santa", "산타 모자", 25, 0, "호호호! 선물 줄게~"], ["crown", "왕관", 40, 0, "나 이제 우땅이 왕이야!"],
+  ["glasses", "동그란 안경", 15, 1, "똑똑해 보여? 에헴!"], ["sunglasses", "선글라스", 20, 1, "멋있지? 우땅 스웩~"],
+  ["bowtie", "나비넥타이", 15, 2, "오늘은 신사 우땅이야!"],
+  ["rainbow", "무지개 핀", 0, 0, "무지개처럼 반짝반짝!"], ["bananaband", "바나나 머리띠", 0, 0, "100일 동안 고마워! 바나나 왕이다!"],
+].map(([id, name, price, slot, line]) => ({ id, name, price, slot, line }));
+const GIFT = { rainbow: "누적 출석 30일 선물", bananaband: "누적 출석 100일 선물" };
+const item = id => ITEMS.find(i => i.id === id);
+const owns = id => S.owned.includes(id);
+function giveItem(id) { if (owns(id)) return false; S.owned.push(id); S.wear[item(id).slot] = id; return true; }
+function doItem(it) {
+  if (!owns(it.id)) {
+    if (!it.price) return say(josa(it.name, "은", "는") + " " + GIFT[it.id] + "이야!", 3);
+    if (S.bananas < it.price) { setMode("st_cry", 2.5); return say(`${it.name} 갖고 싶은데… 바나나가 ${it.price - S.bananas}개 모자라…`, 3.5); }
+    S.bananas -= it.price; S.owned.push(it.id); S.wear[it.slot] = it.id; S.mood = clamp(S.mood + 15);
+    addExp(10); setMode("laugh", rnd(2.5, 3.2)); say(`우와! ${it.name} 샀다! ${it.line}`, 4.5);
+  } else if (S.wear[it.slot] === it.id) {
+    S.wear[it.slot] = ""; save(); setMode("idle", 2); say(it.name + " 벗었어!", 2.5);
+  } else {
+    S.wear[it.slot] = it.id; save(); setMode("st_me", 2.2); say(pick(["어때? 어울려?", it.name + " 썼어! 히히", it.line]), 3);
+  }
+  drawStats(); openShop();
+}
+function openShop() {
+  const box = $("shopList"); box.innerHTML = "";
+  SLOTS3.forEach((nm, s) => {
+    const h = document.createElement("h3"); h.textContent = nm; box.appendChild(h);
+    const g = document.createElement("div"); g.className = "items";
+    ITEMS.filter(i => i.slot === s).forEach(it => {
+      const b = document.createElement("button"), on = S.wear[s] === it.id, have = owns(it.id);
+      b.className = "item" + (on ? " on" : "") + (!have && !it.price ? " lock" : "");
+      b.disabled = !have && it.price > 0 && S.bananas < it.price;
+      const tag = on ? "쓰는 중 · 벗기" : have ? "가지고 있음" : it.price ? `🍌 ${it.price}개` : GIFT[it.id];
+      b.innerHTML = `<img src="${PREV[it.id]}" alt=""><span>${it.name}</span><small>${tag}</small>`;
+      b.onclick = () => doItem(it);
+      g.appendChild(b);
+    });
+    box.appendChild(g);
+  });
+  $("shopMsg").textContent = `바나나 ${S.bananas}개 · 사서 씌워 줘요. 한 번 더 누르면 벗어요.`;
+  openL("shopModal");
+}
+$("mShop").onclick = openShop;
+$("takeOff").onclick = () => { S.wear = ["", "", ""]; save(); setMode("idle", 2); say("다 벗었어! 가뿐하다~", 2.5); openShop(); };
+function wearLine() { const on = S.wear.filter(w => w && owns(w)).map(w => item(w).name); if (!on.length) return ""; const n = pick(on); return pick(["내 " + n + " 예쁘지?", n + " 사줘서 고마워 " + voc() + "!", n + " 쓰니까 기분 좋다~"]); }
+// 프레임마다 아이템을 머리 위치에 맞춰 놓기 (프레임 480x600 → 화면 폭)
+const accEls = [...document.querySelectorAll(".pet .acc")];
+function placeAcc(seq, idx) {
+  const a = (ANCHORS[seq] || [])[idx], k = pet.clientWidth / 480;
+  accEls.forEach((el, s) => {
+    const id = S.wear[s], show = a && id && owns(id) && !(s === 1 && NOFACE.includes(seq));
+    if (!show) { if (!el.hidden) el.hidden = true; return; }
+    if (el.dataset.id !== id) { el.src = ACC[id]; el.dataset.id = id; }
+    el.hidden = false;
+    el.style.transform = `translate(${a[0] * k}px,${a[1] * k}px) rotate(${-a[3]}deg) scale(${a[2] * k}) translate(-200px,-330px)`;
+  });
+}
+
+/* ── 업적 ── */
+const ACH = [
+  ["snack1", "🍌", "첫 간식", "간식을 처음 줬어요", 3, "", () => S.snackCnt >= 1], ["snack50", "🍰", "미식가 우땅이", "간식을 50번 줬어요", 20, "", () => S.snackCnt >= 50],
+  ["pet100", "🤲", "쓰담쓰담 장인", "쓰다듬기 100번", 15, "", () => S.petTotal >= 100], ["play1", "🎮", "같이 놀자!", "게임을 처음 했어요", 3, "", () => S.playCnt >= 1],
+  ["play30", "🏆", "놀이 대장", "게임 30판", 20, "", () => S.playCnt >= 30], ["catch30", "🧺", "바나나 받기 달인", "바나나 받기 한 판에 30개 이상", 15, "", () => S.best >= 30],
+  ["match1", "🃏", "짝꿍 찾기", "짝 맞추기를 처음 끝냈어요", 5, "", () => S.matchCnt >= 1], ["match12", "🧠", "기억력 천재", "짝 맞추기를 12번 안에 끝냈어요", 20, "", () => S.bestMatch > 0 && S.bestMatch <= 12],
+  ["attend7", "📅", "일주일 출석", "누적 출석 7일", 10, "", () => S.attendTotal >= 7], ["attend30", "🌈", "한 달 출석", "누적 출석 30일 · 무지개 핀 선물", 30, "rainbow", () => S.attendTotal >= 30],
+  ["attend100", "👑", "백일 출석", "누적 출석 100일 · 바나나 머리띠 선물", 50, "bananaband", () => S.attendTotal >= 100],
+  ["lv5", "⭐", "장난꾸러기", "Lv.5 달성", 10, "", () => lvNow() >= 5], ["lv10", "🌟", "단짝 그 이상", "Lv.10 달성", 20, "", () => lvNow() >= 10],
+  ["lv20", "💫", "전설의 시작", "Lv.20 달성", 40, "", () => lvNow() >= 20], ["items3", "🎀", "멋쟁이", "꾸미기 아이템 3개 모으기", 10, "", () => S.owned.length >= 3],
+  ["itemsAll", "💎", "패셔니스타", "파는 꾸미기 아이템 전부 모으기", 30, "", () => ITEMS.every(i => !i.price || owns(i.id))],
+  ["focus1", "⏱️", "집중 시작", "집중 타이머를 처음 끝냈어요", 5, "", () => S.focusCnt >= 1], ["focus10", "🎯", "집중왕", "집중 타이머 10번 끝내기", 20, "", () => S.focusCnt >= 10],
+  ["rich300", "💰", "바나나 부자", "바나나 300개 모으기", 15, "", () => S.bananas >= 300], ["night", "🦉", "올빼미", "밤 12시~새벽 4시에 함께 있기", 5, "", () => new Date().getHours() < 4],
+  ["day100", "💝", "100일의 우땅이", "함께한 지 100일", 30, "", () => daysTogether() >= 100],
+].map(([id, icon, name, desc, bananas, gift, done]) => ({ id, icon, name, desc, bananas, gift, done }));
+function checkAch() {
+  let any = false;
+  for (const a of ACH) {
+    if (S.ach[a.id] || !a.done()) continue;
+    S.ach[a.id] = today(); S.bananas += a.bananas; any = true;
+    let m = `업적 달성! '${a.name}' 바나나 ${a.bananas}개 받았어!`;
+    if (a.gift && giveItem(a.gift)) m += ` 선물로 ${josa(item(a.gift).name, "을", "를")} 받았어! 바로 써 볼게!`;
+    notices.push(m);
+  }
+  if (any) { save(); drawStats(); }
+}
+function attendGiftLine() {
+  for (const [d, n] of [[30, "무지개 핀"], [100, "바나나 머리띠"]]) if (S.attendTotal < d) return `누적 출석 ${S.attendTotal}일 · ${d}일 선물(${n})까지 ${d - S.attendTotal}일!`;
+  return `누적 출석 ${S.attendTotal}일! 언제나 고마워~`;
+}
+
+/* ── 우땅이 수첩 ── */
+function openBook() {
+  const [lv, cur, need] = levelOf(S.exp), esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const got = ACH.filter(a => S.ach[a.id]).length;
+  let h = `<div class="bk-top"><img src="${PREV.none}" alt=""><div style="flex:1"><b>Lv.${lv} ${titleOf(lv)}</b><p>${esc(josa(ownerOr(), "이랑", "랑"))} 함께한 지 ${daysTogether()}일째</p>
+    <div class="xbar"><i style="width:${need ? cur * 100 / need : 100}%"></i></div><p>${need ? `경험치 ${cur} / ${need} · 다음 레벨까지 ${need - cur}` : "최고 레벨!"}</p></div></div>`;
+  h += `<div class="stats">` + [["바나나", S.bananas], ["누적 출석", S.attendTotal + "일"], ["연속 출석", S.streak + "일"], ["간식", S.snackCnt + "번"], ["쓰다듬기", S.petTotal + "번"],
+    ["게임", S.playCnt + "판"], ["바나나 받기 최고", (S.best || 0) + "개"], ["짝 맞추기 최고", S.bestMatch ? S.bestMatch + "번" : "-"], ["집중", S.focusCnt + "번"],
+    ["목욕", S.bathCnt + "번"], ["이불 덮기", S.tuckCnt + "번"], ["그림일기", diaryDays() + "일"]]
+    .map(([k, v]) => `<div>${k}<b>${v}</b></div>`).join("") + `</div>`;
+  h += `<h3>업적 <small>${got} / ${ACH.length}</small></h3><div class="achs">` + ACH.map(a => S.ach[a.id]
+    ? `<div class="ach"><i>${a.icon}</i><div>${a.name}<span>${a.desc} · ${S.ach[a.id]} 달성</span></div></div>`
+    : `<div class="ach no"><i>${a.icon}</i><div>${a.name}<span>${a.desc} · 바나나 ${a.bananas}개</span></div></div>`).join("") + `</div>`;
+  h += `<h3>꾸미기 도감 <small>${S.owned.length} / ${ITEMS.length}</small></h3><div class="items">` + ITEMS.map(it => owns(it.id)
+    ? `<div class="item"><img src="${PREV[it.id]}" alt=""><span>${it.name}</span><small>${S.wear.includes(it.id) ? "쓰는 중" : SLOTS3[it.slot]}</small></div>`
+    : `<div class="item lock"><img src="${ACC[it.id]}" alt=""><span>???</span><small>${it.price ? "🍌 " + it.price + "개" : GIFT[it.id]}</small></div>`).join("") + `</div>`;
+  $("bookBody").innerHTML = h;
+  openL("bookModal");
+}
+$("mBook").onclick = openBook; $("lvBtn").onclick = openBook;
+$("mInfo").onclick = () => {
+  const [lv, cur, need] = levelOf(S.exp);
+  setMode("st_me", 2.2);
+  say(`Lv.${lv} ${titleOf(lv)} · ${josa(ownerOr(), "이랑", "랑")} 함께한 지 ${daysTogether()}일째! ${need ? `다음 레벨까지 경험치 ${need - cur}` : "최고 레벨이야!"}`, 6);
+};
+
+/* ── 짝 맞추기 ── */
+const POSES = [["idle", 0], ["laugh", 2], ["sit", 0], ["sleep", 3], ["eat", 2], ["shy", 2], ["wave", 2], ["punish", 0]];
+let M = null;
+function startMatch() {
+  const deck = [...POSES.keys(), ...POSES.keys()].sort(() => Math.random() - .5), g = $("mGrid");
+  g.innerHTML = ""; M = { open: [], moves: 0, pairs: 0, busy: false };
+  deck.forEach(k => {
+    const c = document.createElement("div"); c.className = "mc"; c.dataset.k = k;
+    c.innerHTML = `<div class="in"><div class="f bk">🍌</div><div class="f fr"><img src="${F[POSES[k][0]][POSES[k][1]]}" alt=""></div></div>`;
+    c.onclick = () => mflip(c); g.appendChild(c);
+  });
+  $("mMoves").textContent = 0; $("mPairs").textContent = 0; $("mStart").hidden = true;
+}
+function mflip(c) {
+  if (!M || M.busy || c.classList.contains("up") || c.classList.contains("done")) return;
+  c.classList.add("up"); M.open.push(c); if (M.open.length < 2) return;
+  M.moves++; $("mMoves").textContent = M.moves;
+  const [a, b] = M.open; M.open = [];
+  if (a.dataset.k === b.dataset.k) {
+    a.classList.add("done"); b.classList.add("done"); M.pairs++; $("mPairs").textContent = M.pairs;
+    if (M.pairs === POSES.length) setTimeout(endMatch, 450);
+  } else { M.busy = true; setTimeout(() => { a.classList.remove("up"); b.classList.remove("up"); M.busy = false; }, 900); }
+}
+function endMatch() {
+  const mv = M.moves, n = Math.max(3, Math.min(18, 26 - mv)); M = null; closeL("match");
+  const best = !S.bestMatch || mv < S.bestMatch; if (best) S.bestMatch = mv;
+  S.matchCnt++; S.playCnt++; bump("play"); S.dirt = clamp(S.dirt + 3); S.bananas += n; S.mood = clamp(S.mood + Math.min(35, 10 + n * 2)); S.full = clamp(S.full - 8);
+  addExp(Math.min(20, 3 + Math.floor(n / 4)));
+  setMode("laugh", 3); say(`${mv}번 만에 다 맞혔어! 바나나 ${n}개 고마워 ${voc()}!` + (best ? " 최고 기록이야!" : ""), 4.5);
+  toast(`바나나 +${n}` + (best ? " · 최고 기록!" : ""));
+}
+$("mGo").onclick = startMatch;
+$("mBack").onclick = () => closeL("match");
+$("pCatch").onclick = () => { closeL("playModal"); setTimeout(openCatch, 60); };
+$("pMatch").onclick = () => { closeL("playModal"); setTimeout(() => { openL("match"); $("mStart").hidden = false; $("mGrid").innerHTML = ""; }, 60); };
+
+/* ── 집중 타이머 ── */
+const focusing = () => S.focusUntil > Date.now();
+const focusLeft = () => Math.max(1, Math.ceil((S.focusUntil - Date.now()) / 60000));
+function openFocus() {
+  const on = focusing();
+  $("focusMsg").textContent = on ? `${S.focusLen}분 집중 중 · ${focusLeft()}분 남았어요.` : "집중하는 동안 우땅이가 옆에 조용히 앉아 기다려요. 끝나면 바나나를 줘요!";
+  $("focusPick").hidden = on; $("focusStop").hidden = !on;
+  openL("focusModal");
+}
+$("mFocus").onclick = openFocus;
+document.querySelectorAll("#focusPick button").forEach(b => b.onclick = () => {
+  const m = +b.dataset.min; S.focusLen = m; S.focusUntil = Date.now() + m * 60000; save(); closeL("focusModal");
+  stay = false; setMode("sit", rnd(20, 40)); say(`좋아! ${m}분 집중 시작! 옆에서 조용히 기다릴게. 끝나면 바나나 ${m / 5}개 줄게~`, 4.5);
+});
+$("focusStop").onclick = () => { S.focusUntil = 0; save(); closeL("focusModal"); setMode("idle", 2); say("집중 그만! 조금 쉬었다 해도 괜찮아~", 3); };
+function focusTick() {
+  const b = $("focusB");
+  if (S.focusUntil && Date.now() >= S.focusUntil) {
+    const m = S.focusLen || 25, ban = m / 5; S.focusUntil = 0; S.bananas += ban; S.focusCnt++; S.focusMin += m; bump("focus", m); addExp(ban * 2);
+    setMode("laugh", rnd(3, 3.6)); say(`${m}분 집중 끝! 수고했어 ${voc()}! 바나나 ${ban}개 선물이야. 5분만 쉬었다 하자~`, 7);
+    toast(`집중 끝! 바나나 +${ban}`); try { navigator.vibrate && navigator.vibrate([120, 80, 120]); } catch (e) {}
+  }
+  const on = focusing(); b.hidden = !on; if (on) b.textContent = `⏱ ${focusLeft()}분`;
+}
+
+/* ── 매 틱: 켜 두기 경험치 · 업적 · 축하 · 집중 ── */
+let lastIdleExp = performance.now(), lastAchScan = 0;
+function extraTick(now) {
+  if (now - lastIdleExp > 15 * 60000) { lastIdleExp = now; addExp(1); }
+  if (now - lastAchScan > 2000) { lastAchScan = now; if (owner) checkAch(); focusTick(); $("lvBtn").textContent = "Lv." + lvNow(); }
+  if (!bubble.classList.contains("hide") || layers.length || ["eat", "eat_milk", "eat_cake", "st_cry", "punish", "sleep"].includes(mode)) return;
+  if (pendingLv) return celebrate(pendingLv);
+  if (notices.length && now - lastNotice > 2000) { lastNotice = now; setMode("laugh", rnd(2.5, 3.2)); say(notices.shift(), 5.5); }
+}
+
+/* ══════════ 계절 · 날짜 이벤트 · 돌봄(씻기기·재우기) · 그림일기 (PC 우땅이와 같음) ══════════ */
+const FX = __FX__;
+const FXI = {}; for (const k in FX) { FXI[k] = new Image(); FXI[k].src = FX[k]; }
+const pad2 = n => String(n).padStart(2, "0");
+const isoDay = (d = new Date()) => d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+
+/* ── 그림일기 기록 ── */
+function dayLog() {
+  const t = isoDay(), D = S.diary;
+  if (!D.length || D[D.length - 1].d !== t) { D.push({ d: t }); while (D.length > 60) D.shift(); }
+  return D[D.length - 1];
+}
+function bump(k, n = 1) { const r = dayLog(); r[k] = (r[k] || 0) + n; }
+const diaryDays = () => S.diary.filter(r => r.min > 0).length;
+
+/* ── 돌봄 수치 (0 = 깨끗 · 쌩쌩) ── */
+const sleepy = () => S.tired >= 75, dirty = () => S.dirt >= 50;
+function careMinute() {
+  if (tucked) return;
+  if (mode === "sleep") S.tired = clamp(S.tired - 3);
+  else { S.dirt = clamp(S.dirt + 0.18); S.tired = clamp(S.tired + 0.22); }
+}
+(function careAway() { const h = AWAY_H; if (h >= 1) S.tired = clamp(S.tired - h * 15); S.dirt = clamp(S.dirt + Math.min(h, 12)); })();
+function careLine() {
+  const n = voc();
+  if (S.dirt >= 70 && Math.random() < .6) return pick(["몸이 근질근질해… " + n + " 씻겨 줘~", "킁킁… 나한테서 냄새나?", "목욕하고 싶다… 거품 목욕!"]);
+  if (sleepy() && Math.random() < .6) return pick(["하암… 졸려…", n + " 이불 덮어 줄래? 하암~", "눈이 자꾸 감겨…"]);
+  return "";
+}
+
+/* ── 효과 조각 (방 전체 캔버스) ── */
+const fxc = $("fxc"), fctx = fxc.getContext("2d");
+let parts = [], showKind = "", showUntil = 0, showAcc = 0, fxLast = performance.now();
+const WEATHER = {
+  snow: [["snow"], 0, [30, 60], [10, 20], 20, .8, 5, 40],
+  petal: [["petal"], 0, [32, 58], [10, 16], 28, 2.2, 4, 35],
+  leaf: [["maple", "ginkgo"], 0, [38, 70], [12, 20], 34, 2.6, 3, 35],
+  bubble: [["bubble"], 1, [26, 52], [11, 24], 16, 0, 3, 30],
+  confetti: [["conf0", "conf1", "conf2", "conf3", "star"], 0, [60, 100], [7, 12], 26, 5, 9, 25],
+  xmas: [["snow", "snow", "snow", "star"], 0, [30, 60], [10, 20], 20, 1, 5.5, 45],
+  heart: [["heart", "heart", "star"], 1, [32, 58], [11, 19], 20, .6, 3, 30],
+  spooky: [["candy", "maple", "star"], 0, [45, 78], [11, 19], 30, 2.6, 3, 30],
+}; // [그림, 위로?, 속도, 크기, 흔들림, 회전, 초당 개수, 초]
+function sizeFx() {
+  const r = room.getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 2);
+  if (fxc.width !== Math.round(r.width * dpr)) { fxc.width = Math.round(r.width * dpr); fxc.height = Math.round(r.height * dpr); }
+  return [r.width, r.height, dpr];
+}
+function startShow(kind) { if (!WEATHER[kind]) return; showKind = kind; showUntil = performance.now() + WEATHER[kind][7] * 1000; showAcc = 0; }
+function spawn(kind, W, H) {
+  const [spr, rise, sp, sz, sway, spin] = WEATHER[kind], size = rnd(sz[0], sz[1]), v = rnd(sp[0], sp[1]);
+  parts.push({ k: pick(spr), x: rnd(0, W), y: rise ? H + size : -size, vx: rnd(-6, 6), vy: rise ? -v : v, g: 0, size, sway: rnd(.4, 1) * sway,
+    ph: rnd(0, 6), rot: rise ? rnd(-.3, .3) : rnd(-3, 3), vr: rnd(-spin, spin), age: 0, life: (H + size * 2) / v + 1, fade: true });
+}
+function bubbleAt(x, y) {
+  parts.push({ k: "bubble", x, y, vx: rnd(-10, 10), vy: rnd(-34, -16), g: 0, size: rnd(9, 16), sway: rnd(3, 8), ph: rnd(0, 6), rot: 0, vr: 0, age: 0, life: rnd(1.2, 2.2), fade: true });
+}
+function burst(kind, n) {
+  const r = room.getBoundingClientRect(), p = pet.getBoundingClientRect();
+  for (let i = 0; i < n; i++) {
+    const a = rnd(-Math.PI, 0), s = rnd(40, 90);
+    parts.push({ k: kind, x: p.left - r.left + p.width * rnd(.3, .7), y: p.top - r.top + p.height * rnd(.25, .5), vx: Math.cos(a) * s, vy: Math.sin(a) * s,
+      g: 60, size: rnd(11, 18), sway: 0, ph: 0, rot: rnd(-.4, .4), vr: rnd(-2, 2), age: 0, life: rnd(.9, 1.5), fade: false });
+  }
+}
+function fxLoop(now) {
+  const dt = Math.min((now - fxLast) / 1000, .1); fxLast = now;
+  const [W, H, dpr] = sizeFx();
+  if (showKind) {
+    if (now > showUntil || document.hidden) showKind = "";
+    else { showAcc += WEATHER[showKind][6] * dt * W / 400; while (showAcc >= 1) { showAcc--; spawn(showKind, W, H); } }
+  }
+  if (parts.length || fxc.dataset.dirty) {
+    fctx.setTransform(dpr, 0, 0, dpr, 0, 0); fctx.clearRect(0, 0, W, H);
+    parts = parts.filter(p => {
+      p.age += dt; p.vy += p.g * dt; p.x += (p.vx + p.sway * Math.sin(p.age * 1.7 + p.ph)) * dt; p.y += p.vy * dt; p.rot += p.vr * dt;
+      if (p.age >= p.life || p.y > H + p.size * 2 || p.y < -p.size * 3) return false;
+      let a = 1; if (p.fade && p.age < .6) a = p.age / .6; a = Math.min(a, (p.life - p.age) / .8);
+      fctx.globalAlpha = Math.max(0, Math.min(1, a));
+      fctx.translate(p.x, p.y); fctx.rotate(p.rot); fctx.drawImage(FXI[p.k], -p.size / 2, -p.size / 2, p.size, p.size); fctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      return true;
+    });
+    fctx.globalAlpha = 1; fxc.dataset.dirty = parts.length ? "1" : "";
+  }
+  requestAnimationFrame(fxLoop);
+}
+requestAnimationFrame(fxLoop);
+
+/* ── 계절 · 날짜 이벤트 ── */
+const LUNAR = { seollal: { 2026: "02-17", 2027: "02-06", 2028: "01-26", 2029: "02-13", 2030: "02-03" },
+  chuseok: { 2026: "09-25", 2027: "09-15", 2028: "10-03", 2029: "09-22", 2030: "09-12" } };
+const EVENTS = [
+  ["01-01", "새해 첫날", "🎍", "confetti", "", 10, "wave", n => ["새해 복 많이 받아 " + n + "! 올해도 잘 부탁해!", "새해다! " + n + " 올해는 꼭 좋은 일만 있을 거야!"]],
+  ["seollal", "설날", "🧧", "confetti", "bokjumeoni", 10, "st_bow", n => ["설날이다! 새해 복 많이 받아~ 세배 꾸벅! 세뱃돈은 바나나로 줘~", n + " 떡국 먹었어? 새해 복 많이 받아!"]],
+  ["02-14", "발렌타인데이", "💝", "heart", "", 5, "shy", n => ["오늘 발렌타인데이래! 초콜릿 대신 내 마음 줄게 ♥", n + " 사랑해! 헤헤 ♥"]],
+  ["05-05", "어린이날", "🎈", "bubble", "", 10, "laugh", n => ["어린이날이다! 오늘은 내가 주인공이야~", "어린이날 선물은… 바나나 케이크! 헤헤"]],
+  ["chuseok", "추석", "🌕", "leaf", "bokjumeoni", 10, "st_bow", n => ["추석이다! 보름달 보면서 소원 빌자~", n + " 송편 먹었어? 나는 바나나 송편!"]],
+  ["10-31", "할로윈", "🎃", "spooky", "witch", 5, "st_surprise", n => ["트릭 오어 트릿! 바나나 안 주면 장난칠 거야~", "으스스~ 할로윈이다! 마녀 우땅이 등장!"]],
+  ["11-11", "빼빼로데이", "🍫", "heart", "", 5, "shy", n => ["빼빼로데이다! 빼빼로 대신 바나나 하나 줄래?", n + " 빼빼로 받았어? 나는 " + n + " 줄래~"]],
+  ["12-24", "크리스마스 이브", "🎄", "xmas", "rudolph", 10, "wave", n => ["내일은 크리스마스! 산타 할아버지 오시려나?", n + " 크리스마스 이브야! 설렌다~"]],
+  ["12-25", "크리스마스", "🎁", "xmas", "rudolph", 15, "laugh", n => ["메리 크리스마스 " + n + "! 산타 할아버지 다녀가셨나 봐!", "메리 크리스마스! " + n + " 선물은 나야~ 헤헤"]],
+  ["12-31", "한 해 마지막 날", "🔔", "confetti", "", 5, "wave", n => ["올해 마지막 날이야! " + n + " 올해도 정말 고마웠어!", "한 해 동안 수고했어 " + n + "!"]],
+].map(([md, name, icon, fx, gift, bananas, anim, lines]) => ({ md, name, icon, fx, gift, bananas, anim, lines }));
+function eventOn(d = new Date()) {
+  const md = pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+  return EVENTS.find(e => e.md === md || (LUNAR[e.md] && LUNAR[e.md][d.getFullYear()] === md));
+}
+function nextEvent(d = new Date()) {
+  for (let i = 1; i <= 60; i++) { const e = eventOn(new Date(d.getFullYear(), d.getMonth(), d.getDate() + i)); if (e) return [e, i]; }
+  return null;
+}
+function seasonOf(d = new Date()) {
+  const m = d.getMonth() + 1;
+  if (m === 12 || m <= 2) return m === 12 && d.getDate() >= 20 && d.getDate() <= 25 ? ["겨울", "xmas", "❄️"] : ["겨울", "snow", "❄️"];
+  return m <= 5 ? ["봄", "petal", "🌸"] : m <= 8 ? ["여름", "bubble", "🫧"] : ["가을", "leaf", "🍁"];
+}
+const todayFx = () => { const e = eventOn(); return e ? e.fx : seasonOf()[1]; };
+const SHOWLINE = {
+  snow: ["와 눈이다! 눈사람 만들자~", "펑펑 내린다! 손 시렵지?", "첫눈일까? 소원 빌자!"], petal: ["벚꽃이 날린다~ 예쁘다!", "꽃비다! 같이 꽃구경 가자", "봄바람 살랑살랑~"],
+  bubble: ["비눗방울이다! 퐁퐁~", "여름이다! 시원한 바나나 셰이크 먹고 싶다"], leaf: ["낙엽이 바스락바스락~", "단풍 예쁘다! 가을이네"],
+  xmas: ["화이트 크리스마스다!", "메리 크리스마스!", "산타 할아버지 언제 오지?"], confetti: ["빵빠레~ 축하해!", "꽃가루 펑펑! 신난다~"],
+  heart: ["사랑이 퐁퐁~ ♥"], spooky: ["으스스~ 사탕 줘!", "트릭 오어 트릿!"],
+};
+function playShow(kind, talk) {
+  startShow(kind); dayLog().w = kind; if (!S.seenFx.includes(kind)) S.seenFx.push(kind); save();
+  if (talk && !focusing() && !tucked && !bathing) {
+    if (["idle", "walk", "sit"].includes(mode)) setMode(pick(["laugh", "wave"]), rnd(2.5, 3.2));
+    say(pick(SHOWLINE[kind]), 4); nextTalk = performance.now() + rnd(60, 120) * 1000;
+  }
+}
+function seasonLine() {
+  const n = voc(), e = eventOn(); if (e) return pick(e.lines(n));
+  const ne = nextEvent(); if (ne && ne[1] <= 7) return `${ne[0].name}까지 ${ne[1]}일 남았어! 두근두근`;
+  return pick({ 겨울: [n + " 감기 조심해! 따뜻하게 입어~", "추워… 털모자 쓰고 싶다", "군고구마 먹고 싶다~"], 봄: ["봄이다! 꽃 냄새 난다~", n + " 오늘 날씨 좋지?"],
+    여름: ["더워… 바나나 아이스크림!", n + " 물 많이 마셔!"], 가을: ["가을엔 책 읽기 좋아~", "선선하다~ 산책 가고 싶다"] }[seasonOf()[0]]);
+}
+function celebrateEvent(e) {
+  S.eventDay = isoDay(); S.eventCnt++; S.bananas += e.bananas; dayLog().ev = e.name;
+  let s = pick(e.lines(voc())) + ` 바나나 ${e.bananas}개 받았어!`;
+  if (e.gift && giveItem(e.gift)) s += ` 선물로 ${josa(item(e.gift).name, "을", "를")} 받았어! 바로 써 볼게!`;
+  addExp(5); drawStats(); setMode(e.anim, rnd(2.5, 3.2)); say(e.icon + " " + s, 7); toast(`${e.icon} ${e.name} · 바나나 +${e.bananas}`);
+  if (!S.noWeather) playShow(e.fx, false);
+}
+let nextShowAt = performance.now() + 25000;
+function seasonTick(now) {
+  if (!owner || !bubble.classList.contains("hide") || layers.length) return;
+  const e = eventOn();
+  if (e && S.eventDay !== isoDay() && ["idle", "walk", "sit"].includes(mode) && now > 9000) return celebrateEvent(e);
+  if (S.noWeather || focusing() || now < nextShowAt || showKind || document.hidden) return;
+  nextShowAt = now + (e ? rnd(20, 40) : rnd(30, 60)) * 60000; playShow(todayFx(), true);
+}
+$("mSeason").textContent = seasonOf()[2] + " 계절";
+$("mSeason").onclick = () => {
+  const [nm] = seasonOf(), e = eventOn(), ne = nextEvent();
+  playShow(todayFx(), true); nextShowAt = performance.now() + rnd(30, 60) * 60000;
+  toast("지금은 " + nm + (e ? ` · 오늘은 ${e.name} ${e.icon}` : ne ? ` · ${ne[0].name}까지 ${ne[1]}일` : ""));
+};
+
+/* ── 씻기기: 손가락(마우스)으로 우땅이를 문질러요 ── */
+let bathing = false, bathStart = 0, lastRub = 0, bathNeed = 0, bathPrompt = false, rubAcc = 0, lastPt = null, lastAutoBub = 0;
+function startBath() {
+  if (focusing()) return say("집중 끝나고 씻자! 쉿~", 2.5);
+  if (S.dirt < 5) { setMode("st_me", 2.2); return say("나 이미 깨끗해! 반짝반짝~", 2.5); }
+  tucked = false; bathing = true; bathPrompt = false; bathStart = performance.now(); bathNeed = Math.max(S.dirt, 35); rubAcc = 0; lastPt = null;
+  setMode("bath", 3600); pet.style.touchAction = "none";
+  say("목욕하자! 🫧 손가락으로 나를 문질문질 해 줘~", 4); nextTalk = performance.now() + rnd(90, 150) * 1000;
+}
+function rub(x, y) { lastRub = performance.now(); bathNeed -= 3.5; S.dirt = clamp(S.dirt - 3.5); bubbleAt(x, y); }
+function roomPt(e) { const r = room.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
+pet.addEventListener("pointermove", e => {
+  if (!bathing) return;
+  const [x, y] = roomPt(e);
+  if (lastPt) { rubAcc += Math.min(80, Math.hypot(x - lastPt[0], y - lastPt[1])); while (rubAcc >= 16 && bathNeed > 0) { rubAcc -= 16; rub(x, y); } }
+  lastPt = [x, y];
+});
+pet.addEventListener("pointerleave", () => { lastPt = null; });
+function bathTick(now) {
+  if (!bathing) return;
+  if (mode !== "bath") { bathing = false; pet.style.touchAction = ""; save(); return say("앗 아직 거품 묻었는데~", 2.5); }
+  if (now - lastRub < 600 && now - lastAutoBub > 250) {
+    lastAutoBub = now; const r = room.getBoundingClientRect(), p = pet.getBoundingClientRect();
+    bubbleAt(p.left - r.left + p.width * rnd(.25, .75), p.top - r.top + p.height * rnd(.3, .85));
+  }
+  if (bathNeed <= 0) return finishBath();
+  if (now - bathStart > 45000) { bathing = false; pet.style.touchAction = ""; save(); setMode("idle", 2); return say("에취! 다음에 마저 씻자~", 3); }
+  if (!bathPrompt && now - bathStart > 7000 && lastRub < bathStart) { bathPrompt = true; say("손가락으로 내 몸을 왔다 갔다 문질러 봐! 🫧", 3.5); }
+}
+function finishBath() {
+  bathing = false; pet.style.touchAction = ""; S.dirt = 0; S.bathCnt++; S.mood = clamp(S.mood + 12); bump("bath");
+  burst("sparkle", 10); setMode("laugh", rnd(2.8, 3.4));
+  say(pick(["반짝반짝! 개운하다~ 고마워 " + voc() + "!", "뽀송뽀송! 향기 나지? 히히", "깨끗해졌다! 반짝 ✨"]), 4);
+  if (S.bathDay !== isoDay()) { S.bathDay = isoDay(); addExp(6); } else save();
+  drawStats();
+}
+
+/* ── 이불 덮어 재우기 ── */
+let tucked = false, tuckStart = 0;
+function tuckIn() {
+  if (focusing()) return say("집중 끝나면 잘게~ 쉿!", 2.5);
+  const h = new Date().getHours();
+  if (S.tired < 15 && h >= 7 && h < 21) { setMode("laugh", 2.3); return say("아직 하나도 안 졸려! 더 놀자~", 2.5); }
+  bathing = false; tucked = true; tuckStart = performance.now();
+  setMode("sleep", Math.max(40, Math.min(120, S.tired / 1.5)));
+  say(pick(["이불 덮어 줘서 고마워… 잘 자 " + voc() + "… ♥", "포근하다… 쿨쿨…", "따뜻해… 좋은 꿈 꿀게…"]), 3.5);
+}
+function wakeTucked() {
+  tucked = false; S.tired = 0; S.tuckCnt++; S.mood = clamp(S.mood + 8); bump("tuck");
+  setMode("wave", rnd(2.6, 3.2)); say(pick(["잘 잤다! 기운이 펄펄!", "하암~ 푹 잤어! 고마워 " + voc() + "!", "개운해! 이제 놀자!"]), 3.5);
+  if (S.tuckDay !== isoDay()) { S.tuckDay = isoDay(); addExp(4); } else save();
+  drawStats();
+}
+let lastTuckTick = performance.now();
+function tuckTick(now) {
+  const dt = (now - lastTuckTick) / 1000; lastTuckTick = now;
+  if (!tucked) return;
+  if (mode !== "sleep") { tucked = false; return; }
+  S.tired = clamp(S.tired - dt * 2.5);
+}
+$("mBath").onclick = startBath;
+$("mTuck").onclick = tuckIn;
+
+/* ── 얼룩 · 이불 그리기 ── */
+const dirtEl = $("dirtImg"), blanketEl = $("blanketImg");
+dirtEl.src = ACC.dirt; blanketEl.src = FX.blanket;
+function placeCare(seq, idx) {
+  const a = (ANCHORS[seq] || [])[idx], k = pet.clientWidth / 480, showD = a && dirty() && !NOFACE.includes(seq);
+  dirtEl.hidden = !showD;
+  if (showD) dirtEl.style.transform = `translate(${a[0] * k}px,${a[1] * k}px) rotate(${-a[3]}deg) scale(${a[2] * k}) translate(-200px,-330px)`;
+  blanketEl.hidden = !(tucked && seq === "sleep");
+}
+
+/* ── 그림일기 ── */
+const WDIARY = { snow: "오늘은 눈이 펑펑 내렸다. ❄️", xmas: "하얀 눈이 내렸다. 크리스마스 느낌! ❄️", petal: "벚꽃잎이 팔랑팔랑 날렸다. 🌸", bubble: "비눗방울이 퐁퐁 떠올랐다. 🫧",
+  leaf: "낙엽이 바스락바스락 떨어졌다. 🍁", confetti: "꽃가루가 펑펑! 🎉", heart: "하트가 퐁퐁 날아다녔다. 💗", spooky: "사탕이 하늘에서 떨어졌다! 🍬" };
+function diaryText(r) {
+  const own = ownerOr(), o = josa(own, "이랑", "랑"); let h = 17;
+  for (const c of r.d) h = (Math.imul(h, 31) + c.charCodeAt(0)) >>> 0;
+  const pk = (...a) => { h = (Math.imul(h, 1103515245) + 12345) >>> 0; return a[(h >>> 8) % a.length]; };
+  const s = [];
+  if (r.ev) s.push(`오늘은 ${r.ev}! ${o} 같이 보내서 좋았다.`); else if (r.w) s.push(WDIARY[r.w]);
+  if (r.min >= 60) s.push(`${o} ${Math.floor(r.min / 60)}시간 ${r.min % 60}분이나 같이 있었다.`);
+  else if (r.min > 0) s.push(`${o} ${r.min}분 같이 있었다. ${pk("조금 아쉽다.", "짧아도 좋았다!")}`);
+  if (r.pet >= 10) s.push(`쓰다듬어 준 게 무려 ${r.pet}번! ${pk("머리가 반들반들해졌다.", "행복해서 녹을 뻔했다.")}`);
+  else if (r.pet > 0) s.push(`${r.pet}번 쓰다듬어 줬다. ${pk("헤헤.", "기분 좋았다.")}`);
+  if (r.snack >= 3) s.push(`간식을 ${r.snack}번이나 먹었다. ${pk("배 터지겠다!", "냠냠, 최고의 하루.")}`);
+  else if (r.snack > 0) s.push(pk("간식을 먹었다. 바나나는 언제 먹어도 맛있다.", "냠냠! 간식 고마워."));
+  if (r.play > 0) s.push(`같이 게임을 ${r.play}판 했다. ${pk("재밌었다!", "다음엔 더 잘할 거야.")}`);
+  if (r.bath > 0) s.push(pk("목욕을 했다. 몸이 뽀송뽀송!", "거품 목욕을 했다. 반짝반짝 ✨"));
+  if (r.tuck > 0) s.push(pk("이불을 덮어 줘서 푹 잤다.", "포근한 이불 속에서 꿀잠 잤다."));
+  if (r.focus > 0) s.push(`${josa(own, "이", "가")} ${r.focus}분 동안 집중했다. 옆에서 조용히 응원했다.`);
+  if (r.lv > 0) s.push(`레벨이 올라서 Lv.${r.lv}이 됐다!`);
+  if (!s.length || (!r.min && s.length <= 1)) s.push(josa(own, "을", "를") + " 잠깐밖에 못 봤다… 내일은 더 오래 같이 있자.");
+  else s.push(pk("내일도 같이 놀자!", own + " 최고. 끝!", "오늘도 행복했다 ♥", "내일은 바나나 케이크 먹고 싶다."));
+  return s.join(" ");
+}
+function diaryFace(r) { const n = (r.pet || 0) + 2 * ((r.snack || 0) + (r.play || 0) + (r.bath || 0) + (r.tuck || 0)); return n >= 12 ? "😆" : n >= 4 ? "😊" : r.min >= 60 ? "🙂" : "🥺"; }
+function openDiary() {
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const rows = S.diary.slice().reverse().filter(r => r.min || r.pet || r.snack || r.play || r.bath || r.tuck).slice(0, 30);
+  $("diaryBody").innerHTML = rows.length ? rows.map(r => {
+    const d = new Date(r.d + "T00:00");
+    return `<div class="dy"><div class="dh"><b>${d.getMonth() + 1}월 ${d.getDate()}일 (${"일월화수목금토"[d.getDay()]})</b><span>${diaryFace(r)}</span></div><p>${esc(diaryText(r))}</p></div>`;
+  }).join("") : `<p>아직 일기가 없어요. 우땅이랑 함께 지내면 하루하루 일기를 써요!</p>`;
+  $("diaryCount").textContent = diaryDays() + "일";
+  openL("diaryModal");
+  setMode("shy", rnd(2.5, 3)); say(pick(["내 일기 몰래 보는 거야? 히히", "부끄럽지만… 보여 줄게!"]), 3);
+}
+$("mDiary").onclick = openDiary;
+
+/* ── 새 선물 아이템 · 업적 ── */
+ITEMS.push(...[["rudolph", "루돌프 뿔", 0, 0, "루돌프 사슴 우땅이~ 메리 크리스마스!"], ["witch", "마녀 모자", 0, 0, "수리수리 바나나~ 얍!"], ["bokjumeoni", "복주머니", 0, 2, "복 많이 받아! 복주머니 짤랑짤랑~"]]
+  .map(([id, name, price, slot, line]) => ({ id, name, price, slot, line })));
+Object.assign(GIFT, { rudolph: "크리스마스 선물", witch: "할로윈 선물", bokjumeoni: "설날·추석 선물" });
+ACH.splice(ACH.length - 2, 0, ...[
+  ["bath1", "🛁", "첫 목욕", "처음으로 씻겨 줬어요", 3, () => S.bathCnt >= 1], ["bath20", "🧼", "뽀송뽀송", "목욕 20번", 20, () => S.bathCnt >= 20],
+  ["tuck1", "🛏️", "잘 자 우땅아", "이불을 처음 덮어 줬어요", 3, () => S.tuckCnt >= 1], ["tuck20", "🌙", "꿀잠 전문가", "이불 덮어 재우기 20번", 20, () => S.tuckCnt >= 20],
+  ["event1", "🎉", "축제 좋아", "기념일 이벤트를 처음 함께했어요", 5, () => S.eventCnt >= 1],
+  ["seasons", "🍂", "사계절 친구", "눈·벚꽃잎·비눗방울·낙엽을 모두 봤어요", 30, () => ["petal", "bubble", "leaf"].every(k => S.seenFx.includes(k)) && (S.seenFx.includes("snow") || S.seenFx.includes("xmas"))],
+  ["diary7", "📔", "일기 일주일", "그림일기가 7일 쌓였어요", 10, () => diaryDays() >= 7],
+].map(([id, icon, name, desc, bananas, done]) => ({ id, icon, name, desc, bananas, gift: "", done })));
+
 /* ── 시작: 꾸벅 인사 ── */
+// 레벨·업적 기능 전부터 키우던 경우: 오늘을 첫날로, 누적 출석은 연속 출석에서 시작
+if (!S.sinceTs) { S.sinceTs = midnight(); S.lvShown = levelOf(S.exp)[0]; }
+if (!S.attendTotal && S.day) S.attendTotal = Math.max(1, S.streak);
+if (!Array.isArray(S.wear) || S.wear.length < 3) S.wear = ["", "", ""];
+save();
 setOwner(owner);
 drawStats();
 setMode("st_bow", 2.2);

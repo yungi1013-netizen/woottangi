@@ -144,6 +144,7 @@ func celebrate(lv int) {
 	from := S.LvShown
 	pendingLv = 0
 	S.LvShown = lv
+	dayLog().Level = lv
 	gift := 0
 	newTitle := false
 	for l := from + 1; l <= lv; l++ {

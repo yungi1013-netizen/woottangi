@@ -181,7 +181,7 @@ func initDPI() {
 // ───────────────────────── 프레임 ─────────────────────────
 type Sprite struct {
 	W, H int
-	Pix  []float32 // premultiplied BGRA
+	Pix  []uint8   // premultiplied BGRA (1바이트씩: 프레임 128장 ≈ 150MB)
 	Seq  string    // 동작 이름 (프레임일 때)
 	Anc  *anchorRT // 머리 위치 (꾸미기 아이템용, 없으면 nil)
 }
@@ -196,11 +196,11 @@ func decodeSprite(b []byte) *Sprite {
 	r := img.Bounds()
 	rgba := image.NewNRGBA(image.Rect(0, 0, r.Dx(), r.Dy()))
 	draw.Draw(rgba, rgba.Bounds(), img, r.Min, draw.Src)
-	sp := &Sprite{W: r.Dx(), H: r.Dy(), Pix: make([]float32, r.Dx()*r.Dy()*4)}
+	sp := &Sprite{W: r.Dx(), H: r.Dy(), Pix: make([]uint8, r.Dx()*r.Dy()*4)}
 	for p := 0; p < r.Dx()*r.Dy(); p++ {
-		R, G, B, A := float32(rgba.Pix[p*4]), float32(rgba.Pix[p*4+1]), float32(rgba.Pix[p*4+2]), float32(rgba.Pix[p*4+3])
-		k := A / 255
-		sp.Pix[p*4], sp.Pix[p*4+1], sp.Pix[p*4+2], sp.Pix[p*4+3] = B*k, G*k, R*k, A
+		R, G, B, A := float32(rgba.Pix[p*4]), float32(rgba.Pix[p*4+1]), float32(rgba.Pix[p*4+2]), rgba.Pix[p*4+3]
+		k := float32(A) / 255
+		sp.Pix[p*4], sp.Pix[p*4+1], sp.Pix[p*4+2], sp.Pix[p*4+3] = uint8(B*k+0.5), uint8(G*k+0.5), uint8(R*k+0.5), A
 	}
 	return sp
 }
@@ -240,10 +240,10 @@ func sample(s *Sprite, su, sv float64) (acc [4]float32) {
 			w = ffx * ffy
 		}
 		o := (cy*s.W + cx) * 4
-		acc[0] += s.Pix[o] * w
-		acc[1] += s.Pix[o+1] * w
-		acc[2] += s.Pix[o+2] * w
-		acc[3] += s.Pix[o+3] * w
+		acc[0] += float32(s.Pix[o]) * w
+		acc[1] += float32(s.Pix[o+1]) * w
+		acc[2] += float32(s.Pix[o+2]) * w
+		acc[3] += float32(s.Pix[o+3]) * w
 	}
 	return
 }
@@ -277,6 +277,9 @@ var (
 	rng               = rand.New(rand.NewSource(time.Now().UnixNano()))
 )
 
+// 버전: build.py 의 VERSION 이 -ldflags "-X main.appVersion=..." 로 들어옴
+var appVersion = "1.1"
+
 func setMode(m string, d time.Duration) {
 	mode = m
 	modeStart = time.Now()
@@ -288,6 +291,21 @@ func rd(a, b float64) time.Duration {
 }
 
 func nextChoice() {
+	if bathing { // 목욕은 bathTick 이 끝냄
+		modeUntil = time.Now().Add(time.Hour)
+		return
+	}
+	if mode == "sleep" && tucked { // 이불 덮고 푹 자고 일어남
+		wakeTucked()
+		return
+	}
+	if focusing() { // 집중 타이머: 옆에 조용히 앉아 있기 (반응 동작이 끝나면 다시 앉음)
+		switch mode {
+		case "sit", "sleep", "idle", "walk", "laugh", "shy", "wave", "st_me", "st_surprise", "st_lounge":
+			setMode("sit", rd(20, 40))
+			return
+		}
+	}
 	switch mode {
 	case "sleep":
 		setMode("sit", rd(2, 4)) // 깨면 잠깐 앉아 있다가
@@ -324,6 +342,9 @@ func nextChoice() {
 		setMode("idle", rd(3, 5))
 		return
 	}
+	if moodChoice() {
+		return
+	}
 	r := rng.Float64()
 	switch {
 	case mode == "walk" && r < 0.45:
@@ -340,6 +361,7 @@ func nextChoice() {
 		if rng.Float64() < 0.4 {
 			dir = -dir
 		}
+		maybeFaceCursor()
 		setMode("walk", rd(4, 9))
 	}
 }
@@ -352,7 +374,7 @@ func refreshWorkArea() {
 		h, _, _ := pGetSystemMetrics.Call(SM_CYSCREEN)
 		r = RECT{0, 0, int32(w), int32(h)}
 	}
-	workL, workR = float64(r.Left), float64(r.Right)
+	workL, workR, workT = float64(r.Left), float64(r.Right), float64(r.Top)
 	ground = float64(r.Bottom) - float64(canvasH) + 2
 }
 
@@ -416,10 +438,15 @@ func currentFrame() (*Sprite, float64, bool) {
 		return pick("sit", 5), 0, false
 	case "sleep":
 		return pick("sleep", 6), 0, false
+	case "bath": // 문질러 주면 헤헤, 아니면 가만히
+		if time.Since(bathLastRub) < 500*time.Millisecond {
+			return pick("shy", 7), 0, false
+		}
+		return pick("idle", 5), 0, false
 	case "drag":
 		return seqs["idle"][0], math.Sin(t*6) * 0.22, false
 	case "fall":
-		return seqs["idle"][0], 0, false
+		return seqs["idle"][0], math.Max(-0.5, math.Min(0.5, velX/(2600*dpi))), false // 날아갈 땐 기울어짐
 	}
 	if blinking {
 		return seqs["blink"][0], 0, false
@@ -434,7 +461,8 @@ func render() {
 		buf[i] = 0
 	}
 	s, rot, flip := currentFrame()
-	dressed := s.Anc != nil && (worn[slotHead] != nil || worn[slotNeck] != nil || (wornFace && !noFaceSeq[s.Seq]))
+	dressed := s.Anc != nil && (worn[slotHead] != nil || worn[slotNeck] != nil || ((wornFace || dirtyShown()) && !noFaceSeq[s.Seq]))
+	blanket := tucked && mode == "sleep"
 	base := eff() * float64(canvasH) * 0.98 / float64(s.H) / eff()
 	sx, sy := base, base
 	ax := float64(canvasW) / 2
@@ -462,6 +490,9 @@ func render() {
 			if dressed {
 				drawWorn(s, su+0.5, sv+0.5, &acc)
 			}
+			if blanket {
+				drawBlanket(s, su, sv, &acc)
+			}
 			if acc[3] < 1 {
 				continue
 			}
@@ -469,6 +500,7 @@ func render() {
 			buf[o], buf[o+1], buf[o+2], buf[o+3] = clampB(acc[0]), clampB(acc[1]), clampB(acc[2]), clampB(acc[3])
 		}
 	}
+	drawPetFx(buf)
 	present()
 }
 
@@ -483,45 +515,38 @@ func tick() {
 		refreshWorkArea()
 		lastArea = now
 	}
+	fsTick(now)
 	switch mode {
 	case "drag":
-		var c POINT
-		pGetCursorPos.Call(uintptr(unsafe.Pointer(&c)))
-		posX = float64(c.X - downPt.X + downWin.X)
-		posY = float64(c.Y - downPt.Y + downWin.Y)
+		dragTick(now)
 	case "fall":
-		velY += 1800 * dt
-		posY += velY * dt
-		if posY >= ground {
-			posY, velY = ground, 0
-			if !greeted {
-				greeted = true
-				setMode("st_bow", 2200*time.Millisecond)
-			} else {
-				setMode("idle", rd(1, 2))
-			}
-		}
+		fallTick(dt)
 	default:
-		if posY < ground-1 {
+		perchTick()
+		if g := groundY(); posY < g-1 {
+			maxFallSpeed, bounces = 0, 0
 			mode = "fall"
 			break
+		} else {
+			posY = g
 		}
-		posY = ground
 		if mode == "walk" {
-			posX += dir * 42 * eff() * dt
-			lo, hi := workL-float64(canvasW)*0.15, workR-float64(canvasW)*0.85
-			if posX < lo {
-				posX, dir = lo, 1
-			}
-			if posX > hi {
-				posX, dir = hi, -1
-			}
+			walkTick(dt)
 		}
 		if now.After(modeUntil) {
 			nextChoice()
 		}
+		cursorTick(now)
 	}
-	render()
+	bathTick(now)
+	tuckTick(dt)
+	petFxTick(dt)
+	if !hiddenFS {
+		render()
+	}
+	screenFxTick(now, dt)
+	seasonTick(now)
+	focusTick(now)
 	talkTick()
 	stateTick()
 	levelTick()
@@ -565,6 +590,7 @@ func showMenu() {
 	appendMenu(m, MF_GRAYED, 0, expMenuLine())
 	appendMenu(m, MF_GRAYED, 0, fmt.Sprintf("바나나 %d개", S.Bananas))
 	appendMenu(m, MF_GRAYED, 0, fmt.Sprintf("배부름 %d · 기분 %d", int(S.Full+0.5), int(S.Mood+0.5)))
+	appendMenu(m, MF_GRAYED, 0, fmt.Sprintf("청결 %d · 기운 %d", clean(), energy()))
 	appendMenu(m, MF_SEPARATOR, 0, "")
 	sn, _, _ := pCreatePopupMenu.Call()
 	for i, f := range snacks {
@@ -581,12 +607,16 @@ func showMenu() {
 		appendMenu(gm, MF_STRING, uintptr(idGame+i), g)
 	}
 	appendMenu(m, MF_POPUP, gm, "놀아주기")
+	appendFocusMenu(m)
 	appendMenu(m, MF_STRING, idPet, "쓰다듬기")
+	appendCareMenu(m)
 	appendMenu(m, MF_STRING, idScold, "혼내기")
 	appendMenu(m, MF_STRING, idLuck, "오늘의 운세")
 	appendMenu(m, MF_STRING, idStamp, "출석 도장")
 	appendMenu(m, MF_STRING, idInfo, "우땅이 정보")
 	appendMenu(m, MF_STRING, idBook, "우땅이 수첩 (업적·도감)")
+	appendMenu(m, MF_STRING, idDiary, "우땅이 그림일기")
+	appendSeasonMenu(m)
 	nt, _, _ := pCreatePopupMenu.Call()
 	appendMenu(nt, MF_STRING, idRemind, fmt.Sprintf("시간 알림 설정… (%d개)", len(reminders)))
 	appendMenu(nt, MF_SEPARATOR, 0, "")
@@ -613,22 +643,9 @@ func showMenu() {
 		f |= MF_CHECKED
 	}
 	appendMenu(m, f, idStay, "제자리에 있기")
-	size, _, _ := pCreatePopupMenu.Call()
-	for i, sc := range []float64{0.75, 1.0, 1.35} {
-		ff := uintptr(MF_STRING)
-		if math.Abs(scale-sc) < 0.01 {
-			ff |= MF_CHECKED
-		}
-		appendMenu(size, ff, uintptr(idSmall+i), []string{"작게", "보통", "크게"}[i])
-	}
-	appendMenu(m, MF_POPUP, size, "크기")
-	f = MF_STRING
-	if autostartEnabled() {
-		f |= MF_CHECKED
-	}
-	appendMenu(m, f, idStart, "윈도우 켤 때 자동 실행")
+	appendSettingsMenu(m)
 	appendMenu(m, MF_SEPARATOR, 0, "")
-	appendMenu(m, MF_GRAYED, 0, "우땅이 v1.0")
+	appendMenu(m, MF_GRAYED, 0, "우땅이 v"+appVersion)
 	appendMenu(m, MF_STRING, idQuit, "종료")
 
 	var c POINT
@@ -687,21 +704,19 @@ func showMenu() {
 		if stay && mode == "walk" {
 			setMode("idle", rd(3, 5))
 		}
-	case idSmall, idMid, idBig:
-		bottom := posY + float64(canvasH)
-		cx := posX + float64(canvasW)/2
-		scale = []float64{0.75, 1.0, 1.35}[cmd-idSmall]
-		setupCanvas()
-		refreshWorkArea()
-		posX = cx - float64(canvasW)/2
-		posY = bottom - float64(canvasH)
-	case idStart:
-		setAutostart(!autostartEnabled())
+	case idFocus25:
+		startFocus(25)
+	case idFocus50:
+		startFocus(50)
+	case idFocusStop:
+		stopFocus()
 	case idQuit:
 		quitPet()
 	default:
 		if cmd >= idShopBase && cmd < idShopBase+uintptr(len(items)) {
 			doItem(int(cmd - idShopBase))
+		} else if !onCareCmd(cmd) && !onSeasonCmd(cmd) {
+			onSettingsCmd(cmd)
 		}
 	}
 }
@@ -741,17 +756,22 @@ func wndProc(h uintptr, msg uint32, w, l uintptr) uintptr {
 			pGetCursorPos.Call(uintptr(unsafe.Pointer(&c)))
 			if abs32(c.X-downPt.X) > 4 || abs32(c.Y-downPt.Y) > 4 {
 				dragging = true
-				setMode("drag", time.Hour)
+				startDrag()
 			}
 		}
 		return 0
 	case WM_LBUTTONUP:
 		pReleaseCapture.Call()
 		if pressed && dragging {
-			velY = 0
-			setMode("fall", time.Hour)
+			onDragRelease()
 		} else if pressed {
-			if mode == "sleep" {
+			if bathing { // 목욕 중 클릭 = 뽀득 문지르기
+				var c POINT
+				pGetCursorPos.Call(uintptr(unsafe.Pointer(&c)))
+				rub(float64(c.X)-posX, float64(c.Y)-posY)
+			} else if tucked && mode == "sleep" {
+				pokeTucked()
+			} else if mode == "sleep" {
 				setMode("sit", rd(2, 4)) // 깨우기
 				blinkTill = time.Now().Add(300 * time.Millisecond)
 			} else {
@@ -804,6 +824,8 @@ func main() {
 		loadSeq(n)
 	}
 	linkAnchors()
+	loadFX()
+	loadCare()
 
 	inst, _, _ := pGetModuleHandleW.Call(0)
 	cls := u16("WoottangiWalk")
@@ -828,6 +850,7 @@ func main() {
 	createNameWindow(inst)
 	loadName()
 	loadState()
+	applySavedSettings()
 	initLevel()
 	initAch()
 	loadAccessories()
@@ -887,7 +910,7 @@ func present() {
 	pt := POINT{int32(posX), int32(posY)}
 	sz := SIZE{int32(canvasW), int32(canvasH)}
 	src := POINT{0, 0}
-	bl := BLENDFUNCTION{AC_SRC_OVER, 0, 255, AC_SRC_ALPHA}
+	bl := BLENDFUNCTION{AC_SRC_OVER, 0, opacity(), AC_SRC_ALPHA}
 	pUpdateLayeredWindow.Call(hwnd, sdc, uintptr(unsafe.Pointer(&pt)), uintptr(unsafe.Pointer(&sz)),
 		memDC, uintptr(unsafe.Pointer(&src)), 0, uintptr(unsafe.Pointer(&bl)), ULW_ALPHA)
 	pReleaseDC.Call(0, sdc)

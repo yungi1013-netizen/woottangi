@@ -6,10 +6,10 @@
 걷고, 앉고, 졸고, 간식을 먹고, 이름을 불러 주고, 시간 맞춰 말을 걸어요.
 바나나를 모아 간식을 주고 모자도 씌워 주면서 함께 레벨을 올려 보세요.
 
-### ⬇️ [설치 프로그램 내려받기 (v1.0)](https://github.com/yungi1013-netizen/woottangi/releases/latest/download/Woottangi_Setup_v1.0.exe)
+### ⬇️ [설치 프로그램 내려받기 (v1.1)](https://github.com/yungi1013-netizen/woottangi/releases/latest/download/Woottangi_Setup_v1.1.exe)
 
 Windows 10/11 · 관리자 권한 필요 없음. 설치하면 시작 메뉴·바탕화면에 "우땅이"가 생기고, 설정 > 앱 에서 지울 수 있어요.
-설치 없이 쓰고 싶다면 [포터블 zip](https://github.com/yungi1013-netizen/woottangi/releases/latest/download/Woottangi_v1.0_portable.zip) 을 받아 압축을 풀고 실행하세요.
+설치 없이 쓰고 싶다면 [포터블 zip](https://github.com/yungi1013-netizen/woottangi/releases/latest/download/Woottangi_v1.1_portable.zip) 을 받아 압축을 풀고 실행하세요.
 처음 실행할 때 SmartScreen 경고가 뜨면 **추가 정보 → 실행**을 눌러 주세요 (서명하지 않은 exe라서 그래요).
 
 ## 할 수 있는 것
@@ -25,6 +25,11 @@ Windows 10/11 · 관리자 권한 필요 없음. 설치하면 시작 메뉴·바
 | 📅 **출석 도장** | 매일 바나나, 7일 연속 보너스, 누적 30·100일엔 특별 아이템 선물 |
 | 🏆 **업적 19개** | 달성하면 우땅이가 축하하고 바나나를 줘요 |
 | 📒 **우땅이 수첩** | 기록 · 업적 · 꾸미기 도감을 한눈에 |
+| ⏱️ **집중 타이머** | 25분·50분 집중하는 동안 옆에 조용히 앉아 있다가, 끝나면 바나나를 줘요 |
+| 🫧 **씻기기 · 재우기** | 놀다 보면 꼬질꼬질해져요. 마우스로 문질러 거품 목욕을 시키고, 졸려 하면 이불을 덮어 재워요 |
+| 🌸 **계절 · 기념일** | 겨울엔 눈, 봄엔 벚꽃잎, 여름엔 비눗방울, 가을엔 낙엽이 가끔 화면 가득 내려요. 크리스마스·설날·할로윈 같은 날엔 특별 인사와 선물 아이템 |
+| 📔 **그림일기** | 하루 동안 함께한 일을 우땅이가 일기로 써서 수첩에 모아 둬요 |
+| ⚙️ **설정** | 크기 · 투명도 · 걷는 속도 · 전체화면일 때 숨기 · 자동 실행 |
 | 🔮 **오늘의 운세** · 🤲 **쓰다듬기** · ⏰ **시간 알림** | 그 밖에 소소한 즐거움 |
 
 <p>
@@ -32,11 +37,13 @@ Windows 10/11 · 관리자 권한 필요 없음. 설치하면 시작 메뉴·바
 <img src="docs/match.png" width="320" alt="짝 맞추기 게임">
 </p>
 
-클릭하면 반응하고, 끌어서 옮기면 떨어지고, 오래 두면 배고프다고 알려 줘요.
+클릭하면 반응하고, 마우스를 가까이 대면 쳐다보며 수줍어해요.
+끌어서 **휙 던지면** 날아가 벽에 튕기고 통통 튀다 착지하고, **창 제목줄 위에 떨어뜨리면** 그 위에 올라앉아 창을 옮길 때 같이 움직여요.
+게임·영상·발표처럼 전체화면일 때는 알아서 숨고, 새벽엔 졸고, 기분이 나쁘면 터벅터벅 걸어요.
 트레이 아이콘을 누르면 화면 가운데로 불러올 수 있어요.
 
 - 저장 위치: `%AppData%\Woottangi\` (이름 · 바나나 · 기록)
-- 휴대폰용 "우땅이 키우기"는 [`web/woottangi_mobile.html`](web/woottangi_mobile.html) 한 파일이에요. 내려받아 휴대폰 브라우저로 열면 돼요.
+- 휴대폰용 "우땅이 키우기"는 [`web/woottangi_mobile.html`](web/woottangi_mobile.html) 한 파일이에요. 내려받아 휴대폰 브라우저로 열면 돼요. 레벨·꾸미기·업적·수첩·짝 맞추기·집중 타이머·씻기기·재우기·계절 이벤트·그림일기도 PC와 똑같이 있어요 (기록은 휴대폰에 따로 저장).
 
 ---
 
@@ -65,6 +72,7 @@ Woottangi_source/
 │  ├─ compose.py           동작 프레임 합성 (걷기·앉기·자기·웃기·먹기·벌서기 …)
 │  ├─ stickers.py          스티커 동작 프레임 (놀람·뒹굴·울기·저요·인사)
 │  ├─ accessories.py       꾸미기 아이템 그림(pc/acc) + 프레임별 머리 위치(pc/anchors.go)
+│  ├─ effects.py           계절 날씨 조각 · 거품 · 반짝이 · 이불 그림 (pc/fx)
 │  ├─ build_web.py         휴대폰 HTML + PC 게임 페이지 만들기
 │  └─ make_res.py          exe 아이콘·버전정보(.syso) 만들기
 ├─ frames/                완성 프레임 128장 (위 도구들의 결과물)
@@ -75,6 +83,13 @@ Woottangi_source/
 │  ├─ notify.go            트레이 아이콘·윈도우 알림·시간 알림·배고픔 알림
 │  ├─ shop.go              꾸미기 상점 (바나나로 모자·안경·나비넥타이 사서 씌우기)
 │  ├─ level.go             레벨·친밀도 (경험치·칭호·레벨 업 보상·함께한 날·기념일·친밀도 대사)
+│  ├─ move.go              던지기·튕기기 · 창 위에 앉기 · 마우스 반응 · 전체화면일 때 숨기 · 밤/기분 행동
+│  ├─ focus.go             집중 타이머 (25·50분)
+│  ├─ care.go              돌봄: 꼬질꼬질 · 씻기기(문지르기) · 졸림 · 이불 덮어 재우기
+│  ├─ season.go            계절 날씨 쇼 · 날짜 이벤트(설날·추석·크리스마스…) · 선물 아이템
+│  ├─ diary.go             그림일기 (하루 기록 → 우땅이 말투 일기)
+│  ├─ fx.go                효과 조각 그리기 (우땅이 주변 거품 · 화면 전체 날씨 창)
+│  ├─ settings.go          설정 메뉴 (크기·투명도·걷는 속도·전체화면 숨기, 저장됨)
 │  ├─ ach.go               업적 19개 · 누적 출석 선물(30·100일) · 우땅이 수첩(/book 업적·도감 페이지)
 │  ├─ match_template.html  짝 맞추기 게임 화면 (build_web.py 가 match.html 로 만듦)
 │  ├─ anchors.go           프레임별 머리 위치 (accessories.py 가 자동 생성)
@@ -105,7 +120,7 @@ PC exe 를 만들려면 Go 1.22 이상 (https://go.dev/dl). 윈도우·맥·리�
 | `python build.py web` | 휴대폰 HTML + 게임 페이지만 |
 | `python build.py exe` | exe 만 |
 | `python build.py all` | 전부 처음부터 (+ 배포 파일) |
-| `python build.py setup` | **배포용**: exe + 설치 프로그램 `dist/Woottangi_Setup_v1.0.exe` + 압축 파일 `dist/Woottangi_v1.0_portable.zip` |
+| `python build.py setup` | **배포용**: exe + 설치 프로그램 `dist/Woottangi_Setup_v{버전}.exe` + 압축 파일 `dist/Woottangi_v{버전}_portable.zip` |
 
 설치 프로그램(`installer/`)은 관리자 권한 없이 `%LOCALAPPDATA%\Programs\Woottangi` 에 설치하고,
 시작 메뉴·바탕화면 바로가기와 "설정 > 앱" 제거 항목을 만듭니다. 이미 설치돼 있으면 업데이트하고, 기록(`%AppData%\Woottangi`)은 그대로 둡니다.
@@ -133,12 +148,15 @@ with sync_playwright() as p:
 | 짝 맞추기 카드 그림 / 보상 | `tools/build_web.py` → `poses` / `pc/state.go` 의 `26-moves` (페이지 `reward()` 도 같이) |
 | 꾸미기 아이템 이름·가격·대사 | `pc/shop.go` → `var items` |
 | 꾸미기 아이템 그림 / 새 아이템 | `tools/accessories.py` → 그림 함수 + `ITEMS` (그 뒤 `python tools/accessories.py`) |
+| 날짜 이벤트 (날짜 · 인사 · 선물) / 설날·추석 날짜 | `pc/season.go` → `events`, `lunarDays` (휴대폰은 `web/template.html` 의 `EVENTS`, `LUNAR`) |
+| 날씨 쇼 종류 · 양 · 속도 / 얼마나 자주 | `pc/fx.go` → `weathers` / `pc/season.go` → `showGap()` |
+| 꼬질꼬질 · 졸림이 쌓이는 빠르기 | `pc/care.go` → `careMinute()` |
 | 아이템이 머리에서 어긋나는 스티커 동작 | `tools/accessories.py` → `STICKER0` (`preview` 로 확인) |
 | 오늘의 운세 문구 | `pc/state.go` → `var luck` / 휴대폰은 `web/template.html` → `LUCK` |
 | 기본 크기 (작게 0.75) | `pc/main.go` → `scale = 0.75` |
 | 동작 프레임 수 | `tools/compose.py` → `SEQ` |
 | 몸·팔·다리 모양 | `tools/compose.py` → `pose()`, `pose_eat()` |
-| 버전 (지금 1.0 고정) | `pc/main.go` 메뉴 "우땅이 v1.0", `pc/notify.go` 트레이 이름, `tools/make_res.py` → `VER`, `FileVersion`, `ProductVersion` |
+| 버전 (지금 1.1) | `build.py` → `VERSION` 한 곳만 (exe 메뉴·트레이·파일 정보·설치 프로그램에 모두 들어감. README 다운로드 링크의 파일 이름도 같이) |
 
 ## 저장 위치 (PC)
 

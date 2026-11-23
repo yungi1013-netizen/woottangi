@@ -47,9 +47,27 @@ var achievements = []achievement{
 	{"lv20", "💫", "전설의 시작", "Lv.20 달성", 40, "", func() bool { return lvNow() >= 20 }},
 	{"items3", "🎀", "멋쟁이", "꾸미기 아이템 3개 모으기", 10, "", func() bool { return len(S.Owned) >= 3 }},
 	{"itemsAll", "💎", "패셔니스타", "파는 꾸미기 아이템 전부 모으기", 30, "", ownsAllShop},
+	{"focus1", "⏱️", "집중 시작", "집중 타이머를 처음 끝냈어요", 5, "", func() bool { return S.FocusCnt >= 1 }},
+	{"focus10", "🎯", "집중왕", "집중 타이머 10번 끝내기", 20, "", func() bool { return S.FocusCnt >= 10 }},
 	{"rich300", "💰", "바나나 부자", "바나나 300개 모으기", 15, "", func() bool { return S.Bananas >= 300 }},
+	{"bath1", "🛁", "첫 목욕", "처음으로 씻겨 줬어요", 3, "", func() bool { return S.BathCnt >= 1 }},
+	{"bath20", "🧼", "뽀송뽀송", "목욕 20번", 20, "", func() bool { return S.BathCnt >= 20 }},
+	{"tuck1", "🛏️", "잘 자 우땅아", "이불을 처음 덮어 줬어요", 3, "", func() bool { return S.TuckCnt >= 1 }},
+	{"tuck20", "🌙", "꿀잠 전문가", "이불 덮어 재우기 20번", 20, "", func() bool { return S.TuckCnt >= 20 }},
+	{"event1", "🎉", "축제 좋아", "기념일 이벤트를 처음 함께했어요", 5, "", func() bool { return S.EventCnt >= 1 }},
+	{"seasons", "🍂", "사계절 친구", "눈·벚꽃잎·비눗방울·낙엽을 모두 봤어요", 30, "", seenAllSeasons},
+	{"diary7", "📔", "일기 일주일", "그림일기가 7일 쌓였어요", 10, "", func() bool { return diaryDays(S.Diary) >= 7 }},
 	{"night", "🦉", "올빼미", "밤 12시~새벽 4시에 함께 있기", 5, "", func() bool { return time.Now().Hour() < 4 }},
 	{"day100", "💝", "100일의 우땅이", "함께한 지 100일", 30, "", func() bool { return daysTogether() >= 100 }},
+}
+
+func seenAllSeasons() bool {
+	for _, k := range []string{"snow", "petal", "bubble", "leaf"} {
+		if !contains(S.SeenFx, k) && !(k == "snow" && contains(S.SeenFx, "xmas")) {
+			return false
+		}
+	}
+	return true
 }
 
 func ownsAllShop() bool {
@@ -156,6 +174,8 @@ func snapshotState() {
 	snap.Owned = slices.Clone(S.Owned)
 	snap.Wear = slices.Clone(S.Wear)
 	snap.Ach = maps.Clone(S.Ach)
+	snap.SeenFx = slices.Clone(S.SeenFx)
+	snap.Diary = slices.Clone(S.Diary)
 	snapOwner = ownerName
 	snapMu.Unlock()
 }
@@ -272,6 +292,10 @@ h1{margin:4px 0 2px;font-size:24px}h2{margin:22px 0 10px;font-size:19px;display:
 .it{background:#fff;border:2px solid #2b1d16;border-radius:12px;padding:6px;text-align:center;font-size:13px}
 .it img{width:100%;aspect-ratio:200/270;object-fit:contain}.it b{display:block}.it span{color:#7d6556;font-size:12px}
 .it.no{background:#f1e9d8;border-style:dashed}.it.no img{filter:brightness(0);opacity:.3}
+.dy{background:#fff;border:2px solid #2b1d16;border-radius:12px;padding:10px 12px;margin-bottom:8px}
+.dh{display:flex;justify-content:space-between;align-items:center;font-size:14px;margin-bottom:4px}.dh span{font-size:20px}
+.dy p{margin:0;font-size:14px;line-height:22px;background:repeating-linear-gradient(transparent 0 21px,#f1e3c4 21px 22px)}
+.empty{color:#7d6556;font-size:14px}
 .on{display:inline-block;margin-top:2px;background:#ffd84d;border:2px solid #2b1d16;border-radius:8px;padding:0 6px;font-size:11px}
 </style></head><body><main>`)
 	fmt.Fprintf(&b, `<div class="top"><img src="/item/none.png" alt=""><div style="flex:1"><h1>Lv.%d %s</h1><p>%s 함께한 지 %d일째</p>`,
@@ -290,6 +314,8 @@ h1{margin:4px 0 2px;font-size:24px}h2{margin:22px 0 10px;font-size:19px;display:
 		{"바나나", fmt.Sprint(st.Bananas)}, {"누적 출석", fmt.Sprintf("%d일", st.AttendTotal)}, {"연속 출석", fmt.Sprintf("%d일", st.Streak)},
 		{"간식", fmt.Sprintf("%d번", st.SnackCnt)}, {"쓰다듬기", fmt.Sprintf("%d번", st.PetTotal)}, {"게임", fmt.Sprintf("%d판", st.PlayCnt)},
 		{"바나나 받기 최고", fmt.Sprintf("%d개", st.Best)}, {"짝 맞추기 최고", bm}, {"꾸미기", fmt.Sprintf("%d/%d", len(st.Owned), len(items))},
+		{"집중", fmt.Sprintf("%d번", st.FocusCnt)}, {"집중한 시간", fmt.Sprintf("%d분", st.FocusMin)}, {"업적", fmt.Sprintf("%d/%d", got, len(achievements))},
+		{"목욕", fmt.Sprintf("%d번", st.BathCnt)}, {"이불 덮기", fmt.Sprintf("%d번", st.TuckCnt)}, {"그림일기", fmt.Sprintf("%d일", diaryDays(st.Diary))},
 	} {
 		fmt.Fprintf(&b, `<div>%s<b>%s</b></div>`, s[0], e(s[1]))
 	}
@@ -301,7 +327,9 @@ h1{margin:4px 0 2px;font-size:24px}h2{margin:22px 0 10px;font-size:19px;display:
 			fmt.Fprintf(&b, `<div class="a no"><div class="i">%s</div><div><b>%s</b><span>%s · 바나나 %d개</span></div></div>`, a.icon, e(a.name), e(a.desc), a.bananas)
 		}
 	}
-	fmt.Fprintf(&b, `</div><h2>꾸미기 도감 <small>%d / %d</small></h2><div class="items">`, len(st.Owned), len(items))
+	b.WriteString(`</div>`)
+	b.WriteString(diaryHTML(st.Diary, owner, e))
+	fmt.Fprintf(&b, `<h2>꾸미기 도감 <small>%d / %d</small></h2><div class="items">`, len(st.Owned), len(items))
 	for _, it := range items {
 		how := fmt.Sprintf("바나나 %d개", it.price)
 		if it.price == 0 {
@@ -317,7 +345,8 @@ h1{margin:4px 0 2px;font-size:24px}h2{margin:22px 0 10px;font-size:19px;display:
 			fmt.Fprintf(&b, `<div class="it no"><img src="/item/%s.png?solo=1" alt=""><b>???</b><span>%s</span></div>`, it.id, e(how))
 		}
 	}
-	b.WriteString(`</div><p style="text-align:center;color:#7d6556;font-size:13px;margin:22px 0 6px">우클릭 메뉴 → 꾸미기 에서 아이템을 쓰고 벗을 수 있어요</p></main></body></html>`)
+	b.WriteString(`</div><p style="text-align:center;color:#7d6556;font-size:13px;margin:22px 0 6px">우클릭 메뉴 → 꾸미기 에서 아이템을 쓰고 벗을 수 있어요</p></main>
+<script>if(location.hash){var el=document.querySelector(location.hash);if(el)el.scrollIntoView()}</script></body></html>`)
 	return b.String()
 }
 

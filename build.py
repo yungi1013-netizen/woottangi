@@ -9,7 +9,7 @@
 
 결과물
     web/woottangi_mobile.html   휴대폰용 우땅이 키우기 (한 파일)
-    dist/Woottangi.exe          PC 바탕화면 우땅이 v1.0
+    dist/Woottangi.exe          PC 바탕화면 우땅이 (버전은 아래 VERSION)
 """
 import os
 import shutil
@@ -19,6 +19,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 PY = sys.executable
+VERSION = "1.1"   # 버전은 여기만 바꾸면 exe·설치 프로그램·파일 정보에 모두 들어감
+os.environ["WOO_VERSION"] = VERSION
 
 
 def run(cmd, **kw):
@@ -31,6 +33,7 @@ def step_frames():
     run([PY, ROOT / "tools" / "compose.py", ROOT / "frames"])
     run([PY, ROOT / "tools" / "stickers.py", ROOT / "frames"])
     run([PY, ROOT / "tools" / "accessories.py"])   # 꾸미기 아이템 그림 + 프레임별 머리 위치
+    run([PY, ROOT / "tools" / "effects.py"])       # 계절 날씨 조각 · 거품 · 이불
 
 
 def step_web():
@@ -52,11 +55,10 @@ def step_exe():
         return
     (ROOT / "dist").mkdir(exist_ok=True)
     env = dict(os.environ, GOOS="windows", GOARCH="amd64", CGO_ENABLED="0")
-    run([go, "build", "-ldflags", "-H windowsgui -s -w", "-o", ROOT / "dist" / "Woottangi.exe", "."], cwd=pc, env=env)
+    run([go, "build", "-ldflags", f"-H windowsgui -s -w -X main.appVersion={VERSION}", "-o", ROOT / "dist" / "Woottangi.exe", "."], cwd=pc, env=env)
     print("exe: dist/Woottangi.exe")
 
 
-VERSION = "1.0"
 
 
 def setup_art(out):

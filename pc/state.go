@@ -45,8 +45,30 @@ type petState struct {
 	PetTotal    int               `json:"petTotal"`
 	PlayCnt     int               `json:"playCnt"`
 	MatchCnt    int               `json:"matchCnt"`
-	BestMatch   int               `json:"bestMatch"` // 짝 맞추기 최소 횟수 (0 = 아직 없음)
+	BestMatch   int               `json:"bestMatch"`     // 짝 맞추기 최소 횟수 (0 = 아직 없음)
 	Ach         map[string]string `json:"ach,omitempty"` // 업적 id → 달성 날짜
+	// 집중 타이머 (focus.go)
+	FocusCnt int `json:"focusCnt"`
+	FocusMin int `json:"focusMin"`
+	// 설정 (settings.go)
+	Scale      float64 `json:"scale,omitempty"`
+	Opacity    int     `json:"opacity,omitempty"` // 0=100% 1=85% 2=70% 3=55%
+	Speed      int     `json:"speed,omitempty"`   // 0 보통 1 느리게 2 빠르게
+	NoAutoHide bool    `json:"noAutoHide,omitempty"`
+	// 돌봄 (care.go): 0 = 깨끗함 · 쌩쌩
+	Dirt    float64 `json:"dirt,omitempty"`
+	Tired   float64 `json:"tired,omitempty"`
+	BathCnt int     `json:"bathCnt,omitempty"`
+	TuckCnt int     `json:"tuckCnt,omitempty"`
+	BathDay string  `json:"bathDay,omitempty"`
+	TuckDay string  `json:"tuckDay,omitempty"`
+	// 계절 · 이벤트 (season.go)
+	EventDay  string   `json:"eventDay,omitempty"`
+	EventCnt  int      `json:"eventCnt,omitempty"`
+	NoWeather bool     `json:"noWeather,omitempty"`
+	SeenFx    []string `json:"seenFx,omitempty"`
+	// 그림일기 (diary.go)
+	Diary []dayRec `json:"diary,omitempty"`
 }
 
 var S = petState{Bananas: 10, Full: 70, Mood: 70}
@@ -91,6 +113,7 @@ func loadState() {
 		if h > 0 {
 			S.Full = clamp(S.Full - h*6)
 			S.Mood = clamp(S.Mood - h*4)
+			careAway(h)
 		}
 	}
 	saveState()
@@ -115,6 +138,11 @@ func stateTick() {
 	} else {
 		S.Full, S.Mood = clamp(S.Full-0.25), clamp(S.Mood-0.2)
 	}
+	if S.Dirt >= 70 { // 꼬질꼬질하면 기분이 조금 더 빨리 내려감
+		S.Mood = clamp(S.Mood - 0.1)
+	}
+	careMinute()
+	dayLog().Min++
 	saveState()
 }
 
@@ -195,6 +223,8 @@ func doSnack(i int) {
 	}
 	S.Bananas -= f.price
 	S.SnackCnt++
+	dayLog().Snack++
+	addDirt(2) // 부스러기
 	S.Full = clamp(S.Full + f.full)
 	S.Mood = clamp(S.Mood + f.mood)
 	addExp(expSnack[i]) // 저장 포함
@@ -244,6 +274,7 @@ func petBonus() {
 		S.PetDay, S.PetCnt = today(), 0
 	}
 	S.PetTotal++
+	dayLog().Pet++
 	if S.PetCnt < 10 {
 		S.PetCnt++
 		S.Mood = clamp(S.Mood + 6)
@@ -266,7 +297,7 @@ func needLine() string {
 	if S.Mood < 30 && rng.Float64() < 0.7 {
 		return pick([]string{n + " 심심해…", n + " 나랑 놀아줘…", "시무룩…"})
 	}
-	return ""
+	return careLine()
 }
 
 // ── 바나나 받기 게임: 내장 웹페이지를 작은 앱 창으로 띄움 ──
@@ -394,6 +425,8 @@ func onGameScore(n, moves int) {
 	S.Mood = clamp(S.Mood + float64(min(35, 10+n*2)))
 	S.Full = clamp(S.Full - 8)
 	S.PlayCnt++
+	dayLog().Play++
+	addDirt(3)
 	best := false
 	if moves > 0 {
 		S.MatchCnt++
