@@ -138,8 +138,15 @@ func onTray(l uintptr) {
 
 // 우땅이를 화면 가운데 아래로 불러오기
 func callPet() {
-	if mode == "drag" {
+	if mode == "drag" || catching {
 		return
+	}
+	if hiding {
+		endHide(false)
+		return
+	}
+	if i := cursorMonitor(); i >= 0 && i != curMon { // 마우스가 있는 모니터로
+		moveToMonitor(i)
 	}
 	posX = (workL+workR)/2 - float64(canvasW)/2
 	if mode == "sleep" {

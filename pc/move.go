@@ -72,6 +72,9 @@ func speedMul() float64 {
 	if sleepy() {
 		m *= 0.75
 	}
+	if batteryLow() { // 배터리가 없으면 기운도 없음
+		m *= 0.7
+	}
 	return m
 }
 
@@ -139,7 +142,7 @@ func fallTick(dt float64) {
 	posY += velY * dt
 	maxFallSpeed = math.Max(maxFallSpeed, velY)
 
-	lo, hi := workL-float64(canvasW)*0.15, workR-float64(canvasW)*0.85
+	lo, hi := floorBounds()
 	if posX < lo {
 		posX, velX = lo, -velX*0.6
 		dir = 1
@@ -180,7 +183,12 @@ func land() {
 	case !greeted:
 		greeted = true
 		setMode("st_bow", 2200*time.Millisecond)
+	case greetAfterFall != "": // 숨바꼭질 끝
+		setMode("laugh", rd(2.5, 3))
+		say(greetAfterFall, 4*time.Second)
+		greetAfterFall = ""
 	case hard:
+		sfx("boing")
 		dayLog().Throw++
 		addDirt(5)
 		setMode("st_surprise", 1800*time.Millisecond)
@@ -225,7 +233,7 @@ func frameRect(h uintptr) (RECT, bool) {
 }
 
 func isOurs(h uintptr) bool {
-	return h == hwnd || h == bubHwnd || h == nameHwnd || h == remHwnd || (fxHwnd != 0 && h == fxHwnd)
+	return h == hwnd || h == bubHwnd || h == nameHwnd || h == remHwnd || (fxHwnd != 0 && h == fxHwnd) || (frHwnd != 0 && h == frHwnd) || (memoHwnd != 0 && h == memoHwnd)
 }
 
 func perchable(h uintptr) bool {
@@ -310,7 +318,7 @@ func walkBounds() (lo, hi float64) {
 	if perch != 0 {
 		return float64(perchR.Left) - float64(canvasW)*0.3, float64(perchR.Right) - float64(canvasW)*0.7
 	}
-	return workL - float64(canvasW)*0.15, workR - float64(canvasW)*0.85
+	return floorBounds()
 }
 
 func walkTick(dt float64) {

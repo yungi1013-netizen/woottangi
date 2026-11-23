@@ -69,6 +69,24 @@ type petState struct {
 	SeenFx    []string `json:"seenFx,omitempty"`
 	// 그림일기 (diary.go)
 	Diary []dayRec `json:"diary,omitempty"`
+	// 여러 모니터 (monitor.go): 꺼 둔 모니터 이름
+	MonOff []string `json:"monOff,omitempty"`
+	// 바탕화면 놀이 (play.go)
+	DeskBest int `json:"deskBest,omitempty"`
+	HideCnt  int `json:"hideCnt,omitempty"`
+	GachaCnt int `json:"gachaCnt,omitempty"`
+	// 친구 땅콩이 (friend.go)
+	FriendCnt int    `json:"friendCnt,omitempty"`
+	FriendDay string `json:"friendDay,omitempty"`
+	// 생활 도우미 (helper.go)
+	NoStretch  bool   `json:"noStretch,omitempty"`
+	NoWater    bool   `json:"noWater,omitempty"`
+	NoBattery  bool   `json:"noBattery,omitempty"`
+	NoSound    bool   `json:"noSound,omitempty"`
+	StretchCnt int    `json:"stretchCnt,omitempty"`
+	WaterCnt   int    `json:"waterCnt,omitempty"`
+	MemoCnt    int    `json:"memoCnt,omitempty"`
+	Memos      []memo `json:"memos,omitempty"`
 }
 
 var S = petState{Bananas: 10, Full: 70, Mood: 70}

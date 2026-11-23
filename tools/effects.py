@@ -198,12 +198,52 @@ def blanket():
     return p.done()
 
 
+def banana(gold=False):
+    """바탕화면 바나나 받기: 바나나 (금 바나나)"""
+    p = Pen()
+    body, dark = ((255, 214, 40, 255), (230, 170, 20, 255)) if not gold else ((255, 196, 30, 255), (214, 140, 10, 255))
+    outer = [(-25 + 50 * i / 20, -8 + 22 * math.sin(math.pi * i / 20)) for i in range(21)]
+    inner = [(25 - 50 * i / 20, -12 + 10 * math.sin(math.pi * i / 20)) for i in range(21)]
+    p.poly(outer + inner, body)
+    p.line([(-12, 6), (0, 8), (12, 6)], 2, dark)
+    p.line([(24, -10), (29, -19)], 4.5, (110, 80, 30, 255))
+    p.ell(-25, -10, 2.5, 2.5, (90, 60, 20, 255), 0)
+    if gold:
+        for x, y, r in ((-18, -22, 7), (16, -24, 5), (0, -26, 4)):
+            p.poly(star_pts(x, y, r, 0.35, 4, -90), (255, 255, 230, 255), 1.5)
+    return p.done()
+
+
+def rock():
+    """바탕화면 바나나 받기: 돌멩이 (받으면 어질어질)"""
+    p = Pen()
+    p.poly([(-20, 8), (-16, -10), (-2, -18), (14, -14), (22, 0), (18, 14), (0, 18), (-14, 16)], (150, 150, 160, 255))
+    p.line([(-6, -6), (2, -10)], 2, (110, 110, 120, 255))
+    p.ell(8, 4, 3, 2, (120, 120, 130, 255), 0)
+    return p.done()
+
+
+def memo():
+    """포스트잇 메모 (우땅이가 들고 다님)"""
+    p = Pen()
+    p.poly(rot([(-20, -20), (20, -20), (20, 12), (12, 20), (-20, 20)], 0, 0, -8), (255, 236, 120, 255), 2.5)
+    for y in (-10, -2, 6):
+        p.line(rot([(-12, y), (12, y)], 0, 0, -8), 1.6, (200, 170, 60, 255))
+    return p.done()
+
+
+def rot(pts, cx, cy, deg):
+    c, s = math.cos(math.radians(deg)), math.sin(math.radians(deg))
+    return [(cx + (x - cx) * c - (y - cy) * s, cy + (x - cx) * s + (y - cy) * c) for x, y in pts]
+
+
 SPRITES = {
     "snow": snow, "petal": petal, "maple": maple, "ginkgo": ginkgo, "bubble": bubble,
     "star": star, "heart": heart, "sparkle": sparkle, "candy": candy,
     "conf0": confetti((255, 92, 108, 255)), "conf1": confetti((255, 214, 64, 255)),
     "conf2": confetti((90, 190, 255, 255)), "conf3": confetti((120, 210, 110, 255)),
     "blanket": blanket,
+    "banana": banana, "goldbanana": lambda: banana(True), "rock": rock, "memo": memo,
 }
 
 
@@ -215,7 +255,7 @@ if __name__ == "__main__":
         ims[k].save(OUT / f"{k}.png")
     print("effects: pc/fx/*.png")
     if len(sys.argv) > 1 and sys.argv[1] == "preview":
-        sheet = Image.new("RGBA", (64 * 13 * 2, 64 * 2 + 300), (205, 225, 245, 255))
+        sheet = Image.new("RGBA", (128 * (len(ims) - 1), 64 * 2 + 300), (205, 225, 245, 255))
         x = 0
         for k, im in ims.items():
             if k == "blanket":

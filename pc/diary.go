@@ -22,6 +22,7 @@ type dayRec struct {
 	Level   int    `json:"lv,omitempty"` // 그날 오른 레벨
 	Weather string `json:"w,omitempty"`  // 그날 본 날씨 쇼
 	Event   string `json:"ev,omitempty"` // 그날 이벤트 이름
+	Friend  int    `json:"fr,omitempty"` // 땅콩이가 놀러 온 횟수
 }
 
 const diaryKeep = 60
@@ -107,6 +108,9 @@ func diaryText(r dayRec, owner string) []string {
 	}
 	if r.Focus > 0 {
 		s = append(s, fmt.Sprintf("%s %d분 동안 집중했다. 옆에서 조용히 응원했다.", josa(owner, "이", "가"), r.Focus))
+	}
+	if r.Friend > 0 {
+		s = append(s, pk("친구 땅콩이가 놀러 왔다! 같이 술래잡기도 하고 바나나도 나눠 먹었다.", "땅콩이랑 실컷 놀았다. 또 놀러 오면 좋겠다!"))
 	}
 	if r.Throw > 0 {
 		s = append(s, fmt.Sprintf("하늘을 %d번 날았다! %s", r.Throw, pk("무서웠지만 재밌었다.", "어질어질~")))

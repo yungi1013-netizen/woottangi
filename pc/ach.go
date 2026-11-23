@@ -57,6 +57,22 @@ var achievements = []achievement{
 	{"event1", "🎉", "축제 좋아", "기념일 이벤트를 처음 함께했어요", 5, "", func() bool { return S.EventCnt >= 1 }},
 	{"seasons", "🍂", "사계절 친구", "눈·벚꽃잎·비눗방울·낙엽을 모두 봤어요", 30, "", seenAllSeasons},
 	{"diary7", "📔", "일기 일주일", "그림일기가 7일 쌓였어요", 10, "", func() bool { return diaryDays(S.Diary) >= 7 }},
+	{"desk20", "🧺", "바탕화면 사냥꾼", "바탕화면 바나나 받기 한 판에 20개 이상", 15, "", func() bool { return S.DeskBest >= 20 }},
+	{"hide1", "🙈", "꼭꼭 숨어라", "숨바꼭질에서 우땅이를 처음 찾았어요", 5, "", func() bool { return S.HideCnt >= 1 }},
+	{"hide20", "🔍", "숨바꼭질 탐정", "숨바꼭질에서 20번 찾기", 20, "", func() bool { return S.HideCnt >= 20 }},
+	{"gacha1", "🎰", "두근두근 뽑기", "바나나 뽑기를 처음 했어요", 3, "", func() bool { return S.GachaCnt >= 1 }},
+	{"gachaAll", "✨", "뽑기 수집가", "뽑기 아이템 4개 모두 모으기", 30, "", func() bool {
+		for _, id := range gachaPool {
+			if !owns(id) {
+				return false
+			}
+		}
+		return true
+	}},
+	{"friend1", "🥜", "친구가 왔어요", "땅콩이가 처음 놀러 왔어요", 5, "", func() bool { return S.FriendCnt >= 1 }},
+	{"friend10", "🤝", "단짝 친구", "땅콩이와 10번 놀기", 20, "", func() bool { return S.FriendCnt >= 10 }},
+	{"memo1", "📝", "메모 부탁해", "포스트잇 메모를 처음 맡겼어요", 3, "", func() bool { return S.MemoCnt >= 1 }},
+	{"stretch10", "🙆", "건강 지킴이", "스트레칭 알림 10번 받기", 10, "", func() bool { return S.StretchCnt >= 10 }},
 	{"night", "🦉", "올빼미", "밤 12시~새벽 4시에 함께 있기", 5, "", func() bool { return time.Now().Hour() < 4 }},
 	{"day100", "💝", "100일의 우땅이", "함께한 지 100일", 30, "", func() bool { return daysTogether() >= 100 }},
 }
@@ -316,6 +332,7 @@ h1{margin:4px 0 2px;font-size:24px}h2{margin:22px 0 10px;font-size:19px;display:
 		{"바나나 받기 최고", fmt.Sprintf("%d개", st.Best)}, {"짝 맞추기 최고", bm}, {"꾸미기", fmt.Sprintf("%d/%d", len(st.Owned), len(items))},
 		{"집중", fmt.Sprintf("%d번", st.FocusCnt)}, {"집중한 시간", fmt.Sprintf("%d분", st.FocusMin)}, {"업적", fmt.Sprintf("%d/%d", got, len(achievements))},
 		{"목욕", fmt.Sprintf("%d번", st.BathCnt)}, {"이불 덮기", fmt.Sprintf("%d번", st.TuckCnt)}, {"그림일기", fmt.Sprintf("%d일", diaryDays(st.Diary))},
+		{"숨바꼭질", fmt.Sprintf("%d번", st.HideCnt)}, {"바나나 뽑기", fmt.Sprintf("%d번", st.GachaCnt)}, {"땅콩이 방문", fmt.Sprintf("%d번", st.FriendCnt)},
 	} {
 		fmt.Fprintf(&b, `<div>%s<b>%s</b></div>`, s[0], e(s[1]))
 	}

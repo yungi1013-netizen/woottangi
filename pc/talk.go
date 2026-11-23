@@ -170,8 +170,8 @@ func placeBubble() {
 	}
 	x := int32(posX + float64(canvasW)/2 - float64(bubW)/2)
 	y := int32(posY + float64(canvasH)*0.30 - float64(bubH))
-	if y < 0 {
-		y = 0
+	if y < int32(workT) {
+		y = int32(workT)
 	}
 	sdc, _, _ := pGetDC.Call(0)
 	pt := POINT{x, y}
@@ -443,6 +443,7 @@ func doClick() {
 		return
 	}
 	setMode("st_me", 2200*time.Millisecond)
+	sfx("pop")
 	if ownerName != "" && rng.Float64() < 0.4 {
 		say(pick([]string{"응! " + voc() + "!", "불렀어?", "나 여기 있어!"}), 2200*time.Millisecond)
 	}

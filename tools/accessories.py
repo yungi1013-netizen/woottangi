@@ -312,14 +312,72 @@ def dirt():
     return p.done()
 
 
+def starpin():
+    """뽑기 선물: 반짝 별 머리핀"""
+    p = Pen()
+    gold, light = (255, 212, 60, 255), (255, 240, 160, 255)
+    for cx, cy, r, a in ((70, -214, 34, 12), (112, -186, 18, -8)):
+        pts = [(cx + r * (1 if k % 2 == 0 else 0.46) * math.cos(math.radians(-90 + a + k * 36)),
+                cy + r * (1 if k % 2 == 0 else 0.46) * math.sin(math.radians(-90 + a + k * 36))) for k in range(10)]
+        p.poly(pts, gold)
+        p.ell(cx - r * 0.18, cy - r * 0.2, r * 0.16, r * 0.12, light, 0)
+    return p.done()
+
+
+def halo():
+    """뽑기 선물: 천사 링 (머리 위에 동동)"""
+    p = Pen()
+    x0, y0 = p.P(-92, -300)
+    x1, y1 = p.P(92, -258)
+    w = round(OW * SS)
+    p.d.ellipse([x0 - w, y0 - w, x1 + w, y1 + w], outline=INK, width=round(22 * SS))
+    p.d.ellipse([x0, y0, x1, y1], outline=(255, 226, 90, 255), width=round(13 * SS))
+    for x, y in ((-104, -312), (112, -262)):
+        p.line([(x - 9, y), (x + 9, y)], 3.5, (255, 226, 90, 255))
+        p.line([(x, y - 9), (x, y + 9)], 3.5, (255, 226, 90, 255))
+    return p.done()
+
+
+def heartglasses():
+    """뽑기 선물: 하트 선글라스 (얼굴)"""
+    p = Pen()
+    pink = (255, 86, 140, 235)
+    for x in (-56, 56):
+        heart = [(x + 40 * (16 * math.sin(t) ** 3) / 16,
+                  -104 - 40 * (13 * math.cos(t) - 5 * math.cos(2 * t) - 2 * math.cos(3 * t) - math.cos(4 * t)) / 16)
+                 for t in [i * 2 * math.pi / 48 for i in range(48)]]
+        p.poly(heart, pink, 5)
+        p.ell(x - 16, -120, 8, 6, (255, 200, 222, 255), 0)
+    p.line([(-16, -122), (16, -122)], 7)
+    p.line([(-96, -126), (-130, -134)], 7)
+    p.line([(96, -126), (130, -134)], 7)
+    return p.done()
+
+
+def scarf():
+    """뽑기 선물: 줄무늬 목도리 (목)"""
+    p = Pen()
+    red, cream = (232, 70, 76, 255), (255, 244, 220, 255)
+    band = [(-96, 6), (-48, 22), (0, 26), (48, 22), (96, 6), (102, 34), (50, 52), (0, 56), (-50, 52), (-102, 34)]
+    p.poly(band, red)
+    for x in (-62, -20, 22, 64):
+        p.poly([(x - 9, 14 + abs(x) * -0.05), (x + 9, 16), (x + 9, 50), (x - 9, 48)], cream, 0)
+    p.poly([(36, 40), (70, 44), (78, 118), (44, 116)], red)
+    for y in (64, 92):
+        p.poly([(40, y), (74, y + 2), (76, y + 12), (42, y + 10)], cream, 0)
+    p.line([(46, 118), (44, 132)], 4); p.line([(60, 118), (60, 133)], 4); p.line([(74, 118), (76, 132)], 4)
+    return p.done()
+
+
 # id: (그림 함수)  — 이름·가격·자리는 pc/shop.go 에 있음
 ITEMS = {
     "ribbon": ribbon, "flower": flower, "sprout": sprout, "crown": crown,
     "beanie": beanie, "santa": santa, "glasses": glasses, "sunglasses": sunglasses, "bowtie": bowtie,
     "rainbow": rainbow, "bananaband": banana_band,
     "rudolph": rudolph, "witch": witch, "bokjumeoni": bokjumeoni, "dirt": dirt,
+    "starpin": starpin, "halo": halo, "heartglasses": heartglasses, "scarf": scarf,
 }
-FACE_ITEMS = {"glasses", "sunglasses"}
+FACE_ITEMS = {"glasses", "sunglasses", "heartglasses"}
 
 
 # ───────────────────────── 프레임별 머리 위치 ─────────────────────────

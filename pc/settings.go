@@ -72,6 +72,8 @@ func appendSettingsMenu(m uintptr) {
 		appendMenu(sp, f, uintptr(idSpeed+i), n)
 	}
 	appendMenu(st, MF_POPUP, sp, "걷는 속도")
+	appendMonitorMenu(st)
+	appendSoundMenu(st)
 	appendMenu(st, MF_SEPARATOR, 0, "")
 	f := uintptr(MF_STRING)
 	if !S.NoAutoHide {
@@ -102,7 +104,7 @@ func onSettingsCmd(cmd uintptr) bool {
 		setAutostart(!autostartEnabled())
 		return true
 	default:
-		return false
+		return onMonitorCmd(cmd)
 	}
 	saveState()
 	return true

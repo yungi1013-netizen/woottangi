@@ -266,7 +266,7 @@ func closeFxWindow() {
 // 날씨 쇼 시작 (이미 하고 있으면 종류만 바꿈)
 func startShow(kind string) bool {
 	w, ok := weathers[kind]
-	if !ok || hiddenFS {
+	if !ok || hiddenFS || catching {
 		return false
 	}
 	if fxBits == nil && !openFxWindow() {
@@ -296,7 +296,7 @@ func spawnWeather(w weather) {
 }
 
 func screenFxTick(now time.Time, dt float64) {
-	if fxBits == nil {
+	if fxBits == nil || catching { // 바탕화면 바나나 받기가 창을 쓰는 중
 		return
 	}
 	if hiddenFS { // 전체화면이 되면 바로 그만

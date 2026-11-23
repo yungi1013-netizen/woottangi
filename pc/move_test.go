@@ -14,7 +14,9 @@ func setupMove(t *testing.T) {
 	workL, workR, workT = 0, 1920, 0
 	ground = 1040 - float64(canvasH) + 2
 	greeted, perch, hiddenFS = true, 0, false
-	S = petState{Bananas: 10, Full: 80, Mood: 80}
+	S = petState{Bananas: 10, Full: 80, Mood: 80, NoSound: true}
+	mons, monOverride, curMon = nil, nil, -1
+	focusUntil = time.Time{}
 }
 
 // 오른쪽 위로 휙 던지면: 날아가서 벽에 튕기고, 바닥에 통통 튄 뒤 착지

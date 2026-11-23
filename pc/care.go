@@ -101,7 +101,13 @@ func rub(cx, cy float64) {
 	bathNeed -= 3.5
 	S.Dirt = clamp(S.Dirt - 3.5)
 	addBubbleAt(cx, cy)
+	if time.Since(lastRubSfx) > 280*time.Millisecond {
+		lastRubSfx = time.Now()
+		sfx("bubble")
+	}
 }
+
+var lastRubSfx time.Time
 
 func bathTick(now time.Time) {
 	if !bathing {

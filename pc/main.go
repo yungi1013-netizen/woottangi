@@ -291,6 +291,14 @@ func rd(a, b float64) time.Duration {
 }
 
 func nextChoice() {
+	if catching || hiding || !gachaAt.IsZero() { // 놀이가 끝낼 때까지
+		modeUntil = time.Now().Add(time.Hour)
+		return
+	}
+	if friendOn() { // 땅콩이가 정해 줌 (friend.go)
+		setMode("idle", time.Hour)
+		return
+	}
 	if bathing { // 목욕은 bathTick 이 끝냄
 		modeUntil = time.Now().Add(time.Hour)
 		return
@@ -366,16 +374,10 @@ func nextChoice() {
 	}
 }
 
+// 모니터 목록을 다시 읽고 지금 모니터의 바닥·벽 정하기 (monitor.go)
 func refreshWorkArea() {
-	var r RECT
-	pSystemParametersInfoW.Call(SPI_GETWORKAREA, 0, uintptr(unsafe.Pointer(&r)), 0)
-	if r.Right <= r.Left {
-		w, _, _ := pGetSystemMetrics.Call(SM_CXSCREEN)
-		h, _, _ := pGetSystemMetrics.Call(SM_CYSCREEN)
-		r = RECT{0, 0, int32(w), int32(h)}
-	}
-	workL, workR, workT = float64(r.Left), float64(r.Right), float64(r.Top)
-	ground = float64(r.Bottom) - float64(canvasH) + 2
+	scanMonitors()
+	applyMonitor()
 }
 
 func setupCanvas() {
@@ -443,6 +445,14 @@ func currentFrame() (*Sprite, float64, bool) {
 			return pick("shy", 7), 0, false
 		}
 		return pick("idle", 5), 0, false
+	case "catch": // 바탕화면 바나나 받기
+		n, fps := catchFrameSeq()
+		return pick(n, fps), 0, n == "walk" && dir < 0
+	case "hide": // 숨바꼭질 (빼꼼)
+		if blinking {
+			return seqs["blink"][0], 0, dir < 0
+		}
+		return pick("idle", 4), 0, dir < 0
 	case "drag":
 		return seqs["idle"][0], math.Sin(t*6) * 0.22, false
 	case "fall":
@@ -500,7 +510,9 @@ func render() {
 			buf[o], buf[o+1], buf[o+2], buf[o+3] = clampB(acc[0]), clampB(acc[1]), clampB(acc[2]), clampB(acc[3])
 		}
 	}
+	drawMemoNote(buf)
 	drawPetFx(buf)
+	clipHidden(buf)
 	present()
 }
 
@@ -516,28 +528,42 @@ func tick() {
 		lastArea = now
 	}
 	fsTick(now)
-	switch mode {
-	case "drag":
-		dragTick(now)
-	case "fall":
-		fallTick(dt)
-	default:
-		perchTick()
-		if g := groundY(); posY < g-1 {
-			maxFallSpeed, bounces = 0, 0
-			mode = "fall"
-			break
-		} else {
-			posY = g
+	followMonitor()
+	if hiding {
+		hideTick(now)
+	} else {
+		switch mode {
+		case "drag":
+			dragTick(now)
+		case "fall":
+			fallTick(dt)
+		default:
+			perchTick()
+			if g := groundY(); posY < g-1 {
+				maxFallSpeed, bounces = 0, 0
+				mode = "fall"
+				break
+			} else {
+				posY = g
+			}
+			if mode == "walk" {
+				walkTick(dt)
+			}
+			if mode == "catch" {
+				catchMove(dt)
+			}
+			if now.After(modeUntil) {
+				nextChoice()
+			}
+			cursorTick(now)
 		}
-		if mode == "walk" {
-			walkTick(dt)
-		}
-		if now.After(modeUntil) {
-			nextChoice()
-		}
-		cursorTick(now)
 	}
+	catchTick(now, dt)
+	gachaTick(now)
+	friendTick(now, dt)
+	healthTick(now)
+	batteryTick(now)
+	memoTick(now)
 	bathTick(now)
 	tuckTick(dt)
 	petFxTick(dt)
@@ -591,7 +617,11 @@ func showMenu() {
 	appendMenu(m, MF_GRAYED, 0, fmt.Sprintf("바나나 %d개", S.Bananas))
 	appendMenu(m, MF_GRAYED, 0, fmt.Sprintf("배부름 %d · 기분 %d", int(S.Full+0.5), int(S.Mood+0.5)))
 	appendMenu(m, MF_GRAYED, 0, fmt.Sprintf("청결 %d · 기운 %d", clean(), energy()))
+	if b := batteryMenuLine(); b != "" {
+		appendMenu(m, MF_GRAYED, 0, b)
+	}
 	appendMenu(m, MF_SEPARATOR, 0, "")
+	appendPlayStop(m)
 	sn, _, _ := pCreatePopupMenu.Call()
 	for i, f := range snacks {
 		fl := uintptr(MF_STRING)
@@ -606,6 +636,7 @@ func showMenu() {
 	for i, g := range gameNames {
 		appendMenu(gm, MF_STRING, uintptr(idGame+i), g)
 	}
+	appendPlayMenu(gm)
 	appendMenu(m, MF_POPUP, gm, "놀아주기")
 	appendFocusMenu(m)
 	appendMenu(m, MF_STRING, idPet, "쓰다듬기")
@@ -616,6 +647,7 @@ func showMenu() {
 	appendMenu(m, MF_STRING, idInfo, "우땅이 정보")
 	appendMenu(m, MF_STRING, idBook, "우땅이 수첩 (업적·도감)")
 	appendMenu(m, MF_STRING, idDiary, "우땅이 그림일기")
+	appendMemoMenu(m)
 	appendSeasonMenu(m)
 	nt, _, _ := pCreatePopupMenu.Call()
 	appendMenu(nt, MF_STRING, idRemind, fmt.Sprintf("시간 알림 설정… (%d개)", len(reminders)))
@@ -630,6 +662,7 @@ func showMenu() {
 		tf |= MF_CHECKED
 	}
 	appendMenu(nt, tf, idNeed, "배고픔·심심함 알림")
+	appendHelperNotify(nt)
 	appendMenu(m, MF_POPUP, nt, "알림")
 	appendMenu(m, MF_SEPARATOR, 0, "")
 	appendMenu(m, MF_STRING, idWalk, "걸어 다니기")
@@ -715,13 +748,23 @@ func showMenu() {
 	default:
 		if cmd >= idShopBase && cmd < idShopBase+uintptr(len(items)) {
 			doItem(int(cmd - idShopBase))
-		} else if !onCareCmd(cmd) && !onSeasonCmd(cmd) {
+		} else if !onCareCmd(cmd) && !onSeasonCmd(cmd) && !onPlayCmd(cmd) && !onHelperCmd(cmd) {
 			onSettingsCmd(cmd)
 		}
 	}
 }
 
 func quitPet() {
+	if catching {
+		endDeskCatch(true)
+	}
+	if hiding {
+		endHide(false)
+	}
+	if friendOn() {
+		closeFriend()
+	}
+	gachaAt = time.Time{}
 	quitting = true
 	setMode("st_bow", 2*time.Second)
 	say(pick([]string{"꾸벅! 다음에 또 만나~", "안녕! 꾸벅", "또 봐 " + voc() + "! 꾸벅"}), 2*time.Second)
@@ -745,6 +788,13 @@ func wndProc(h uintptr, msg uint32, w, l uintptr) uintptr {
 		tick()
 		return 0
 	case WM_LBUTTONDOWN:
+		if hiding { // 숨바꼭질: 찾았다!
+			endHide(hideStage >= 2)
+			return 0
+		}
+		if catching { // 바나나 받기 중엔 마우스만 따라감
+			return 0
+		}
 		pGetCursorPos.Call(uintptr(unsafe.Pointer(&downPt)))
 		downWin = POINT{int32(posX), int32(posY)}
 		pressed, dragging = true, false
@@ -826,6 +876,7 @@ func main() {
 	linkAnchors()
 	loadFX()
 	loadCare()
+	loadSounds()
 
 	inst, _, _ := pGetModuleHandleW.Call(0)
 	cls := u16("WoottangiWalk")
@@ -856,6 +907,8 @@ func main() {
 	loadAccessories()
 	loadReminders()
 	createRemWindow(inst)
+	createMemoWindow(inst)
+	memoShowAt = time.Now().Add(20 * time.Second)
 	msgTaskbarCreated, _, _ = pRegisterWindowMsgW.Call(uintptr(unsafe.Pointer(u16("TaskbarCreated"))))
 	addTray(icon)
 	pSetTimer.Call(hwnd, 1, 33, 0)
@@ -883,6 +936,11 @@ func main() {
 		}
 		if isRemMsg(m.Hwnd) {
 			if r2, _, _ := pIsDialogMessageW.Call(remHwnd, uintptr(unsafe.Pointer(&m))); r2 != 0 {
+				continue
+			}
+		}
+		if isMemoMsg(m.Hwnd) {
+			if r2, _, _ := pIsDialogMessageW.Call(memoHwnd, uintptr(unsafe.Pointer(&m))); r2 != 0 {
 				continue
 			}
 		}

@@ -155,6 +155,7 @@ func celebrate(lv int) {
 	S.Mood = clamp(S.Mood + 10)
 	saveState()
 	setMode("laugh", rd(3, 3.6))
+	sfx("level")
 	s := fmt.Sprintf("레벨 업! Lv.%d 됐어!\n바나나 %d개 선물!", lv, gift)
 	if newTitle {
 		s = fmt.Sprintf("레벨 업! Lv.%d!\n이제 나는 '%s'야!\n바나나 %d개 선물!", lv, titleOf(lv), gift)

@@ -51,15 +51,24 @@ var items = []item{
 	{"rudolph", "루돌프 뿔", 0, slotHead, "루돌프 사슴 우땅이~ 메리 크리스마스!"},
 	{"witch", "마녀 모자", 0, slotHead, "수리수리 바나나~ 얍!"},
 	{"bokjumeoni", "복주머니", 0, slotNeck, "복 많이 받아! 복주머니 짤랑짤랑~"},
+	// 바나나 뽑기에서만 나옴 (play.go)
+	{"starpin", "반짝 별 핀", 0, slotHead, "반짝반짝 작은 별~ 나 빛나지?"},
+	{"halo", "천사 링", 0, slotHead, "오늘은 천사 우땅이야~ 착하게 살게!"},
+	{"heartglasses", "하트 안경", 0, slotFace, "세상이 다 하트로 보여~ 사랑해!"},
+	{"scarf", "줄무늬 목도리", 0, slotNeck, "포근포근 따뜻해~"},
 }
 
 // 선물 아이템을 받는 방법 (메뉴·수첩 표시용)
 var giftFrom = map[string]string{
-	"rainbow":    "누적 출석 30일 선물",
-	"bananaband": "누적 출석 100일 선물",
-	"rudolph":    "크리스마스 선물",
-	"witch":      "할로윈 선물",
-	"bokjumeoni": "설날·추석 선물",
+	"rainbow":      "누적 출석 30일 선물",
+	"bananaband":   "누적 출석 100일 선물",
+	"rudolph":      "크리스마스 선물",
+	"witch":        "할로윈 선물",
+	"bokjumeoni":   "설날·추석 선물",
+	"starpin":      "바나나 뽑기",
+	"halo":         "바나나 뽑기",
+	"heartglasses": "바나나 뽑기",
+	"scarf":        "바나나 뽑기",
 }
 
 // 아이템을 그냥 손에 넣음 (선물). 이미 있으면 false
