@@ -110,6 +110,8 @@ func (t *thing) draw() {
 	sz := SIZE{int32(n), int32(n)}
 	src := POINT{0, 0}
 	bl := BLENDFUNCTION{AC_SRC_OVER, 0, 255, AC_SRC_ALPHA}
+	// 물건마다 그림(DIB)이 따로라서, 올리기 전에 이 물건 그림을 DC 에 끼워야 보임
+	pSelectObject.Call(thingDC, t.dib)
 	pUpdateLayeredWindow.Call(t.hwnd, sdc, uintptr(unsafe.Pointer(&pt)), uintptr(unsafe.Pointer(&sz)),
 		thingDC, uintptr(unsafe.Pointer(&src)), 0, uintptr(unsafe.Pointer(&bl)), ULW_ALPHA)
 	pReleaseDC.Call(0, sdc)
