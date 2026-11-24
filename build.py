@@ -19,7 +19,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 PY = sys.executable
-VERSION = "1.1"   # 버전은 여기만 바꾸면 exe·설치 프로그램·파일 정보에 모두 들어감
+VERSION = "1.2"   # 버전은 여기만 바꾸면 exe·설치 프로그램·파일 정보에 모두 들어감
 os.environ["WOO_VERSION"] = VERSION
 
 
@@ -34,6 +34,7 @@ def step_frames():
     run([PY, ROOT / "tools" / "stickers.py", ROOT / "frames"])
     run([PY, ROOT / "tools" / "accessories.py"])   # 꾸미기 아이템 그림 + 프레임별 머리 위치
     run([PY, ROOT / "tools" / "effects.py"])       # 계절 날씨 조각 · 거품 · 이불
+    run([PY, ROOT / "tools" / "emo_gif.py"])       # 이모티콘 GIF (pc/emo, 폰 앱에도 들어감)
 
 
 def step_web():

@@ -6,11 +6,16 @@
 걷고, 앉고, 졸고, 간식을 먹고, 이름을 불러 주고, 시간 맞춰 말을 걸어요.
 바나나를 모아 간식을 주고 모자도 씌워 주면서 함께 레벨을 올려 보세요.
 
-### ⬇️ [설치 프로그램 내려받기 (v1.1)](https://github.com/yungi1013-netizen/woottangi/releases/latest/download/Woottangi_Setup_v1.1.exe)
+### ⬇️ [설치 프로그램 내려받기 (v1.2)](https://github.com/yungi1013-netizen/woottangi/releases/latest/download/Woottangi_Setup_v1.2.exe)
 
 Windows 10/11 · 관리자 권한 필요 없음. 설치하면 시작 메뉴·바탕화면에 "우땅이"가 생기고, 설정 > 앱 에서 지울 수 있어요.
-설치 없이 쓰고 싶다면 [포터블 zip](https://github.com/yungi1013-netizen/woottangi/releases/latest/download/Woottangi_v1.1_portable.zip) 을 받아 압축을 풀고 실행하세요.
+설치 없이 쓰고 싶다면 [포터블 zip](https://github.com/yungi1013-netizen/woottangi/releases/latest/download/Woottangi_v1.2_portable.zip) 을 받아 압축을 풀고 실행하세요.
 처음 실행할 때 SmartScreen 경고가 뜨면 **추가 정보 → 실행**을 눌러 주세요 (서명하지 않은 exe라서 그래요).
+
+### 📱 [안드로이드 앱 내려받기 (v1.2 APK)](https://github.com/yungi1013-netizen/woottangi/releases/latest/download/Woottangi_Android_v1.2.apk)
+
+폰 화면 위를 우땅이가 돌아다녀요 (다른 앱 위에 표시 권한 필요). 휴대폰에서 받아 설치하고, "출처를 알 수 없는 앱" 설치를 허용해 주세요.
+이미 깔려 있으면 그대로 덮어 설치하면 돼요. 바나나 · 레벨 · 꾸미기 · 업적 기록은 그대로 남아요.
 
 ## 할 수 있는 것
 
@@ -20,10 +25,14 @@ Windows 10/11 · 관리자 권한 필요 없음. 설치하면 시작 메뉴·바
 |---|---|
 | 🍌 **간식 주기** | 바나나 · 바나나우유 · 바나나케이크. 배부름과 기분이 올라가요 |
 | 🎀 **꾸미기** | 바나나로 모자·안경·나비넥타이를 사서 씌워요. 걷든 자든 머리를 따라다녀요 |
-| 🎮 **놀아주기** | 바나나 받기 · 짝 맞추기 미니게임으로 바나나를 모아요 |
+| 🎮 **놀아주기** | 바나나 받기 · 짝 맞추기 · 바나나 탑 쌓기 · 우땅이 두더지 잡기 미니게임으로 바나나를 모아요 |
+| 💬 **AI 대화 (새로!)** | 메뉴 → 우땅이랑 대화하기. 말을 걸면 우땅이가 Claude로 대답하고 어울리는 동작도 해요. 내 Anthropic API 키를 넣어야 켜지고 (사용 요금은 내 계정), 키가 없어도 지금처럼 잘 놀아요 |
+| 😊 **이모티콘** | 브이 · 엄지척 · 노래 · 꽃받침 등 20가지가 넘는 동작. GIF로 저장해서 메신저로 보낼 수도 있어요 |
+| 🍳 **바나나 요리** | 바나나로 요리를 만들어 요리 도감을 채워요 |
+| 🎶 **음악 춤** | 컴퓨터·폰에서 음악이 나오면 우땅이가 들썩들썩 춤을 춰요 |
 | ⭐ **레벨·칭호** | 함께할수록 경험치가 쌓여 아기 우땅이 → 단짝 → 베프 → 전설의 우땅이… |
 | 📅 **출석 도장** | 매일 바나나, 7일 연속 보너스, 누적 30·100일엔 특별 아이템 선물 |
-| 🏆 **업적 19개** | 달성하면 우땅이가 축하하고 바나나를 줘요 |
+| 🏆 **업적 50개 이상** | 달성하면 우땅이가 축하하고 바나나를 줘요. 몇몇 업적은 특별한 꾸미기 아이템(꽃 화관·금메달·헤드폰·요리사 모자…)도 선물해요 |
 | 📒 **우땅이 수첩** | 기록 · 업적 · 꾸미기 도감을 한눈에 |
 | ⏱️ **집중 타이머** | 25분·50분 집중하는 동안 옆에 조용히 앉아 있다가, 끝나면 바나나를 줘요 |
 | 🫧 **씻기기 · 재우기** | 놀다 보면 꼬질꼬질해져요. 마우스로 문질러 거품 목욕을 시키고, 졸려 하면 이불을 덮어 재워요 |
@@ -73,7 +82,7 @@ Woottangi_source/
 │  └─ stickers/            이모티콘 스티커 5종 (고해상도)
 ├─ tools/                 파이썬 도구
 │  ├─ heads.py             표정 머리 만들기 (눈·입 inpaint 후 새로 그림)
-│  ├─ compose.py           동작 프레임 합성 (걷기·앉기·자기·웃기·먹기·벌서기 …)
+│  ├─ compose.py           동작 프레임 합성 (걷기·앉기·자기·웃기·먹기·벌서기 … + 이모티콘: 박수·화이팅·사랑해·흥·춤·갸우뚱)
 │  ├─ stickers.py          스티커 동작 프레임 (놀람·뒹굴·울기·저요·인사)
 │  ├─ accessories.py       꾸미기 아이템 그림(pc/acc) + 프레임별 머리 위치(pc/anchors.go)
 │  ├─ effects.py           계절 날씨 조각 · 거품 · 반짝이 · 이불 그림 (pc/fx)
@@ -98,13 +107,23 @@ Woottangi_source/
 │  ├─ helper.go            건강 알림 · 배터리 반응 · 포스트잇 메모 · 효과음
 │  ├─ monitor.go           여러 모니터 (다닐 모니터 고르기 · 모니터 넘어가기)
 │  ├─ settings.go          설정 메뉴 (크기·투명도·걷는 속도·전체화면 숨기, 저장됨)
-│  ├─ ach.go               업적 19개 · 누적 출석 선물(30·100일) · 우땅이 수첩(/book 업적·도감 페이지)
+│  ├─ ach.go               업적 · 업적 보상 아이템 · 누적 출석 선물(30·100일) · 업데이트 소식 · 우땅이 수첩(/book)
+│  ├─ ai.go · chat.html    AI 대화 (Claude, 사용자 API 키) · 대화 창 페이지
+│  ├─ emo.go               이모티콘 메뉴 · GIF 저장
+│  ├─ cook.go              바나나 요리 · 요리 도감
+│  ├─ music.go             음악 감지 (윈도우 오디오 미터) → 춤
+│  ├─ whack_template.html  우땅이 두더지 잡기 (build_web.py 가 whack.html 로 만듦)
 │  ├─ match_template.html  짝 맞추기 게임 화면 (build_web.py 가 match.html 로 만듦)
 │  ├─ anchors.go           프레임별 머리 위치 (accessories.py 가 자동 생성)
 │  ├─ acc/                 꾸미기 아이템 그림 (accessories.py 결과)
 │  ├─ shop_test.go         go test → 상점 동작 확인 + test_worn.png 미리보기
 │  └─ game_template.html   바나나 받기 게임 화면 (build_web.py 가 game.html 로 만듦)
 ├─ installer/            설치 프로그램 (Go) — 설치·업데이트·삭제, build.py setup 으로 만듦
+├─ android/              안드로이드 앱 (Java, Gradle 없이 tools/build_android.py 로 APK 빌드)
+│  ├─ src/…/Pet.java       우땅이 상태·행동 (PC 와 같은 규칙) · AI 답 다듬기
+│  ├─ src/…/PetService.java  화면 위 우땅이 (다른 앱 위에 표시) · 꾹 메뉴
+│  ├─ src/…/AiChat.java    AI 대화 (Messages API 를 HttpURLConnection 으로 직접 호출)
+│  └─ test/PetTest.java    python tools/build_android.py --test
 ├─ web/
 │  ├─ template.html        휴대폰용 화면 원본
 │  └─ woottangi_mobile.html  완성본 (build_web.py 결과)
@@ -129,6 +148,7 @@ PC exe 를 만들려면 Go 1.22 이상 (https://go.dev/dl). 윈도우·맥·리�
 | `python build.py exe` | exe 만 |
 | `python build.py all` | 전부 처음부터 (+ 배포 파일) |
 | `python build.py setup` | **배포용**: exe + 설치 프로그램 `dist/Woottangi_Setup_v{버전}.exe` + 압축 파일 `dist/Woottangi_v{버전}_portable.zip` |
+| `python tools/build_android.py` | 안드로이드 APK `dist/Woottangi_Android_v{버전}.apk` (JDK 17 + Android SDK, 서명 키는 저장소 밖에 둠) |
 
 설치 프로그램(`installer/`)은 관리자 권한 없이 `%LOCALAPPDATA%\Programs\Woottangi` 에 설치하고,
 시작 메뉴·바탕화면 바로가기와 "설정 > 앱" 제거 항목을 만듭니다. 이미 설치돼 있으면 업데이트하고, 기록(`%AppData%\Woottangi`)은 그대로 둡니다.
@@ -166,8 +186,8 @@ with sync_playwright() as p:
 | 오늘의 운세 문구 | `pc/state.go` → `var luck` / 휴대폰은 `web/template.html` → `LUCK` |
 | 기본 크기 (작게 0.75) | `pc/main.go` → `scale = 0.75` |
 | 동작 프레임 수 | `tools/compose.py` → `SEQ` |
-| 몸·팔·다리 모양 | `tools/compose.py` → `pose()`, `pose_eat()` |
-| 버전 (지금 1.1) | `build.py` → `VERSION` 한 곳만 (exe 메뉴·트레이·파일 정보·설치 프로그램에 모두 들어감. README 다운로드 링크의 파일 이름도 같이) |
+| 몸·팔·다리 모양 | `tools/compose.py` → `pose()`, `pose_eat()`, `pose_emo()` (이모티콘) |
+| 버전 (지금 1.2) | `build.py` → `VERSION` 한 곳만 (exe 메뉴·트레이·파일 정보·설치 프로그램에 모두 들어감. README 다운로드 링크의 파일 이름도 같이) |
 
 ## 저장 위치 (PC)
 

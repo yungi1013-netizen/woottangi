@@ -56,6 +56,11 @@ var items = []item{
 	{"halo", "천사 링", 0, slotHead, "오늘은 천사 우땅이야~ 착하게 살게!"},
 	{"heartglasses", "하트 안경", 0, slotFace, "세상이 다 하트로 보여~ 사랑해!"},
 	{"scarf", "줄무늬 목도리", 0, slotNeck, "포근포근 따뜻해~"},
+	// 업적 보상 (ach.go)
+	{"medal", "금메달", 0, slotNeck, "놀이 대장 금메달! 반짝반짝~"},
+	{"headphones", "헤드폰", 0, slotHead, "쿵짝쿵짝~ 집중 모드 ON!"},
+	{"flowercrown", "꽃 화관", 0, slotHead, "쓰담쓰담 고마워~ 꽃 화관 예쁘지?"},
+	{"chefhat", "요리사 모자", 0, slotHead, "오늘은 우땅이 셰프! 맛있게 해 줄게~"},
 }
 
 // 선물 아이템을 받는 방법 (메뉴·수첩 표시용)
@@ -69,6 +74,10 @@ var giftFrom = map[string]string{
 	"halo":         "바나나 뽑기",
 	"heartglasses": "바나나 뽑기",
 	"scarf":        "바나나 뽑기",
+	"medal":        "업적 '놀이 대장' 선물",
+	"headphones":   "업적 '집중왕' 선물",
+	"flowercrown":  "업적 '쓰담쓰담 장인' 선물",
+	"chefhat":      "업적 '바나나 요리사' 선물",
 }
 
 // 아이템을 그냥 손에 넣음 (선물). 이미 있으면 false

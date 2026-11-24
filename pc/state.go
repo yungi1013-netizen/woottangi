@@ -78,6 +78,26 @@ type petState struct {
 	// 친구 땅콩이 (friend.go)
 	FriendCnt int    `json:"friendCnt,omitempty"`
 	FriendDay string `json:"friendDay,omitempty"`
+	// 내 자리 (climb.go): 화면 좌표의 창 왼쪽 위
+	HasSeat bool    `json:"seat,omitempty"`
+	SeatX   float64 `json:"seatX,omitempty"`
+	SeatY   float64 `json:"seatY,omitempty"`
+	// 장난감 · 선물 · 바나나 탑 (toy.go · gift.go)
+	ToyCnt    int            `json:"toyCnt,omitempty"`
+	ToyKick   int            `json:"toyKick,omitempty"`
+	ToyDay    string         `json:"toyDay,omitempty"`
+	Gifts     map[string]int `json:"gifts,omitempty"`
+	GiftCnt   int            `json:"giftCnt,omitempty"`
+	TowerBest int            `json:"towerBest,omitempty"`
+	TowerCnt  int            `json:"towerCnt,omitempty"`
+	WhackBest int            `json:"whackBest,omitempty"`
+	WhackCnt  int            `json:"whackCnt,omitempty"`
+	Cooked    map[string]int `json:"cooked,omitempty"`
+	CookCnt   int            `json:"cookCnt,omitempty"`
+	DanceCnt  int            `json:"danceCnt,omitempty"`
+	GifSaved  bool           `json:"gifSaved,omitempty"`
+	ChatCnt   int            `json:"chatCnt,omitempty"`
+	SeenVer   string         `json:"seenVer,omitempty"` // 업데이트 소식을 본 버전
 	// 생활 도우미 (helper.go)
 	NoStretch  bool   `json:"noStretch,omitempty"`
 	NoWater    bool   `json:"noWater,omitempty"`
@@ -326,6 +346,12 @@ var gameHTML []byte
 //go:embed match.html
 var matchHTML []byte
 
+//go:embed tower.html
+var towerHTML []byte
+
+//go:embed whack.html
+var whackHTML []byte
+
 const WM_APP_SCORE = 0x8000 + 1
 
 var (
@@ -351,7 +377,10 @@ func startGameServer() error {
 	}
 	mux.HandleFunc("/", page(gameHTML))
 	mux.HandleFunc("/match", page(matchHTML))
+	mux.HandleFunc("/tower", page(towerHTML))
+	mux.HandleFunc("/whack", page(whackHTML))
 	addBookRoutes(mux)
+	addAIRoutes(mux)
 	mux.HandleFunc("/start", func(w http.ResponseWriter, r *http.Request) {
 		gameMu.Lock()
 		defer gameMu.Unlock()
@@ -372,6 +401,16 @@ func startGameServer() error {
 			http.Error(w, "no", 400)
 			return
 		}
+		if r.URL.Query().Get("g") == "whack" { // 두더지 잡기: 점수
+			pPostMessageW.Call(hwnd, WM_APP_SCORE+4, uintptr(min(n, whackMax)), 0)
+			w.Write([]byte("ok"))
+			return
+		}
+		if r.URL.Query().Get("g") == "tower" { // 바나나 탑: 쌓은 층 수
+			pPostMessageW.Call(hwnd, WM_APP_SCORE+3, uintptr(min(n, towerMax)), 0)
+			w.Write([]byte("ok"))
+			return
+		}
 		moves := 0 // 0 = 바나나 받기, 1 이상 = 짝 맞추기에서 뒤집은 횟수
 		if r.URL.Query().Get("g") == "match" {
 			moves, _ = strconv.Atoi(r.URL.Query().Get("m"))
@@ -390,8 +429,8 @@ func startGameServer() error {
 	return nil
 }
 
-var gameNames = []string{"바나나 받기", "짝 맞추기"}
-var gamePaths = []string{"", "match"}
+var gameNames = []string{"바나나 받기", "짝 맞추기", "바나나 탑 쌓기", "우땅이 두더지 잡기"}
+var gamePaths = []string{"", "match", "tower", "whack"}
 
 func openGame(which int) {
 	if S.Full < 15 {

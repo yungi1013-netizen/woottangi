@@ -125,6 +125,8 @@ header .who{font-size:14px;color:var(--muted)}
 .ach i{font-style:normal;font-size:22px}.ach span{display:block;font-size:11px;color:var(--muted)}
 .ach.no{background:#f1e9d8;border-style:dashed;color:#9c8b7c}.ach.no i{filter:grayscale(1);opacity:.45}
 .pick2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.emoGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.emoGrid button{display:grid;justify-items:center;gap:2px;padding:6px 2px;font-size:13px;min-width:0;word-break:keep-all}.emoGrid img{width:100%;max-width:64px;aspect-ratio:4/5;object-fit:contain}
 .pick2 button{display:grid;gap:4px;padding:12px 4px}.pick2 b{font-size:30px;font-weight:400}
 .match .mgrid{position:absolute;left:8px;right:8px;top:40px;bottom:8px;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(4,1fr);gap:6px}
 .mc{position:relative;perspective:500px;cursor:pointer;min-height:0}
@@ -263,7 +265,16 @@ header .who{font-size:14px;color:var(--muted)}
   <div class="sheet">
     <button type="button" class="back" data-close="playModal" aria-label="뒤로">‹</button>
     <h2>뭐 하고 놀까?</h2>
-    <div class="pick2"><button id="pCatch"><b>🧺</b>바나나 받기</button><button id="pMatch"><b>🃏</b>짝 맞추기</button><button id="pHide"><b>🙈</b>숨바꼭질<small>찾으면 바나나</small></button><button id="pGacha"><b>🎰</b>바나나 뽑기<small>바나나 10개</small></button><button id="pFriend" style="grid-column:1/-1"><b>🥜</b>친구 땅콩이<small></small></button></div>
+    <div class="pick2"><button id="pCatch"><b>🧺</b>바나나 받기</button><button id="pMatch"><b>🃏</b>짝 맞추기</button><button id="pHide"><b>🙈</b>숨바꼭질<small>찾으면 바나나</small></button><button id="pGacha"><b>🎰</b>바나나 뽑기<small>바나나 10개</small></button><button id="pFriend" style="grid-column:1/-1"><b>🥜</b>친구 땅콩이<small></small></button><button id="pEmo" style="grid-column:1/-1"><b>😊</b>이모티콘<small>박수 · 화이팅 · 사랑해 · 흥! · 춤 · 갸우뚱</small></button></div>
+  </div>
+</div>
+
+<div class="modal" id="emoModal" hidden>
+  <div class="sheet tall">
+    <button type="button" class="back" data-close="emoModal" aria-label="뒤로">‹</button>
+    <h2>이모티콘</h2>
+    <p>누르면 우땅이가 그대로 해 줘요.</p>
+    <div class="emoGrid" id="emoGrid"></div>
   </div>
 </div>
 
@@ -373,7 +384,32 @@ function toast(t) { const el = $("toast"); el.textContent = t; el.classList.remo
 
 /* ── 상태 ── */
 const FPS = {walk:11, idle:5, laugh:12, sit:5, sleep:6, eat:6, eat_milk:6, eat_cake:6, shy:7, punish:8, wave:8,
-  st_surprise:9, st_lounge:4, st_cry:9, st_me:9, st_bow:5};
+  st_surprise:9, st_lounge:4, st_cry:9, st_me:9, st_bow:5, clap:10, cheer:9, heart:7, angry:9, dance:9, huh:6,
+  v:8, thumb:8, sing:8, no:10, flower:7, yum:8, what:8, cute:7};
+/* 이모티콘 동작 (PC emo.go 와 같음): [동작, 이름, 초, 대사] */
+const EMOS = [
+  ["clap", "박수 짝짝", 2.6, n => ["짝짝짝! 최고야!", n+" 잘했어! 짝짝~", "박수 짝짝!"]],
+  ["cheer", "화이팅!", 2.6, n => [n+" 화이팅!", "아자아자 화이팅!", "할 수 있어! 화이팅!"]],
+  ["heart", "사랑해", 3.2, n => [n+" 사랑해 ♥", "이만큼 좋아해! ♥", "두근두근… ♥"]],
+  ["angry", "흥!", 2.6, n => ["흥! 삐졌어!", "뿌우… 나 화났어!", "흥칫뿡!"]],
+  ["dance", "신나는 춤", 3.6, n => ["룰루랄라~ 신난다!", "우땅우땅 춤이다~", "둠칫 둠칫!"]],
+  ["huh", "갸우뚱", 2.8, n => ["음…? 그게 뭐야?", "갸우뚱…?", "잘 모르겠어~ 헤헤"]],
+  ["v", "브이~", 2.6, n => ["브이~! 찰칵!", n+" 나 귀엽지? 브이!", "브이브이~"]],
+  ["thumb", "엄지척", 2.6, n => ["최고야! 엄지척!", n+" 최고!", "완전 짱이야!"]],
+  ["sing", "노래하기", 3.6, n => ["랄랄라~ ♪", "우땅이 노래 들어볼래? ♬", "바나나 바나나~ ♪"]],
+  ["no", "안 돼요!", 2.4, n => ["안 돼요!", "그건 안 돼~!", "절대 안 돼요!"]],
+  ["flower", "꽃 선물", 3.2, n => [n+" 이거 선물이야!", "꽃 받아줘~", "예쁜 꽃 줄게!"]],
+  ["yum", "잘 먹었어요", 3, n => ["잘 먹었어요! 배 통통~", "바나나 최고! 잘 먹었다~"]],
+  ["what", "뭐해?", 2.8, n => [n+" 뭐해?", "뭐해~? 나랑 놀자!", "빼꼼! 뭐해?"]],
+  ["cute", "꽃받침", 3, n => ["나 귀엽지? 헤헤", "꽃받침~ 뿅!", "귀여움 발사!"]],
+  ["st_surprise", "깜짝 놀라기", 1.8, n => ["깜짝이야!", "헉!"]],
+  ["st_me", "저요 저요", 2.2, n => ["저요! 저요!", "나 여기 있어!"]],
+  ["st_lounge", "뒹굴뒹굴", 5, n => ["뒹굴뒹굴~ 편하다", "아무것도 하기 싫다~"]],
+  ["st_bow", "꾸벅 인사", 2.2, n => ["안녕하세요! 꾸벅", n+" 반가워! 꾸벅"]],
+];
+const NEW_EMO = ["clap","cheer","heart","angry","dance","huh","v","thumb","sing","no","flower","yum","what","cute"];
+let clickTimes = [];
+function clickSpam() { const t = performance.now(); clickTimes = clickTimes.filter(c => t - c < 3000); clickTimes.push(t); if (clickTimes.length >= 5) { clickTimes = []; return true; } return false; }
 let mode = "st_bow", modeStart = performance.now(), modeUntil = modeStart + 2200;
 let x = 0.5, dir = 1, stay = false, last = performance.now();
 let blinkAt = performance.now() + 3000, blinkTill = 0;
@@ -384,7 +420,8 @@ function next() {
   if (fr) return setMode("idle", 3600);
   if (bathing) { modeUntil = performance.now() + 3600e3; return; }
   if (mode === "sleep" && tucked) return wakeTucked();
-  if (focusing() && ["sit","sleep","idle","walk","laugh","shy","wave","st_me","st_surprise","st_lounge"].includes(mode)) return setMode("sit", rnd(20,40));
+  if (focusing() && ["sit","sleep","idle","walk","laugh","shy","wave","st_me","st_surprise","st_lounge", ...NEW_EMO].includes(mode)) return setMode("sit", rnd(20,40));
+  if (NEW_EMO.includes(mode)) return setMode("idle", rnd(1.5,3));
   switch (mode) {
     case "st_bow": return setMode("wave", rnd(2.5,3.2));
     case "st_cry": say(pick(["으앙… 벌 서고 있을게…", "팔 아파… 흑흑"]), 3); return setMode("punish", rnd(4.5,5.5));
@@ -403,6 +440,9 @@ function next() {
   if (r < .08) return setMode("st_lounge", rnd(5,9));
   if (r < .12) return setMode("wave", rnd(2.5,3.5));
   if (r < .18) return setMode("laugh", rnd(1.6,2.6));
+  if (r < .21 && S.mood >= 60) return setMode("dance", rnd(3.2,4.2)); // 기분 좋으면 가끔 춤
+  if (r < .23) return setMode("huh", rnd(2.4,3));
+  if (r < .25) return setMode(["v","sing","what"][Math.floor(Math.random()*3)], rnd(2.6,3.4));
   if (r < .34) return setMode("sit", rnd(6,12));
   if (Math.random() < .4) dir = -dir;
   setMode("walk", rnd(4,9));
@@ -550,7 +590,8 @@ $("aFeed").onclick = () => {
 $("snackClose").onclick = () => closeL("snackModal");
 let petCount = 0, petDay = "";
 $("aPet").onclick = () => {
-  setMode("shy", rnd(3.2,4.2)); say(pick(["헤헤… 부끄러워…", "히히 간지러워~", voc()+" 좋아… ♥", "에헤헤…"]), 3);
+  if (Math.random() < .35) { setMode("heart", 3.2); say(pick([voc()+" 사랑해 ♥", "이만큼 좋아해! ♥", "두근두근… ♥"]), 3); }
+  else { setMode("shy", rnd(3.2,4.2)); say(pick(["헤헤… 부끄러워…", "히히 간지러워~", voc()+" 좋아… ♥", "에헤헤…"]), 3); }
   if (petDay !== today()) { petDay = today(); petCount = 0; }
   S.petTotal++; bump("pet");
   if (petCount++ < 10) { S.mood = clamp(S.mood + 6); save(); drawStats(); addExp(2); } else save();
@@ -682,6 +723,7 @@ pet.onclick = e => {
   if (tucked && mode === "sleep") return performance.now() - tuckStart < 15000 ? say(pick(["으음… 5분만 더…", "쿨… 조금만 더 잘래…"]), 2.5) : wakeTucked();
   if (focusing()) return say(`쉿, 집중 중이야! ${focusLeft()}분 남았어`, 2.5);
   if (mode === "sleep") { setMode("sit", rnd(2,4)); return say("하암… 잘 잤다!", 2.5); }
+  if (clickSpam()) { setMode("angry", 2.6); return say(pick(["흥! 그만 눌러~", "아야! 살살 해 줘! 흥!", "뿌우… 삐졌어!"]), 2.5); } // 마구 누르면 삐짐
   if (Math.random() < .3) { setMode("st_surprise", 1.8); return say(pick(["깜짝이야!", "앗! 놀랐잖아~", "헉!"]), 2); }
   setMode("st_me", 2.2); sfx("pop");
   if (Math.random() < .5) say(pick(["응! "+voc()+"!", "불렀어?", "나 여기 있어!"]), 2.2);
@@ -896,6 +938,20 @@ function endMatch() {
 $("mGo").onclick = startMatch;
 $("mBack").onclick = () => closeL("match");
 $("pCatch").onclick = () => { closeL("playModal"); setTimeout(openCatch, 60); };
+$("pEmo").onclick = () => {
+  const g = $("emoGrid"); g.innerHTML = "";
+  for (const [s, name, sec, lines] of EMOS) {
+    const b = document.createElement("button");
+    b.innerHTML = `<img src="${F[s][Math.min(2, F[s].length - 1)]}" alt="">${name}`;
+    b.onclick = () => {
+      closeL("emoModal");
+      if (hiding || gachaAt || bathing || fr || (tucked && mode === "sleep") || focusing()) return say("지금은 못 해~ 조금 이따!", 2.5);
+      setMode(s, sec); say(pick(lines(voc())), 2.5);
+    };
+    g.appendChild(b);
+  }
+  closeL("playModal"); setTimeout(() => openL("emoModal"), 60);
+};
 $("pMatch").onclick = () => { closeL("playModal"); setTimeout(() => { openL("match"); $("mStart").hidden = false; $("mGrid").innerHTML = ""; }, 60); };
 
 /* ── 집중 타이머 ── */

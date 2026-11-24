@@ -1,0 +1,74 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>우땅이 바나나 탑 쌓기</title>
+<style>
+*{box-sizing:border-box}html,body{height:100%;margin:0}
+body{font-family:"Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif;background:#bfe6f6;color:#2b1d16;user-select:none;overflow:hidden}
+.wrap{position:relative;height:100%;background:linear-gradient(#9fd8f2,#d9f2fc 70%,#e9f8ff)}
+canvas{width:100%;height:100%;display:block;touch-action:none;cursor:pointer}
+.hud{position:absolute;left:110px;right:10px;top:10px;display:flex;justify-content:flex-end;gap:8px;font-size:18px;font-weight:700;pointer-events:none}
+.hud span{background:#fff;border:3px solid #2b1d16;border-radius:12px;padding:3px 12px}
+.panel{position:absolute;inset:0;display:grid;place-content:center;text-align:center;gap:12px;background:#ffffffd9;padding:16px}
+[hidden]{display:none!important}
+.btns{display:flex;gap:10px;justify-content:center}
+button.ghost{background:#fff}
+.back{position:absolute;left:10px;top:10px;z-index:5;font-size:16px;padding:4px 14px;box-shadow:2px 3px 0 #2b1d16}
+.panel h1{margin:0;font-size:28px}.panel p{margin:0;font-size:16px;line-height:1.7;color:#7d6556}
+.panel img{width:130px;margin:0 auto}
+button{font:inherit;font-size:20px;font-weight:700;padding:10px 26px;border:3px solid #2b1d16;border-radius:14px;background:#ffe78a;color:#2b1d16;cursor:pointer;box-shadow:2px 4px 0 #2b1d16}
+</style></head><body><div class="wrap">
+<button class="back" id="back" hidden>‹ 그만하기</button>
+<div class="hud"><span>🏗️ <b id="sc">0</b>층</span></div>
+<canvas id="cv"></canvas>
+<div class="panel" id="start"><img src="__WAVE__" alt=""><h1>바나나 탑 쌓기</h1><p>왔다 갔다 하는 바나나 상자를<br>딱 맞을 때 눌러서(또는 스페이스) 쌓아요.<br>삐져나온 부분은 떨어져요. 딱 맞추면 <b>완벽!</b></p><div class="btns"><button class="ghost" data-x>‹ 닫기</button><button id="go">시작!</button></div></div>
+<div class="panel" id="end" hidden><img src="__LAUGH__" alt=""><h1 id="endT"></h1><p id="endP">바나나를 우땅이에게 보냈어요. 이 창은 닫아도 돼요.</p><div class="btns"><button class="ghost" data-x>‹ 닫기</button><button id="again">한 판 더!</button></div>
+<p id="closeHint" hidden>창 오른쪽 위 X 를 눌러 닫아 주세요.</p></div>
+</div><script>
+const $=id=>document.getElementById(id),rnd=(a,b)=>a+Math.random()*(b-a);
+const cv=$("cv"),img=new Image();img.src="__LAUGH__";const wimg=new Image();wimg.src="__WAVE__";let G=null;
+let tok="";async function start(){try{tok=await (await fetch("/start")).text()}catch(e){tok=""}if(!tok){$("start").hidden=false;$("end").hidden=true;document.querySelector("#start p").innerHTML="우땅이가 배고파서 못 놀겠대요…<br>간식을 먼저 주세요!";return}
+$("start").hidden=true;$("end").hidden=true;$("back").hidden=false;const r=cv.getBoundingClientRect(),d=devicePixelRatio||1;cv.width=r.width*d;cv.height=r.height*d;
+const W=cv.width,H=cv.height,bh=Math.min(36*d,H/16),bw=Math.min(W*.5,260*d);
+G={W,H,d,bh,bw,stack:[{x:(W-bw)/2,w:bw}],cur:null,bits:[],cam:0,camT:0,combo:0,pops:[],over:0,last:performance.now(),happy:0};
+next();$("sc").textContent=0;requestAnimationFrame(loop)}
+function layers(){return G.stack.length-1}
+function next(){const top=G.stack[G.stack.length-1],n=layers(),sp=G.W*Math.min(1.25,.42+n*.03);const left=Math.random()<.5;
+G.cur={x:left?-top.w*.2:G.W-top.w*.8,w:top.w,v:left?sp:-sp}}
+function drop(){if(!G||!G.cur||G.over)return;const c=G.cur,t=G.stack[G.stack.length-1],y=yOf(G.stack.length);
+let x0=Math.max(c.x,t.x),x1=Math.min(c.x+c.w,t.x+t.w);
+if(x1-x0<=0){G.bits.push({x:c.x,w:c.w,y,vy:0,vx:c.v*.2,r:0});G.cur=null;G.over=1.1;return}
+if(Math.abs(c.x-t.x)<=4*G.d){x0=t.x;x1=t.x+t.w;G.combo++;let w=x1-x0;if(G.combo>=3){const g=Math.min(8*G.d,G.bw-w);x0-=g/2;w+=g}x1=x0+w;
+G.pops.push({t:"완벽!"+(G.combo>=3?" ×"+G.combo:""),x:x0+(x1-x0)/2,y,a:1});G.happy=.6}
+else{G.combo=0;if(c.x<x0)G.bits.push({x:c.x,w:x0-c.x,y,vy:0,vx:-60*G.d,r:0});if(c.x+c.w>x1)G.bits.push({x:x1,w:c.x+c.w-x1,y,vy:0,vx:60*G.d,r:0})}
+G.stack.push({x:x0,w:x1-x0});$("sc").textContent=layers();G.camT=Math.max(0,(G.stack.length-7)*G.bh);next()}
+function yOf(i){return G.H-G.H*.16-(i+1)*G.bh+G.cam}
+$("go").onclick=start;
+function quit(){window.close();setTimeout(()=>{document.querySelectorAll("#closeHint").forEach(e=>e.hidden=false);$("end").hidden=false;$("start").hidden=true;$("endT").textContent="다음에 또 놀자!";$("endP").textContent=""},300)}
+document.querySelectorAll("[data-x]").forEach(b=>b.onclick=quit);
+$("back").onclick=()=>{if(!G)return;G=null;$("back").hidden=true;$("start").hidden=false;document.querySelector("#start p").innerHTML="그만했어요. 이번 판 바나나는 없어요.<br>다시 할까요?"};
+addEventListener("keydown",e=>{if(e.key==="Escape"){if(G)$("back").click();else quit()}if((e.key===" "||e.key==="Enter")&&G){e.preventDefault();drop()}});$("again").onclick=start;
+cv.addEventListener("pointerdown",e=>{e.preventDefault();drop()});
+function block(c,x,y,w,h,d){c.save();c.beginPath();c.roundRect(x,y,w,h,6*d);c.fillStyle="#ffd84d";c.fill();c.clip();
+c.fillStyle="#f2b92e";c.fillRect(x,y+h*.7,w,h*.3);c.font=`${h*.62}px sans-serif`;c.textAlign="center";c.textBaseline="middle";
+for(let k=x+h*.55;k<x+w;k+=h*1.05)c.fillText("🍌",k,y+h*.48);c.restore();
+c.beginPath();c.roundRect(x,y,w,h,6*d);c.lineWidth=2.5*d;c.strokeStyle="#2b1d16";c.stroke()}
+function loop(now){if(!G)return;const dt=Math.min((now-G.last)/1000,.05);G.last=now;const c=cv.getContext("2d"),{W,H,d,bh}=G;
+G.cam+=(G.camT-G.cam)*Math.min(1,dt*5);
+if(G.cur){G.cur.x+=G.cur.v*dt;if(G.cur.x<-G.cur.w*.25){G.cur.x=-G.cur.w*.25;G.cur.v=Math.abs(G.cur.v)}if(G.cur.x>W-G.cur.w*.75){G.cur.x=W-G.cur.w*.75;G.cur.v=-Math.abs(G.cur.v)}}
+c.clearRect(0,0,W,H);
+// 땅 · 받침
+const gy=G.H-G.H*.16+G.cam;c.fillStyle="#8fd16a";c.fillRect(0,gy,W,H);c.fillStyle="#6cb84a";c.fillRect(0,gy,W,6*d);
+const b0=G.stack[0];c.fillStyle="#c98b4f";c.strokeStyle="#2b1d16";c.lineWidth=2.5*d;c.beginPath();c.roundRect(b0.x-8*d,yOf(0),b0.w+16*d,bh,4*d);c.fill();c.stroke();
+for(let i=1;i<G.stack.length;i++){const s=G.stack[i],y=yOf(i);if(y>H+bh||y<-bh*2)continue;block(c,s.x,y,s.w,bh,d)}
+if(G.cur)block(c,G.cur.x,yOf(G.stack.length)-bh*.2,G.cur.w,bh,d);
+G.bits=G.bits.filter(b=>{b.vy+=1800*d*dt;b.y+=b.vy*dt;b.x+=b.vx*dt;b.r+=dt*2*Math.sign(b.vx||1);c.save();c.translate(b.x+b.w/2,b.y+bh/2);c.rotate(b.r);block(c,-b.w/2,-bh/2,b.w,bh,d);c.restore();return b.y<H+bh});
+// 우땅이 (받침 옆에서 구경)
+const pw=Math.min(W*.22,110*d),ph=pw*1.25,px=Math.max(pw*.6,b0.x-pw*.55),py=gy;const im=G.happy>0?img:wimg;G.happy-=dt;
+if(im.complete){c.save();c.translate(px,py);if(G.happy>0)c.translate(0,-Math.abs(Math.sin(now/90))*8*d);c.drawImage(im,-pw/2,-ph,pw,ph);c.restore()}
+c.font=`bold ${22*d}px sans-serif`;c.textAlign="center";
+G.pops=G.pops.filter(p=>{p.a-=dt*1.2;p.y-=40*d*dt;c.globalAlpha=Math.max(0,p.a);c.fillStyle="#ff7a3c";c.strokeStyle="#fff";c.lineWidth=4*d;c.strokeText(p.t,p.x,p.y);c.fillText(p.t,p.x,p.y);c.globalAlpha=1;return p.a>0});
+if(G.over){G.over-=dt;if(G.over<=0)return end()}
+requestAnimationFrame(loop)}
+function end(){const s=layers();G=null;$("back").hidden=true;const ban=s>0?Math.min(15,1+Math.floor(s/2)):0;
+$("endT").textContent=`${s}층 쌓았어요!`;$("endP").textContent=ban?`바나나 ${ban}개를 우땅이에게 보냈어요. 이 창은 닫아도 돼요.`:"한 층도 못 쌓았어요… 다시 해 볼까요?";$("end").hidden=false;
+fetch("/score?g=tower&n="+s+"&t="+tok).then(r=>{if(!r.ok)throw 0}).catch(()=>{$("endP").textContent="우땅이에게 보내지 못했어요. 우땅이가 켜져 있는지 확인해 주세요."})}
+</script></body></html>

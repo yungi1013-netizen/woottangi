@@ -33,9 +33,9 @@ func lvNow() int { l, _, _ := levelOf(S.Exp); return l }
 var achievements = []achievement{
 	{"snack1", "🍌", "첫 간식", "간식을 처음 줬어요", 3, "", func() bool { return S.SnackCnt >= 1 }},
 	{"snack50", "🍰", "미식가 우땅이", "간식을 50번 줬어요", 20, "", func() bool { return S.SnackCnt >= 50 }},
-	{"pet100", "🤲", "쓰담쓰담 장인", "쓰다듬기 100번", 15, "", func() bool { return S.PetTotal >= 100 }},
+	{"pet100", "🤲", "쓰담쓰담 장인", "쓰다듬기 100번 · 꽃 화관 선물", 15, "flowercrown", func() bool { return S.PetTotal >= 100 }},
 	{"play1", "🎮", "같이 놀자!", "게임을 처음 했어요", 3, "", func() bool { return S.PlayCnt >= 1 }},
-	{"play30", "🏆", "놀이 대장", "게임 30판", 20, "", func() bool { return S.PlayCnt >= 30 }},
+	{"play30", "🏆", "놀이 대장", "게임 30판 · 금메달 선물", 20, "medal", func() bool { return S.PlayCnt >= 30 }},
 	{"catch30", "🧺", "바나나 받기 달인", "바나나 받기 한 판에 30개 이상", 15, "", func() bool { return S.Best >= 30 }},
 	{"match1", "🃏", "짝꿍 찾기", "짝 맞추기를 처음 끝냈어요", 5, "", func() bool { return S.MatchCnt >= 1 }},
 	{"match12", "🧠", "기억력 천재", "짝 맞추기를 12번 안에 끝냈어요", 20, "", func() bool { return S.BestMatch > 0 && S.BestMatch <= 12 }},
@@ -48,7 +48,7 @@ var achievements = []achievement{
 	{"items3", "🎀", "멋쟁이", "꾸미기 아이템 3개 모으기", 10, "", func() bool { return len(S.Owned) >= 3 }},
 	{"itemsAll", "💎", "패셔니스타", "파는 꾸미기 아이템 전부 모으기", 30, "", ownsAllShop},
 	{"focus1", "⏱️", "집중 시작", "집중 타이머를 처음 끝냈어요", 5, "", func() bool { return S.FocusCnt >= 1 }},
-	{"focus10", "🎯", "집중왕", "집중 타이머 10번 끝내기", 20, "", func() bool { return S.FocusCnt >= 10 }},
+	{"focus10", "🎯", "집중왕", "집중 타이머 10번 끝내기 · 헤드폰 선물", 20, "headphones", func() bool { return S.FocusCnt >= 10 }},
 	{"rich300", "💰", "바나나 부자", "바나나 300개 모으기", 15, "", func() bool { return S.Bananas >= 300 }},
 	{"bath1", "🛁", "첫 목욕", "처음으로 씻겨 줬어요", 3, "", func() bool { return S.BathCnt >= 1 }},
 	{"bath20", "🧼", "뽀송뽀송", "목욕 20번", 20, "", func() bool { return S.BathCnt >= 20 }},
@@ -73,8 +73,23 @@ var achievements = []achievement{
 	{"friend10", "🤝", "단짝 친구", "땅콩이와 10번 놀기", 20, "", func() bool { return S.FriendCnt >= 10 }},
 	{"memo1", "📝", "메모 부탁해", "포스트잇 메모를 처음 맡겼어요", 3, "", func() bool { return S.MemoCnt >= 1 }},
 	{"stretch10", "🙆", "건강 지킴이", "스트레칭 알림 10번 받기", 10, "", func() bool { return S.StretchCnt >= 10 }},
+	{"toy1", "⚽", "공놀이 시작", "장난감을 처음 꺼내 줬어요", 3, "", func() bool { return S.ToyCnt >= 1 }},
+	{"toy100", "🎈", "공놀이 선수", "장난감을 100번 차고 튕기기", 15, "", func() bool { return S.ToyKick >= 100 }},
+	{"gift1", "🎁", "첫 선물", "우땅이 선물을 처음 주웠어요", 3, "", func() bool { return S.GiftCnt >= 1 }},
+	{"giftAll", "🧺", "선물 수집가", "선물 10가지를 모두 모았어요", 30, "", func() bool { return giftKindsGot(S.Gifts) >= len(giftKinds) }},
+	{"tower10", "🏗️", "바나나 탑 10층", "바나나 탑을 10층 쌓았어요", 10, "", func() bool { return S.TowerBest >= 10 }},
+	{"tower25", "🗼", "하늘까지 탑", "바나나 탑을 25층 쌓았어요", 25, "", func() bool { return S.TowerBest >= 25 }},
 	{"night", "🦉", "올빼미", "밤 12시~새벽 4시에 함께 있기", 5, "", func() bool { return time.Now().Hour() < 4 }},
 	{"day100", "💝", "100일의 우땅이", "함께한 지 100일", 30, "", func() bool { return daysTogether() >= 100 }},
+	{"whack1", "🔨", "뿅망치 데뷔", "두더지 잡기를 처음 했어요", 3, "", func() bool { return S.WhackCnt >= 1 }},
+	{"whack30", "🎯", "두더지 잡기 달인", "두더지 잡기 한 판에 30점 이상", 15, "", func() bool { return S.WhackBest >= 30 }},
+	{"cook1", "🍳", "첫 요리", "바나나 요리를 처음 했어요", 3, "", func() bool { return S.CookCnt >= 1 }},
+	{"cook10", "👨‍🍳", "바나나 요리사", "요리 10번 · 요리사 모자 선물", 15, "chefhat", func() bool { return S.CookCnt >= 10 }},
+	{"cookAll", "📖", "요리 도감 완성", "요리 8가지를 모두 만들었어요", 30, "", func() bool { return cookedKinds(S.Cooked) >= len(recipes) }},
+	{"gif1", "🖼️", "이모티콘 부자", "이모티콘 GIF를 저장했어요", 3, "", func() bool { return S.GifSaved }},
+	{"chat1", "💬", "말이 통했어", "우땅이랑 AI 대화를 처음 했어요", 3, "", func() bool { return S.ChatCnt >= 1 }},
+	{"dance10", "🎶", "음악 친구", "음악에 맞춰 10번 춤췄어요", 10, "", func() bool { return S.DanceCnt >= 10 }},
+	{"chat30", "🗨️", "수다쟁이 우땅이", "우땅이랑 AI 대화 30번", 15, "", func() bool { return S.ChatCnt >= 30 }},
 }
 
 func seenAllSeasons() bool {
@@ -103,8 +118,33 @@ func initAch() {
 	if S.AttendTotal == 0 && S.Day != "" {
 		S.AttendTotal = max(1, S.Streak)
 	}
+	// 업데이트하고 처음 켜면 새로워진 점을 한 번 알려 줌 (처음 설치한 사람은 건너뜀)
+	if S.SeenVer != newsID {
+		if S.Day != "" {
+			notices = append(notices, updateNews)
+			toast("우땅이 "+appVersion+" 업데이트!", "우땅이랑 AI 대화 · 새 이모티콘 8개 · 두더지 잡기 · 바나나 요리 · 음악 춤")
+		}
+		S.SeenVer = newsID
+	}
+	// 보상 아이템이 생기기 전에 이미 깬 업적: 아이템만 조용히 챙겨 줌
+	for _, a := range achievements {
+		if a.item != "" && S.Ach[a.id] != "" && !owns(a.item) {
+			S.Owned = append(S.Owned, a.item)
+		}
+	}
 	saveState()
 }
+
+// 업데이트 소식 (말풍선). 폰 앱 MainActivity.NEWS 와 같은 내용
+// 소식 번호: 같은 버전 안에서 소식이 늘면 뒤를 바꿔 한 번 더 보여 줌 (폰 MainActivity.newsId 와 같게)
+var newsID = appVersion + "-ai"
+
+const updateNews = "업데이트 됐어! 새로 생긴 것:\n" +
+	"· 나랑 AI 대화하기 (메뉴 → 우땅이랑 대화하기)\n" +
+	"· 이모티콘 8개 (브이·엄지척·노래…)\n" +
+	"· 두더지 잡기 · 바나나 요리 도감\n" +
+	"· 음악 나오면 춤추기 · 업적 꾸미기 선물\n" +
+	"기록은 그대로야!"
 
 // 출석 도장에 붙는 장기 출석 안내
 func attendGiftLine() string {
@@ -190,6 +230,7 @@ func snapshotState() {
 	snap.Owned = slices.Clone(S.Owned)
 	snap.Wear = slices.Clone(S.Wear)
 	snap.Ach = maps.Clone(S.Ach)
+	snap.Cooked = maps.Clone(S.Cooked)
 	snap.SeenFx = slices.Clone(S.SeenFx)
 	snap.Diary = slices.Clone(S.Diary)
 	snapOwner = ownerName
@@ -212,6 +253,7 @@ var (
 )
 
 func addBookRoutes(mux *http.ServeMux) {
+	addFxRoute(mux) // 선물 그림 (gift.go)
 	mux.HandleFunc("/book", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Header().Set("Cache-Control", "no-store")
@@ -312,6 +354,7 @@ h1{margin:4px 0 2px;font-size:24px}h2{margin:22px 0 10px;font-size:19px;display:
 .dh{display:flex;justify-content:space-between;align-items:center;font-size:14px;margin-bottom:4px}.dh span{font-size:20px}
 .dy p{margin:0;font-size:14px;line-height:22px;background:repeating-linear-gradient(transparent 0 21px,#f1e3c4 21px 22px)}
 .empty{color:#7d6556;font-size:14px}
+` + giftBookCSS + cookBookCSS + `
 .on{display:inline-block;margin-top:2px;background:#ffd84d;border:2px solid #2b1d16;border-radius:8px;padding:0 6px;font-size:11px}
 </style></head><body><main>`)
 	fmt.Fprintf(&b, `<div class="top"><img src="/item/none.png" alt=""><div style="flex:1"><h1>Lv.%d %s</h1><p>%s 함께한 지 %d일째</p>`,
@@ -333,6 +376,8 @@ h1{margin:4px 0 2px;font-size:24px}h2{margin:22px 0 10px;font-size:19px;display:
 		{"집중", fmt.Sprintf("%d번", st.FocusCnt)}, {"집중한 시간", fmt.Sprintf("%d분", st.FocusMin)}, {"업적", fmt.Sprintf("%d/%d", got, len(achievements))},
 		{"목욕", fmt.Sprintf("%d번", st.BathCnt)}, {"이불 덮기", fmt.Sprintf("%d번", st.TuckCnt)}, {"그림일기", fmt.Sprintf("%d일", diaryDays(st.Diary))},
 		{"숨바꼭질", fmt.Sprintf("%d번", st.HideCnt)}, {"바나나 뽑기", fmt.Sprintf("%d번", st.GachaCnt)}, {"땅콩이 방문", fmt.Sprintf("%d번", st.FriendCnt)},
+		{"장난감 놀이", fmt.Sprintf("%d번", st.ToyKick)}, {"주운 선물", fmt.Sprintf("%d개", st.GiftCnt)}, {"바나나 탑 최고", fmt.Sprintf("%d층", st.TowerBest)},
+		{"두더지 잡기 최고", fmt.Sprintf("%d점", st.WhackBest)}, {"요리", fmt.Sprintf("%d번", st.CookCnt)}, {"음악 춤", fmt.Sprintf("%d번", st.DanceCnt)},
 	} {
 		fmt.Fprintf(&b, `<div>%s<b>%s</b></div>`, s[0], e(s[1]))
 	}
@@ -345,6 +390,8 @@ h1{margin:4px 0 2px;font-size:24px}h2{margin:22px 0 10px;font-size:19px;display:
 		}
 	}
 	b.WriteString(`</div>`)
+	b.WriteString(giftBookHTML(st))
+	b.WriteString(cookBookHTML(st))
 	b.WriteString(diaryHTML(st.Diary, owner, e))
 	fmt.Fprintf(&b, `<h2>꾸미기 도감 <small>%d / %d</small></h2><div class="items">`, len(st.Owned), len(items))
 	for _, it := range items {

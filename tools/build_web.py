@@ -92,6 +92,21 @@ def main():
     (ROOT / "pc" / "match.html").write_text(m, encoding="utf-8")
     print("match: pc/match.html")
 
+    t = (ROOT / "pc" / "tower_template.html").read_text(encoding="utf-8")
+    t = t.replace("__WAVE__", F["wave"][2]).replace("__LAUGH__", F["laugh"][2])
+    (ROOT / "pc" / "tower.html").write_text(t, encoding="utf-8")
+    print("tower: pc/tower.html")
+
+    (ROOT / "pc" / "whack.html").write_text(whack_html(F), encoding="utf-8")
+    print("whack: pc/whack.html")
+
+
+def whack_html(F):
+    """두더지 잡기: 쏙 나오는 그림(손 흔들기) · 맞은 그림(깜짝)"""
+    t = (ROOT / "pc" / "whack_template.html").read_text(encoding="utf-8")
+    return (t.replace("__WAVE__", F["wave"][2]).replace("__LAUGH__", F["laugh"][2])
+            .replace("__POP__", F["laugh"][2]).replace("__HIT__", F["st_surprise"][0]))
+
 
 if __name__ == "__main__":
     main()

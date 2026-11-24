@@ -23,3 +23,12 @@ __pycache__/
 pc/test_care.png
 pc/test_friend.png
 preview_fx.png
+
+# 안드로이드 빌드 중간 결과
+android/build/
+
+# build.py 가 만드는 페이지 · 이모티콘 GIF · 테스트 그림
+pc/tower.html
+pc/whack.html
+pc/emo/
+pc/test_climb.png

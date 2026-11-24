@@ -232,6 +232,76 @@ def memo():
     return p.done()
 
 
+def ball():
+    """장난감 공 (비치볼)"""
+    p = Pen()
+    p.ell(0, 0, 26, 26, (255, 255, 255, 255), 0)
+    cols = [(255, 92, 108, 255), (255, 214, 64, 255), (90, 170, 255, 255), (120, 210, 110, 255)]
+    for i, c in enumerate(cols):
+        a0 = -90 + i * 90
+        p.d.pieslice([*p.P(-26, -26), *p.P(26, 26)], a0 - 20, a0 + 20, fill=c)
+    p.ell(0, 0, 7, 7, (255, 255, 255, 255), 1.8)
+    x0, y0 = p.P(-26, -26)
+    x1, y1 = p.P(26, 26)
+    p.d.ellipse([x0, y0, x1, y1], outline=INK, width=round(2.6 * SS))
+    p.ell(-11, -13, 4, 3, (255, 255, 255, 200), 0)
+    return p.done()
+
+
+def balloon():
+    """장난감 풍선 (줄 달림)"""
+    p = Pen()
+    p.line([(0, 16), (-3, 22), (2, 27), (-1, 31)], 1.6, (90, 70, 60, 255))
+    p.poly([(-4, 17), (4, 17), (0, 12)], (235, 60, 80, 255), 1.8)
+    p.ell(0, -6, 19, 22, (255, 84, 104, 255), 2.6)
+    p.ell(-8, -15, 4, 6, (255, 200, 210, 255), 0)
+    return p.done()
+
+
+def clover():
+    """선물: 네잎클로버"""
+    p = Pen()
+    p.line([(0, 4), (4, 16), (10, 24)], 2.6, (60, 140, 60, 255))
+    for a in (0, 90, 180, 270):
+        c, s_ = math.cos(math.radians(a - 45)), math.sin(math.radians(a - 45))
+        pts = []
+        for i in range(40):
+            t = 2 * math.pi * i / 40
+            x = 9 * math.sin(t) ** 3
+            y = -(7 * math.cos(t) - 3 * math.cos(2 * t) - math.cos(3 * t))
+            pts.append((x, y - 9))
+        pts = [(x * c - y * s_, x * s_ + y * c) for x, y in [(-y, x) for x, y in pts]]
+        p.poly([(x, y - 2) for x, y in rot(pts, 0, 0, 90)], (110, 200, 90, 255), 2.2)
+    p.ell(0, -2, 3, 3, (80, 160, 70, 255), 0)
+    return p.done()
+
+
+def acorn():
+    """선물: 도토리"""
+    p = Pen()
+    p.ell(0, 6, 14, 16, (196, 130, 70, 255), 2.5)
+    p.ell(-5, 2, 3, 5, (230, 175, 120, 255), 0)
+    p.poly([(-17, -4), (-14, -12), (-4, -16), (4, -16), (14, -12), (17, -4), (0, -2)], (130, 85, 45, 255), 2.5)
+    for x in (-9, -2, 5, 12):
+        p.line([(x - 2, -12), (x, -6)], 1.4, (95, 60, 30, 255))
+    p.line([(0, -16), (3, -23)], 3, (95, 60, 30, 255))
+    return p.done()
+
+
+def shell():
+    """선물: 조개껍데기"""
+    p = Pen()
+    pts = [(0, 18)]
+    for i in range(21):
+        a = math.radians(200 + i * 7)
+        pts.append((24 * math.cos(a), 4 + 22 * math.sin(a)))
+    p.poly(pts, (255, 196, 180, 255), 2.5)
+    for k in (-14, -7, 0, 7, 14):
+        p.line([(0, 16), (k, -12 + abs(k) * 0.5)], 1.5, (225, 140, 130, 255))
+    p.poly([(-7, 18), (7, 18), (5, 24), (-5, 24)], (245, 170, 155, 255), 2.2)
+    return p.done()
+
+
 def rot(pts, cx, cy, deg):
     c, s = math.cos(math.radians(deg)), math.sin(math.radians(deg))
     return [(cx + (x - cx) * c - (y - cy) * s, cy + (x - cx) * s + (y - cy) * c) for x, y in pts]
@@ -244,6 +314,7 @@ SPRITES = {
     "conf2": confetti((90, 190, 255, 255)), "conf3": confetti((120, 210, 110, 255)),
     "blanket": blanket,
     "banana": banana, "goldbanana": lambda: banana(True), "rock": rock, "memo": memo,
+    "ball": ball, "balloon": balloon, "clover": clover, "acorn": acorn, "shell": shell,
 }
 
 

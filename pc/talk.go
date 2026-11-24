@@ -170,7 +170,12 @@ func placeBubble() {
 	}
 	x := int32(posX + float64(canvasW)/2 - float64(bubW)/2)
 	y := int32(posY + float64(canvasH)*0.30 - float64(bubH))
-	if y < int32(workT) {
+	if q == 1 || q == 3 { // 벽: 그림 위쪽 여백이 없음
+		y = int32(posY + float64(canvasH)*0.12 - float64(bubH))
+	}
+	if q == 2 { // 천장: 매달린 우땅이 아래에
+		y = int32(posY + float64(canvasH)*0.98)
+	} else if y < int32(workT) {
 		y = int32(workT)
 	}
 	sdc, _, _ := pGetDC.Call(0)
@@ -207,9 +212,14 @@ func talkTick() {
 			say(pick([]string{"쿨쿨… " + voc() + "…", "음냐음냐… 바나나…", "Zzz…"}), 3*time.Second)
 			return
 		}
-		say(randomLine(), 4500*time.Millisecond)
-		if (mode == "idle" || mode == "walk") && rng.Float64() < 0.5 {
-			setMode("wave", rd(2.5, 3.5))
+		l := randomLine()
+		say(l, 4500*time.Millisecond)
+		if mode == "idle" || mode == "walk" {
+			if e := emoForLine(l); e != "" {
+				setMode(e, time.Duration(emoOf(e).sec*float64(time.Second)))
+			} else if rng.Float64() < 0.5 {
+				setMode("wave", rd(2.5, 3.5))
+			}
 		}
 	}
 }
@@ -415,6 +425,12 @@ func doFeed() { doSnack(0) }
 
 func doPet() {
 	petBonus()
+	if rng.Float64() < 0.35 { // 가끔은 하트 꼭 안고 사랑해
+		setMode("heart", 3200*time.Millisecond)
+		say(pick([]string{voc() + " 사랑해 ♥", "이만큼 좋아해! ♥", "두근두근… ♥"}), 3*time.Second)
+		nextTalk = time.Now().Add(rd(60, 120))
+		return
+	}
 	setMode("shy", rd(3.2, 4.2))
 	say(pick([]string{"헤헤… 부끄러워…", "히히 간지러워~", voc() + " 좋아… ♥", "에헤헤…", "우땅우땅 ♥"}), 3*time.Second)
 	nextTalk = time.Now().Add(rd(60, 120))
@@ -435,6 +451,11 @@ func doClick() {
 	}
 	if focusing() {
 		say(fmt.Sprintf("쉿, 집중 중이야! %d분 남았어", focusLeft()), 2500*time.Millisecond)
+		return
+	}
+	if clickSpam(time.Now()) { // 마구 누르면 삐짐
+		setMode("angry", 2600*time.Millisecond)
+		say(pick([]string{"흥! 그만 눌러~", "아야! 살살 해 줘! 흥!", "뿌우… 삐졌어!"}), 2500*time.Millisecond)
 		return
 	}
 	if rng.Float64() < 0.3 {

@@ -10,7 +10,7 @@ dst=sys.argv[2] if len(sys.argv)>2 else 'rsrc_windows_amd64.syso'
 DESC=sys.argv[3] if len(sys.argv)>3 else "우땅이"            # 파일 설명 (설치 프로그램은 "우땅이 설치")
 ORIG=sys.argv[4] if len(sys.argv)>4 else "Woottangi.exe"     # 원래 파일 이름
 import os
-APPVER=os.environ.get("WOO_VERSION","1.1")                 # build.py 의 VERSION
+APPVER=os.environ.get("WOO_VERSION","1.2")                 # build.py 의 VERSION
 _mj,_mn=(int(x) for x in (APPVER.split(".")+["0"])[:2])
 im=Image.open(src).convert('RGBA');w,h=im.size;S=max(w,h)
 sq=Image.new('RGBA',(S,S),(0,0,0,0));sq.paste(im,((S-w)//2,(S-h)//2))
@@ -22,12 +22,12 @@ for i in range(n):
 grp=struct.pack('<HHH',0,1,n)+b''.join(struct.pack('<BBBBHHIH',a,b_,cc,r,pl,bc,len(img),i+1) for i,(a,b_,cc,r,pl,bc,img) in enumerate(ents))
 manifest=b'''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
-<assemblyIdentity version="1.0.0.0" processorArchitecture="*" name="K.Woottangi" type="win32"/>
+<assemblyIdentity version="__VER__" processorArchitecture="*" name="K.Woottangi" type="win32"/>
 <dependency><dependentAssembly><assemblyIdentity type="win32" name="Microsoft.Windows.Common-Controls" version="6.0.0.0" processorArchitecture="*" publicKeyToken="6595b64144ccf1df" language="*"/></dependentAssembly></dependency>
 <application xmlns="urn:schemas-microsoft-com:asm.v3"><windowsSettings>
 <dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">true</dpiAware>
 </windowsSettings></application>
-</assembly>'''
+</assembly>'''.replace(b"__VER__", f"{_mj}.{_mn}.0.0".encode())
 
 def _pad(b):
     return b + b'\0' * ((4 - len(b) % 4) % 4)
@@ -42,7 +42,6 @@ def _blk(key, val=b'', typ=1, children=b'', vlen=None):
     return struct.pack('<HHH', total, vlen, typ) + body + data + children
 def _s(key, v):
     return _pad(_blk(key, (v + '\0').encode('utf-16-le')))
-VER = "1.0.0.0"
 strs = b''.join(_s(k, v) for k, v in [("CompanyName", "K"), ("FileDescription", DESC), ("FileVersion", APPVER),
     ("InternalName", "Woottangi"), ("OriginalFilename", ORIG), ("ProductName", "우땅이"), ("ProductVersion", APPVER)])
 st = _blk("041204b0", typ=1, children=strs, vlen=0)

@@ -52,8 +52,9 @@ func focusTick(now time.Time) {
 	S.FocusCnt++
 	S.FocusMin += focusLen
 	dayLog().Focus += focusLen
-	addExp(e) // 저장 포함
-	setMode("laugh", rd(3, 3.6))
+	addExp(e)                      // 저장 포함
+	setMode("clap", 3*time.Second) // 수고했어 짝짝
+
 	say(fmt.Sprintf("%d분 집중 끝! 수고했어 %s!\n바나나 %d개 선물이야.\n5분만 쉬었다 하자~", focusLen, voc(), b), 7*time.Second)
 	toast("집중 끝!", fmt.Sprintf("%d분 집중 완료 · 바나나 %d개 · 잠깐 쉬어 가요", focusLen, b))
 	nextTalk = time.Now().Add(rd(60, 120))

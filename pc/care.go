@@ -85,6 +85,8 @@ func startBath() {
 		return
 	}
 	tucked = false
+	detachSurface()
+	pauseToy()
 	bathing, bathPrompt = true, false
 	bathStart = time.Now()
 	bathNeed = math.Max(S.Dirt, 35)

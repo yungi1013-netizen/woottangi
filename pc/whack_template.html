@@ -1,0 +1,72 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>우땅이 두더지 잡기</title>
+<style>
+*{box-sizing:border-box}html,body{height:100%;margin:0}
+body{font-family:"Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif;background:#bfe6f6;color:#2b1d16;user-select:none;overflow:hidden}
+.wrap{position:relative;height:100%;background:linear-gradient(#9fd8f2,#d9f2fc 40%,#9fdc7a 40%,#7cc75a)}
+canvas{width:100%;height:100%;display:block;touch-action:none;cursor:pointer}
+.hud{position:absolute;left:110px;right:10px;top:10px;display:flex;justify-content:flex-end;gap:8px;font-size:18px;font-weight:700;pointer-events:none}
+.hud span{background:#fff;border:3px solid #2b1d16;border-radius:12px;padding:3px 12px}
+.panel{position:absolute;inset:0;display:grid;place-content:center;text-align:center;gap:12px;background:#ffffffd9;padding:16px}
+[hidden]{display:none!important}
+.btns{display:flex;gap:10px;justify-content:center}
+button.ghost{background:#fff}
+.back{position:absolute;left:10px;top:10px;z-index:5;font-size:16px;padding:4px 14px;box-shadow:2px 3px 0 #2b1d16}
+.panel h1{margin:0;font-size:28px}.panel p{margin:0;font-size:16px;line-height:1.7;color:#7d6556}
+.panel img{width:130px;margin:0 auto}
+button{font:inherit;font-size:20px;font-weight:700;padding:10px 26px;border:3px solid #2b1d16;border-radius:14px;background:#ffe78a;color:#2b1d16;cursor:pointer;box-shadow:2px 4px 0 #2b1d16}
+</style></head><body><div class="wrap">
+<button class="back" id="back" hidden>‹ 그만하기</button>
+<div class="hud"><span>⏱️ <b id="tm">30</b></span><span>🔨 <b id="sc">0</b>점</span></div>
+<canvas id="cv"></canvas>
+<div class="panel" id="start"><img src="__WAVE__" alt=""><h1>우땅이 두더지 잡기</h1><p>구멍에서 쏙 나오는 <b>우땅이</b>를 톡 눌러요! (+1점)<br>👑 황금 <b>우땅이</b>는 +3점,<br>🌼 꽃 단 <b>땅콩이</b>는 누르면 -2점이에요.<br>30초 동안 몇 점 낼 수 있을까?</p>
+<div class="btns"><button class="ghost" data-x>‹ 닫기</button><button id="go">시작!</button></div></div>
+<div class="panel" id="end" hidden><img src="__LAUGH__" alt=""><h1 id="endT"></h1><p id="endP">바나나를 우땅이에게 보냈어요. 이 창은 닫아도 돼요.</p><div class="btns"><button class="ghost" data-x>‹ 닫기</button><button id="again">한 판 더!</button></div>
+<p id="closeHint" hidden>창 오른쪽 위 X 를 눌러 닫아 주세요.</p></div>
+</div><script>
+const $=id=>document.getElementById(id),rnd=(a,b)=>a+Math.random()*(b-a);
+const cv=$("cv"),pop=new Image();pop.src="__POP__";const hit=new Image();hit.src="__HIT__";let G=null;
+const LEN=30;
+let tok="";async function start(){try{tok=await (await fetch("/start")).text()}catch(e){tok=""}if(!tok){$("start").hidden=false;$("end").hidden=true;document.querySelector("#start p").innerHTML="우땅이가 배고파서 못 놀겠대요…<br>간식을 먼저 주세요!";return}
+$("start").hidden=true;$("end").hidden=true;$("back").hidden=false;const r=cv.getBoundingClientRect(),d=devicePixelRatio||1;cv.width=r.width*d;cv.height=r.height*d;
+const W=cv.width,H=cv.height,cols=3,rows=3,cw=W/cols,top=H*.42,rh=(H-top)/rows,hr=Math.min(cw*.36,rh*.42,90*d);
+const holes=[];for(let j=0;j<rows;j++)for(let i=0;i<cols;i++)holes.push({x:cw*(i+.5),y:top+rh*(j+.62),m:null});
+G={W,H,d,hr,holes,score:0,time:LEN,spawn:.6,pops:[],last:performance.now(),shake:0};$("sc").textContent=0;$("tm").textContent=LEN;requestAnimationFrame(loop)}
+function spawn(){const free=G.holes.filter(h=>!h.m);if(!free.length)return;const h=free[Math.floor(Math.random()*free.length)];
+const t=Math.random(),fast=G.time<10?.75:1;h.m={k:t<.1?"gold":t<.3?"fr":"woo",up:0,stay:rnd(.75,1.15)*fast,out:0,hit:0}}
+function tap(e){if(!G)return;e.preventDefault();const r=cv.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*G.W,y=(e.clientY-r.top)/r.height*G.H;
+for(const h of G.holes){const m=h.m;if(!m||m.hit||m.up<.35)continue;const ph=G.hr*2.1*m.up;
+if(Math.abs(x-h.x)<G.hr*1.05&&y<h.y+G.hr*.25&&y>h.y-ph-G.hr*.2){m.hit=1;m.out=0;const v=m.k==="gold"?3:m.k==="fr"?-2:1;G.score=Math.max(0,G.score+v);$("sc").textContent=G.score;
+G.pops.push({t:v>0?(v>1?"+3 👑":"+1 뿅!"):"-2 땅콩이 아파!",x:h.x,y:h.y-G.hr*2,a:1,c:v>0?"#ff7a3c":"#7a5cff"});if(v<0)G.shake=.3;return}}}
+cv.addEventListener("pointerdown",tap);
+$("go").onclick=start;
+function quit(){window.close();setTimeout(()=>{document.querySelectorAll("#closeHint").forEach(e=>e.hidden=false);$("end").hidden=false;$("start").hidden=true;$("endT").textContent="다음에 또 놀자!";$("endP").textContent=""},300)}
+document.querySelectorAll("[data-x]").forEach(b=>b.onclick=quit);
+$("back").onclick=()=>{if(!G)return;G=null;$("back").hidden=true;$("start").hidden=false;document.querySelector("#start p").innerHTML="그만했어요. 이번 판 바나나는 없어요.<br>다시 할까요?"};
+addEventListener("keydown",e=>{if(e.key==="Escape"){if(G)$("back").click();else quit()}});$("again").onclick=start;
+function loop(now){if(!G)return;const dt=Math.min((now-G.last)/1000,.05);G.last=now;const c=cv.getContext("2d"),{W,H,d,hr}=G;
+G.time-=dt;$("tm").textContent=Math.max(0,Math.ceil(G.time));G.spawn-=dt;if(G.spawn<=0&&G.time>.8){spawn();G.spawn=rnd(.45,.85)*(G.time<10?.7:1)}
+c.clearRect(0,0,W,H);c.save();if(G.shake>0){G.shake-=dt;c.translate(Math.sin(now/20)*6*d,0)}
+for(const h of G.holes){
+ c.fillStyle="#5b3a1e";c.strokeStyle="#2b1d16";c.lineWidth=3*d;c.beginPath();c.ellipse(h.x,h.y,hr*1.1,hr*.42,0,0,Math.PI*2);c.fill();c.stroke();
+ const m=h.m;if(m){
+  if(m.hit){m.out+=dt;if(m.out>.45)h.m=null}else{m.up=Math.min(1,m.up+dt*5);m.stay-=dt;if(m.stay<=0){m.up-=dt*10;if(m.up<=0)h.m=null}}
+  if(h.m){const up=m.hit?Math.max(0,1-m.out*2.2):m.up,pw=hr*1.9,ph=pw*1.25,im=m.hit?hit:pop;
+   c.save();c.beginPath();c.rect(h.x-hr*1.6,h.y-ph*1.4,hr*3.2,ph*1.4);c.clip();
+   if(m.k==="fr")c.filter="sepia(.35) saturate(.75) brightness(1.3)";else if(m.k==="gold")c.filter="sepia(.6) saturate(2.2) brightness(1.15)";
+   if(im.complete)c.drawImage(im,h.x-pw/2,h.y-ph*.95*up+hr*.15,pw,ph);c.filter="none";
+   c.font=`${hr*.62}px sans-serif`;c.textAlign="center";c.textBaseline="middle";
+   const hy=h.y-ph*.95*up+hr*.15+ph*.1;if(m.k==="gold")c.fillText("👑",h.x,hy);if(m.k==="fr")c.fillText("🌼",h.x+pw*.22,hy+ph*.05);
+   if(m.hit&&m.k!=="fr")c.fillText("💫",h.x,hy-hr*.2);c.restore()}
+  // 구멍 앞 테두리
+  c.fillStyle="#7cc75a";c.beginPath();c.ellipse(h.x,h.y+hr*.18,hr*1.25,hr*.3,0,0,Math.PI);c.fill();
+  c.strokeStyle="#2b1d16";c.beginPath();c.ellipse(h.x,h.y,hr*1.1,hr*.42,0,0,Math.PI);c.stroke()}}
+c.restore();
+c.font=`bold ${22*d}px sans-serif`;c.textAlign="center";
+G.pops=G.pops.filter(p=>{p.a-=dt*1.4;p.y-=50*d*dt;c.globalAlpha=Math.max(0,p.a);c.fillStyle=p.c;c.strokeStyle="#fff";c.lineWidth=4*d;c.strokeText(p.t,p.x,p.y);c.fillText(p.t,p.x,p.y);c.globalAlpha=1;return p.a>0});
+if(G.time<=0)return end();
+requestAnimationFrame(loop)}
+function end(){const s=G.score;G=null;$("back").hidden=true;const ban=s>0?Math.min(15,1+Math.floor(s/3)):0;
+$("endT").textContent=`${s}점!`;$("endP").textContent=ban?`바나나 ${ban}개를 우땅이에게 보냈어요. 이 창은 닫아도 돼요.`:"한 마리도 못 잡았어요… 다시 해 볼까요?";$("end").hidden=false;
+fetch("/score?g=whack&n="+s+"&t="+tok).then(r=>{if(!r.ok)throw 0}).catch(()=>{$("endP").textContent="우땅이에게 보내지 못했어요. 우땅이가 켜져 있는지 확인해 주세요."})}
+</script></body></html>

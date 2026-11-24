@@ -130,6 +130,8 @@ func startFriend(manual bool) bool {
 	if !openFriendWindow() {
 		return false
 	}
+	detachSurface() // 바닥에서 같이 놀기
+	pauseToy()
 	f := &friendT{stage: "enter", speed: 1}
 	f.L, f.R = workL, workR
 	f.gr = ground + float64(canvasH) - float64(frH)
@@ -175,7 +177,7 @@ func friendTick(now time.Time, dt float64) {
 	}
 	f := fr
 	if f.mode == "walk" {
-		f.x += f.dir * 42 * eff() * friendScale * speedMulBase() * f.speed * dt
+		f.x += f.dir * friendWalk * eff() * speedMul() * f.speed * dt // 우땅이보다 조금 느긋하게
 	}
 	if f.mode != "walk" && now.After(f.modeUntil) {
 		f.setMode("idle", time.Hour)
@@ -235,7 +237,7 @@ func friendTick(now time.Time, dt float64) {
 			} else {
 				f.dir = 1
 			}
-			f.speed = 1.2
+			f.speed = 1.1
 			f.setMode("walk", time.Hour)
 			setMode("idle", rd(2, 4))
 		}
@@ -246,6 +248,8 @@ func friendTick(now time.Time, dt float64) {
 	}
 	renderFriend()
 }
+
+const friendWalk = 28.0 // px/s (우땅이는 42)
 
 func speedMulBase() float64 { return []float64{1, 0.6, 1.5}[clampI(S.Speed, 0, 2)] }
 
@@ -299,7 +303,7 @@ func nextActivity(f *friendT, now time.Time) {
 		pc := posX + float64(canvasW)/2
 		fc := f.x + float64(frW)/2
 		f.dir = math.Copysign(1, fc-pc)
-		f.speed = 1.25
+		f.speed = 1.15
 		f.setMode("walk", time.Hour)
 		if petOK {
 			dir = f.dir
@@ -336,7 +340,7 @@ func friendFrame(f *friendT) (*Sprite, bool) {
 	}
 	switch f.mode {
 	case "walk":
-		return pickF("walk", 11), f.dir < 0
+		return pickF("walk", 8*f.speed), f.dir < 0 // 느린 걸음에 맞춘 발걸음
 	case "laugh":
 		return pickF("laugh", 12), false
 	case "wave":

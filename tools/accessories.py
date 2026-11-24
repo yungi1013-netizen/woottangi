@@ -369,6 +369,70 @@ def scarf():
     return p.done()
 
 
+def medal():
+    """업적 선물: 금메달 (목) — 놀이 대장"""
+    p = Pen()
+    blue, red = (80, 140, 240, 255), (240, 80, 90, 255)
+    p.poly([(-58, 2), (-36, -2), (4, 40), (-12, 48)], blue)
+    p.poly([(58, 2), (36, -2), (-4, 40), (12, 48)], red)
+    p.ell(0, 46, 27, 27, (255, 200, 40, 255))
+    p.ell(0, 46, 17, 17, (255, 226, 110, 255), 0)
+    r = 13
+    star = [(r * (1 if k % 2 == 0 else 0.45) * math.cos(math.radians(-90 + k * 36)),
+             46 + r * (1 if k % 2 == 0 else 0.45) * math.sin(math.radians(-90 + k * 36))) for k in range(10)]
+    p.poly(star, (255, 170, 20, 255), 2.5)
+    p.ell(-9, 36, 4, 3, (255, 250, 220, 255), 0)
+    return p.done()
+
+
+def headphones():
+    """업적 선물: 헤드폰 (머리) — 집중왕"""
+    p = Pen()
+    mint, dark = (110, 214, 190, 255), (70, 170, 150, 255)
+    band = arc_pts(0, -116, 158, 136, 192, 348)
+    p.line(band, 24)
+    p.line(band, 13, mint)
+    for s in (-1, 1):
+        p.ell(s * 152, -112, 26, 42, dark)
+        p.ell(s * 146, -112, 16, 30, mint, 3)
+        p.ell(s * 143, -124, 5, 8, (220, 255, 245, 255), 0)
+    return p.done()
+
+
+def flowercrown():
+    """업적 선물: 꽃 화관 (머리) — 쓰담쓰담 장인"""
+    p = Pen()
+    leaf = (120, 200, 100, 255)
+    path = arc_pts(0, -112, 140, 124, 200, 340, 6)
+    for k in range(len(path) - 1):  # 잎
+        (x0, y0), (x1, y1) = path[k], path[k + 1]
+        mx, my = (x0 + x1) / 2, (y0 + y1) / 2 - 6
+        p.ell(mx, my, 13, 8, leaf, 3)
+    cols = [(255, 140, 180, 255), (255, 214, 77, 255), (180, 150, 255, 255), (255, 255, 255, 255)]
+    for k, (x, y) in enumerate(path):
+        c = cols[k % len(cols)]
+        for j in range(5):
+            a = math.radians(-90 + j * 72 + k * 17)
+            p.ell(x + math.cos(a) * 12, y + math.sin(a) * 12, 10, 10, c, 3)
+        p.ell(x, y, 7, 7, (255, 180, 60, 255), 3)
+    return p.done()
+
+
+def chefhat():
+    """업적 선물: 요리사 모자 (머리) — 바나나 요리사"""
+    p = Pen()
+    w = (255, 255, 255, 255)
+    p.poly([(-78, -218), (78, -218), (74, -186), (-74, -186)], (245, 245, 245, 255))
+    for x, y, r in ((-62, -262, 36), (62, -262, 36), (-30, -292, 40), (30, -292, 40), (0, -270, 44)):
+        p.ell(x, y, r, r * 0.9, w)
+    p.ell(0, -262, 70, 34, w, 0)  # 겹친 선 지우기
+    p.poly([(-78, -238), (78, -238), (78, -218), (-78, -218)], w, 0)
+    p.line([(-78, -218), (78, -218)], OW)
+    for x in (-40, 0, 40):
+        p.line([(x, -244), (x + 4, -226)], 2.5, (200, 200, 200, 255))
+    return p.done()
+
+
 # id: (그림 함수)  — 이름·가격·자리는 pc/shop.go 에 있음
 ITEMS = {
     "ribbon": ribbon, "flower": flower, "sprout": sprout, "crown": crown,
@@ -376,6 +440,7 @@ ITEMS = {
     "rainbow": rainbow, "bananaband": banana_band,
     "rudolph": rudolph, "witch": witch, "bokjumeoni": bokjumeoni, "dirt": dirt,
     "starpin": starpin, "halo": halo, "heartglasses": heartglasses, "scarf": scarf,
+    "medal": medal, "headphones": headphones, "flowercrown": flowercrown, "chefhat": chefhat,
 }
 FACE_ITEMS = {"glasses", "sunglasses", "heartglasses"}
 

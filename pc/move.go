@@ -57,6 +57,9 @@ func feetOff() float64 { return float64(canvasH) - 2 } // posY + feetOff() = 발
 
 // 지금 서 있어야 할 높이
 func groundY() float64 {
+	if airPerch { // 공중 자리 (climb.go)
+		return airY
+	}
 	if perch != 0 {
 		return float64(perchR.Top) - feetOff()
 	}
@@ -118,12 +121,17 @@ func releaseVelocity() (vx, vy float64) {
 
 func startDrag() {
 	perch = 0
+	q, airPerch, wantClimb, wantCeil, seatJump = 0, false, false, false, false // 창은 정사각형이라 자리 그대로
 	dragN = 0
 	setMode("drag", time.Hour)
 }
 
 func onDragRelease() {
 	velX, velY = releaseVelocity()
+	if math.Hypot(velX, velY) < 160*dpi && placeGently() { // 살살 놓기 (climb.go)
+		velX, velY = 0, 0
+		return
+	}
 	thrown = math.Hypot(velX, velY) > 500*dpi
 	if !thrown {
 		velX, velY = 0, 0
@@ -136,10 +144,13 @@ func onDragRelease() {
 
 func fallTick(dt float64) {
 	prevFeet := posY + feetOff()
+	vy0 := velY
 	velY += 1800 * dpi * dt
-	velX *= 1 - 0.5*dt // 공기 저항
+	if !seatJump {
+		velX *= 1 - 0.5*dt // 공기 저항
+	}
 	posX += velX * dt
-	posY += velY * dt
+	posY += (vy0 + velY) / 2 * dt // 중력 그대로 (프레임이 길어도 높이를 덜 잃음)
 	maxFallSpeed = math.Max(maxFallSpeed, velY)
 
 	lo, hi := floorBounds()
@@ -152,9 +163,23 @@ func fallTick(dt float64) {
 		dir = -1
 	}
 	if top := workT - float64(canvasH)*0.25; posY < top {
+		if thrown && !seatJump && rng.Float64() < ceilGrabChance { // 천장 탁 잡기
+			d := 1.0
+			if velX < 0 {
+				d = -1
+			}
+			thrown, maxFallSpeed, bounces = false, 0, 0
+			toCeiling(posX, d)
+			setMode("cling", rd(1.5, 3))
+			say(pick([]string{"천장 잡았다!", "매달리기 성공!"}), 2500*time.Millisecond)
+			return
+		}
 		posY, velY = top, -velY*0.4
 	}
-	if velY > 0 && perchEnabled {
+	if seatLand() { // 내 자리 도착
+		return
+	}
+	if velY > 0 && perchEnabled && !seatJump {
 		if w, r, ok := findPerch(prevFeet, posY+feetOff()); ok {
 			perch, perchR = w, r
 			posY = groundY()
@@ -165,6 +190,7 @@ func fallTick(dt float64) {
 	if posY >= ground {
 		posY = ground
 		perch = 0
+		seatJump = false
 		land()
 	}
 }
@@ -233,7 +259,7 @@ func frameRect(h uintptr) (RECT, bool) {
 }
 
 func isOurs(h uintptr) bool {
-	return h == hwnd || h == bubHwnd || h == nameHwnd || h == remHwnd || (fxHwnd != 0 && h == fxHwnd) || (frHwnd != 0 && h == frHwnd) || (memoHwnd != 0 && h == memoHwnd)
+	return h == hwnd || h == bubHwnd || h == nameHwnd || h == remHwnd || (fxHwnd != 0 && h == fxHwnd) || (frHwnd != 0 && h == frHwnd) || (memoHwnd != 0 && h == memoHwnd) || isThing(h)
 }
 
 func perchable(h uintptr) bool {
@@ -322,9 +348,12 @@ func walkBounds() (lo, hi float64) {
 }
 
 func walkTick(dt float64) {
-	posX += dir * 42 * eff() * dt * speedMul()
+	posX += dir * 42 * eff() * dt * speedMul() * walkBoost()
 	lo, hi := walkBounds()
 	if posX >= lo && posX <= hi {
+		return
+	}
+	if perch == 0 && tryClimbAtEdge(posX < lo) { // 화면 끝 벽 타기 (climb.go)
 		return
 	}
 	if perch != 0 && rng.Float64() < 0.35 { // 창 끝에서 폴짝
@@ -392,7 +421,7 @@ func cursorTick(now time.Time) {
 
 // 걷기 시작할 때 가끔 커서 쪽으로 (호기심)
 func maybeFaceCursor() {
-	if rng.Float64() > 0.25 {
+	if !cursorOn || rng.Float64() > 0.25 {
 		return
 	}
 	var c POINT

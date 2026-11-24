@@ -25,6 +25,7 @@ func applyScale(sc float64) {
 	if sc <= 0 || math.Abs(sc-scale) < 0.001 {
 		return
 	}
+	detachSurface() // 크기가 바뀌면 일단 내려옴
 	bottom := posY + float64(canvasH)
 	cx := posX + float64(canvasW)/2
 	scale = sc

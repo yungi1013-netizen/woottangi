@@ -278,9 +278,10 @@ var (
 )
 
 // 버전: build.py 의 VERSION 이 -ldflags "-X main.appVersion=..." 로 들어옴
-var appVersion = "1.1"
+var appVersion = "1.2"
 
 func setMode(m string, d time.Duration) {
+	surfaceModeHook(m) // 벽·천장·자리에서 못 하는 동작이면 내려옴 (climb.go)
 	mode = m
 	modeStart = time.Now()
 	modeUntil = time.Now().Add(d)
@@ -299,6 +300,14 @@ func nextChoice() {
 		setMode("idle", time.Hour)
 		return
 	}
+	if toyActive() && petFree() { // 장난감 놀이: toyTick 이 정해 줌 (toy.go)
+		if mode == "idle" {
+			modeUntil = time.Now().Add(2 * time.Second)
+		} else {
+			setMode("idle", 2*time.Second)
+		}
+		return
+	}
 	if bathing { // 목욕은 bathTick 이 끝냄
 		modeUntil = time.Now().Add(time.Hour)
 		return
@@ -313,6 +322,14 @@ func nextChoice() {
 			setMode("sit", rd(20, 40))
 			return
 		}
+		if isNewEmo(mode) {
+			setMode("sit", rd(20, 40))
+			return
+		}
+	}
+	if isNewEmo(mode) { // 이모티콘 동작이 끝나면 잠깐 서 있기
+		setMode("idle", rd(1.5, 3))
+		return
 	}
 	switch mode {
 	case "sleep":
@@ -336,7 +353,14 @@ func nextChoice() {
 			setMode("wave", rd(2.5, 3.2)) // 꾸벅 인사 후 손 흔들기
 		}
 		return
-	case "laugh", "shy", "eat", "eat_milk", "eat_cake", "st_surprise", "st_lounge", "st_me", "wave":
+	case "eat", "eat_milk", "eat_cake":
+		if rng.Float64() < 0.35 { // 다 먹고 가끔 "잘 먹었어요!"
+			playEmo("yum", true)
+		} else {
+			setMode("idle", rd(1.5, 3))
+		}
+		return
+	case "laugh", "shy", "st_surprise", "st_lounge", "st_me", "wave":
 		setMode("idle", rd(1.5, 3))
 		return
 	case "punish":
@@ -346,8 +370,19 @@ func nextChoice() {
 		}
 		return
 	}
+	if airPerch { // 공중 자리 위: 앉고 쉬고 졸기만 (climb.go)
+		perchedChoice()
+		return
+	}
+	if wantClimb { // 벽 타러 가는 중
+		setMode("walk", 30*time.Second)
+		return
+	}
 	if stay || !autoMove {
 		setMode("idle", rd(3, 5))
+		return
+	}
+	if hasSeat() && rng.Float64() < 0.05 && jumpToSeat() {
 		return
 	}
 	if moodChoice() {
@@ -363,6 +398,12 @@ func nextChoice() {
 		setMode("wave", rd(2.5, 3.5))
 	case r < 0.18:
 		setMode("laugh", rd(1.6, 2.6))
+	case r < 0.21 && S.Mood >= 60: // 기분 좋으면 가끔 춤
+		setMode("dance", rd(3.2, 4.2))
+	case r < 0.23:
+		setMode("huh", rd(2.4, 3))
+	case r < 0.25: // 가끔 브이 · 노래 · 뭐해?
+		setMode(pick([]string{"v", "sing", "what"}), rd(2.6, 3.4))
 	case r < 0.32:
 		setMode("sit", rd(6, 12))
 	default:
@@ -414,6 +455,13 @@ func currentFrame() (*Sprite, float64, bool) {
 	switch mode {
 	case "walk":
 		return pick("walk", 11), 0, dir < 0
+	case "climb": // 벽·천장 (render 가 q 만큼 돌림)
+		return pick("walk", 9), 0, climbFlip()
+	case "cling":
+		if blinking {
+			return seqs["blink"][0], 0, climbFlip()
+		}
+		return pick("idle", 5), 0, climbFlip()
 	case "laugh":
 		return pick("laugh", 12), 0, false
 	case "eat", "eat_milk", "eat_cake":
@@ -431,6 +479,8 @@ func currentFrame() (*Sprite, float64, bool) {
 		return pick(mode, fps), 0, false
 	case "shy":
 		return pick("shy", 7), 0, false
+	case "clap", "cheer", "heart", "angry", "dance", "huh", "v", "thumb", "sing", "no", "flower", "yum", "what", "cute":
+		return pick(mode, emoOf(mode).fps), 0, false
 	case "punish":
 		return pick("punish", 8), 0, false
 	case "sit":
@@ -482,10 +532,20 @@ func render() {
 	}
 	cs, sn := math.Cos(rot), math.Sin(rot)
 	sw, sh := float64(s.W), float64(s.H)
+	hx, hy := float64(canvasW)/2, float64(canvasH)/2
 	for py := 0; py < canvasH; py++ {
-		fy := float64(py) + 0.5 - ay
 		for px := 0; px < canvasW; px++ {
-			fx := float64(px) + 0.5 - ax
+			// 벽·천장: 화면 픽셀을 거꾸로 돌려서 세워진 그림 좌표로
+			dx, dy := float64(px)+0.5-hx, float64(py)+0.5-hy
+			switch q {
+			case 1:
+				dx, dy = dy, -dx
+			case 2:
+				dx, dy = -dx, -dy
+			case 3:
+				dx, dy = -dy, dx
+			}
+			fx, fy := dx+hx-ax, dy+hy-ay
 			u := (fx*cs + fy*sn) / sx
 			v := (-fx*sn + fy*cs) / sy
 			if flip {
@@ -529,41 +589,17 @@ func tick() {
 	}
 	fsTick(now)
 	followMonitor()
-	if hiding {
-		hideTick(now)
-	} else {
-		switch mode {
-		case "drag":
-			dragTick(now)
-		case "fall":
-			fallTick(dt)
-		default:
-			perchTick()
-			if g := groundY(); posY < g-1 {
-				maxFallSpeed, bounces = 0, 0
-				mode = "fall"
-				break
-			} else {
-				posY = g
-			}
-			if mode == "walk" {
-				walkTick(dt)
-			}
-			if mode == "catch" {
-				catchMove(dt)
-			}
-			if now.After(modeUntil) {
-				nextChoice()
-			}
-			cursorTick(now)
-		}
-	}
+	moveTick(now, dt)
+	toyTick(now, dt)
+	giftTick(now)
 	catchTick(now, dt)
 	gachaTick(now)
 	friendTick(now, dt)
 	healthTick(now)
 	batteryTick(now)
 	memoTick(now)
+	musicTick()
+	aiTick()
 	bathTick(now)
 	tuckTick(dt)
 	petFxTick(dt)
@@ -577,6 +613,46 @@ func tick() {
 	stateTick()
 	levelTick()
 	remTick()
+}
+
+// 움직임 한 프레임 (테스트에서도 씀)
+func moveTick(now time.Time, dt float64) {
+	if hiding {
+		hideTick(now)
+		return
+	}
+	switch mode {
+	case "drag":
+		dragTick(now)
+	case "fall":
+		fallTick(dt)
+	case "climb", "cling": // 벽·천장 (climb.go)
+		climbTick(now, dt)
+	default:
+		perchTick()
+		if airPerchTick(dt) {
+			break
+		}
+		if g := groundY(); posY < g-1 {
+			maxFallSpeed, bounces = 0, 0
+			mode = "fall"
+			break
+		} else {
+			posY = g
+		}
+		if mode == "walk" {
+			walkTick(dt)
+		}
+		if mode == "catch" {
+			catchMove(dt)
+		}
+		if mode != "climb" && now.After(modeUntil) {
+			nextChoice()
+		}
+		if cursorOn {
+			cursorTick(now)
+		}
+	}
 }
 
 // ───────────────────────── 메뉴 ─────────────────────────
@@ -595,7 +671,8 @@ const (
 	idPet    = 1041
 	idScold  = 1042
 	idSnack  = 1050 // +0,1,2
-	idGame   = 1060 // +0 바나나 받기, +1 짝 맞추기
+	idCook   = 1053
+	idGame   = 1060 // +0 바나나 받기, +1 짝 맞추기, +2 바나나 탑, +3 두더지 잡기
 	idLuck   = 1064
 	idStamp  = 1065
 	idInfo   = 1066
@@ -630,21 +707,31 @@ func showMenu() {
 		}
 		appendMenu(sn, fl, uintptr(idSnack+i), fmt.Sprintf("%s  (바나나 %d개)", f.name, f.price))
 	}
-	appendMenu(m, MF_POPUP, sn, "간식 주기")
+	appendMenu(sn, MF_SEPARATOR, 0, "")
+	cf := uintptr(MF_STRING)
+	if S.Bananas < cookCost {
+		cf |= MF_GRAYED
+	}
+	appendMenu(sn, cf, idCook, fmt.Sprintf("바나나 요리하기  (바나나 %d개)", cookCost))
+	appendMenu(m, MF_POPUP, sn, "간식 주기 · 요리")
 	appendShopMenu(m)
 	gm, _, _ := pCreatePopupMenu.Call()
 	for i, g := range gameNames {
 		appendMenu(gm, MF_STRING, uintptr(idGame+i), g)
 	}
 	appendPlayMenu(gm)
+	appendToyMenu(gm)
+	appendClimbPlayMenu(gm)
 	appendMenu(m, MF_POPUP, gm, "놀아주기")
 	appendFocusMenu(m)
 	appendMenu(m, MF_STRING, idPet, "쓰다듬기")
 	appendCareMenu(m)
+	appendEmoMenu(m)
 	appendMenu(m, MF_STRING, idScold, "혼내기")
 	appendMenu(m, MF_STRING, idLuck, "오늘의 운세")
 	appendMenu(m, MF_STRING, idStamp, "출석 도장")
 	appendMenu(m, MF_STRING, idInfo, "우땅이 정보")
+	appendMenu(m, MF_STRING, idChat, "우땅이랑 대화하기 (AI)…")
 	appendMenu(m, MF_STRING, idBook, "우땅이 수첩 (업적·도감)")
 	appendMenu(m, MF_STRING, idDiary, "우땅이 그림일기")
 	appendMemoMenu(m)
@@ -669,6 +756,7 @@ func showMenu() {
 	appendMenu(m, MF_STRING, idSit, "앉기")
 	appendMenu(m, MF_STRING, idSleep, "자기")
 	appendMenu(m, MF_STRING, idLaugh, "웃기")
+	appendSeatMenu(m)
 	appendMenu(m, MF_STRING, idName, "이름 바꾸기")
 	appendMenu(m, MF_SEPARATOR, 0, "")
 	f := uintptr(MF_STRING)
@@ -700,10 +788,14 @@ func showMenu() {
 		doFeed()
 	case idSnack, idSnack + 1, idSnack + 2:
 		doSnack(int(cmd - idSnack))
-	case idGame, idGame + 1:
+	case idCook:
+		doCook()
+	case idGame, idGame + 1, idGame + 2, idGame + 3:
 		openGame(int(cmd - idGame))
 	case idBook:
 		openBook()
+	case idChat:
+		openChat()
 	case idTakeOff:
 		takeOffAll()
 	case idLuck:
@@ -748,7 +840,7 @@ func showMenu() {
 	default:
 		if cmd >= idShopBase && cmd < idShopBase+uintptr(len(items)) {
 			doItem(int(cmd - idShopBase))
-		} else if !onCareCmd(cmd) && !onSeasonCmd(cmd) && !onPlayCmd(cmd) && !onHelperCmd(cmd) {
+		} else if !onCareCmd(cmd) && !onSeasonCmd(cmd) && !onPlayCmd(cmd) && !onClimbCmd(cmd) && !onToyCmd(cmd) && !onEmoCmd(cmd) && !onHelperCmd(cmd) {
 			onSettingsCmd(cmd)
 		}
 	}
@@ -819,6 +911,9 @@ func wndProc(h uintptr, msg uint32, w, l uintptr) uintptr {
 				var c POINT
 				pGetCursorPos.Call(uintptr(unsafe.Pointer(&c)))
 				rub(float64(c.X)-posX, float64(c.Y)-posY)
+			} else if q != 0 { // 벽·천장에서 톡 = 손 놓침
+				letGo()
+				say(pick([]string{"으앗! 떨어진다~", "깜짝이야! 으아아~"}), 2200*time.Millisecond)
 			} else if tucked && mode == "sleep" {
 				pokeTucked()
 			} else if mode == "sleep" {
@@ -835,6 +930,12 @@ func wndProc(h uintptr, msg uint32, w, l uintptr) uintptr {
 		return 0
 	case WM_APP_SCORE:
 		onGameScore(int(w), int(l))
+		return 0
+	case WM_APP_SCORE + 3:
+		onTowerScore(int(w))
+		return 0
+	case WM_APP_SCORE + 4:
+		onWhackScore(int(w))
 		return 0
 	case WM_APP_SCORE + 1:
 		say(attendLine(int(w), true), 5*time.Second)
@@ -870,7 +971,9 @@ func main() {
 	}
 	pSetProcessDPIAware.Call()
 	initDPI()
-	for _, n := range []string{"walk", "idle", "blink", "laugh", "sit", "sitblink", "sleep", "eat", "eat_milk", "eat_cake", "shy", "punish", "st_surprise", "st_lounge", "st_cry", "st_me", "st_bow", "wave"} {
+	startMusicWatch()
+	for _, n := range []string{"walk", "idle", "blink", "laugh", "sit", "sitblink", "sleep", "eat", "eat_milk", "eat_cake", "shy", "punish", "st_surprise", "st_lounge", "st_cry", "st_me", "st_bow", "wave",
+		"clap", "cheer", "heart", "angry", "dance", "huh", "v", "thumb", "sing", "no", "flower", "yum", "what", "cute"} {
 		loadSeq(n)
 	}
 	linkAnchors()

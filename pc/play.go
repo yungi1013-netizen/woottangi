@@ -56,6 +56,7 @@ func startDeskCatch() {
 	}
 	perch = 0
 	posY = ground
+	pauseToy()
 	catching, catchScore, catchSpawn = true, 0, 0
 	catchItems = catchItems[:0]
 	catchUntil = time.Now().Add(catchLen + 3*time.Second) // 3초 준비
@@ -243,6 +244,8 @@ func startHide() {
 		say("지금은 못 해~ 조금 이따 놀자!", 2500*time.Millisecond)
 		return
 	}
+	detachSurface() // 벽·천장·자리에서 내려와서 숨음
+	pauseToy()
 	hiding, hideStage, hideHint = true, 0, false
 	hideAt = time.Now().Add(2500 * time.Millisecond)
 	perch = 0
@@ -450,6 +453,7 @@ func startGacha() {
 		say("지금은 못 해~ 조금 이따!", 2500*time.Millisecond)
 		return
 	}
+	pauseToy()
 	S.Bananas -= gachaCost
 	S.GachaCnt++
 	saveState()

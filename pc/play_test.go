@@ -183,6 +183,7 @@ func TestHide(t *testing.T) {
 	defer runtime.UnlockOSThread()
 	setupCare(t)
 	twoMonitorsOff()
+	t.Cleanup(func() { hiding, hideStage = false, 0 }) // 실패해도 '숨는 중'이 다음 테스트로 안 남게
 	startHide()
 	if !hiding || !busy() {
 		t.Fatal("숨바꼭질 시작 안 됨")
@@ -210,8 +211,8 @@ func TestHide(t *testing.T) {
 			}
 		}
 	}
-	if countOpaque(buf) < 500 {
-		t.Fatal("빼꼼 내민 부분이 너무 작음")
+	if n := countOpaque(buf); n < canvasW*canvasH/40 { // 바닥 아래 빼꼼은 머리 윗부분만 (112px 창에서 약 470)
+		t.Fatalf("빼꼼 내민 부분이 너무 작음: %d", n)
 	}
 	b := S.Bananas
 	endHide(true)

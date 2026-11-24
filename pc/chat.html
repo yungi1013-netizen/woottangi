@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>우땅이랑 대화하기</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#fff8e6;color:#2b1d16;font-family:"Malgun Gothic","Apple SD Gothic Neo",sans-serif}
+body{display:flex;flex-direction:column}
+header{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#ffe27a;border-bottom:3px solid #2b1d16}
+header img{width:52px;height:52px;object-fit:contain}
+header h1{font-size:18px;margin:0;flex:1}
+header button{font:inherit;font-size:13px;background:#fff;border:2px solid #2b1d16;border-radius:10px;padding:4px 10px;cursor:pointer}
+#log{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+.m{max-width:80%;padding:9px 13px;border:2px solid #2b1d16;border-radius:16px;line-height:1.45;white-space:pre-wrap;word-break:break-word;font-size:15px}
+.me{align-self:flex-end;background:#fff;border-bottom-right-radius:4px}
+.woo{align-self:flex-start;background:#ffd54a;border-bottom-left-radius:4px}
+.err{align-self:center;background:#ffe3e3;border-color:#d6263a;font-size:13px}
+.think{opacity:.6}
+form{display:flex;gap:8px;padding:10px 12px;border-top:3px solid #2b1d16;background:#fff}
+#t{flex:1;font:inherit;font-size:16px;padding:9px 12px;border:2px solid #2b1d16;border-radius:12px}
+form button{font:inherit;font-size:15px;font-weight:bold;background:#ffd54a;border:2px solid #2b1d16;border-radius:12px;padding:0 16px;cursor:pointer;box-shadow:2px 3px 0 #2b1d16}
+form button:disabled{opacity:.5}
+#setup{padding:16px;overflow-y:auto}
+#setup h2{font-size:17px;margin:4px 0 10px}
+#setup p,#setup li{font-size:14px;line-height:1.55}
+#setup ol{padding-left:20px;margin:6px 0}
+#setup input{width:100%;font:inherit;font-size:14px;padding:9px 11px;border:2px solid #2b1d16;border-radius:10px;margin:8px 0}
+#setup .row{display:flex;gap:8px}
+#setup button{font:inherit;font-size:15px;font-weight:bold;background:#ffd54a;border:2px solid #2b1d16;border-radius:10px;padding:8px 16px;cursor:pointer}
+#setup button.ghost{background:#fff;font-weight:normal}
+.note{background:#fff;border:2px dashed #e0b860;border-radius:12px;padding:10px 12px;font-size:13px!important;color:#6a5040}
+#keyMsg{color:#d6263a;font-size:13px;min-height:18px}
+</style>
+</head>
+<body>
+<header><img src="/item/none.png" alt=""><h1>우땅이랑 대화하기</h1><button id="setBtn" type="button">AI 설정</button></header>
+
+<div id="setup" hidden>
+  <h2>🔑 AI 대화 켜기</h2>
+  <p>우땅이가 AI(Claude)로 대답하려면 <b>Anthropic API 키</b>가 필요해요.</p>
+  <ol>
+    <li>console.anthropic.com 에 가입하고 결제 수단을 등록해요.</li>
+    <li>API Keys 메뉴에서 키를 만들어요 (<b>sk-ant-</b> 로 시작).</li>
+    <li>아래 칸에 붙여 넣고 저장해요.</li>
+  </ol>
+  <input id="key" type="password" autocomplete="off" placeholder="sk-ant-..." aria-label="API 키">
+  <div id="keyMsg"></div>
+  <div class="row"><button id="saveKey" type="button">저장</button><button id="delKey" class="ghost" type="button" hidden>키 지우기</button><button id="back" class="ghost" type="button" hidden>대화로 돌아가기</button></div>
+  <p class="note">· 키는 이 PC에만 저장되고 다른 곳으로 보내지 않아요 (대화할 때 Anthropic에만 써요).<br>
+  · 대화할 때마다 내 API 계정에 사용 요금이 조금씩 나가요.<br>
+  · 내가 쓴 말과 우땅이 상태(이름·레벨·기분)가 Anthropic으로 보내져요. 비밀번호 같은 개인 정보는 적지 마세요.<br>
+  · 키가 없어도 우땅이는 지금처럼 정해진 대사로 잘 놀아요.</p>
+</div>
+
+<div id="log" hidden></div>
+<form id="f" hidden><input id="t" maxlength="200" autocomplete="off" placeholder="우땅이에게 말 걸기…" aria-label="보낼 말"><button id="send">보내기</button></form>
+
+<script>
+const $=id=>document.getElementById(id);
+let hasKey=false, owner="";
+function add(cls,text){const d=document.createElement("div");d.className="m "+cls;d.textContent=text;$("log").appendChild(d);$("log").scrollTop=1e9;return d}
+function show(chat){$("setup").hidden=chat;$("log").hidden=!chat;$("f").hidden=!chat;$("delKey").hidden=!hasKey;$("back").hidden=!hasKey;if(chat)$("t").focus();else $("key").focus()}
+async function status(){try{const r=await (await fetch("/ai/status")).json();hasKey=r.key;owner=r.owner||""}catch(e){}
+ show(hasKey);if(hasKey&&!$("log").children.length)add("woo",(owner?owner+"! ":"")+"나랑 얘기하자~ 뭐든 말해 봐!")}
+$("setBtn").onclick=()=>show(false);
+$("back").onclick=()=>show(true);
+async function setKey(k){const r=await (await fetch("/ai/key",{method:"POST",body:k})).json();
+ if(r.error){$("keyMsg").textContent=r.error;return}$("key").value="";$("keyMsg").textContent="";await status()}
+$("saveKey").onclick=()=>{const k=$("key").value.trim();if(!k){$("keyMsg").textContent="키를 붙여 넣어 주세요.";return}setKey(k)};
+$("key").onkeydown=e=>{if(e.key==="Enter")$("saveKey").click()};
+$("delKey").onclick=()=>{if(confirm("저장된 API 키를 지울까요?"))setKey("")};
+$("f").onsubmit=async e=>{e.preventDefault();const text=$("t").value.trim();if(!text)return;
+ $("t").value="";add("me",text);$("send").disabled=true;const w=add("woo think","우땅이가 생각 중… 🍌");
+ try{const r=await (await fetch("/ai/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text})})).json();
+  w.remove();if(r.error){add("err",r.error);if(r.nokey){hasKey=false;show(false)}}else add("woo",r.reply)}
+ catch(err){w.remove();add("err","우땅이 프로그램이 꺼져 있는 것 같아요.")}
+ $("send").disabled=false;$("t").focus()};
+status();
+</script>
+</body>
+</html>

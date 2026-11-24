@@ -17,6 +17,8 @@ func setupMove(t *testing.T) {
 	S = petState{Bananas: 10, Full: 80, Mood: 80, NoSound: true}
 	mons, monOverride, curMon = nil, nil, -1
 	focusUntil = time.Time{}
+	ceilGrabChance = 0 // 던지기 테스트는 천장에 안 잡힘
+	t.Cleanup(func() { ceilGrabChance = 0.5 })
 }
 
 // 오른쪽 위로 휙 던지면: 날아가서 벽에 튕기고, 바닥에 통통 튄 뒤 착지

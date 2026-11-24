@@ -5,6 +5,7 @@
 
     python tools/compose.py            # frames/ 에 전체 동작 저장
     python tools/compose.py 출력폴더
+    python tools/compose.py 출력폴더 clap heart   # 그 동작만
 """
 import math, os, io
 from pathlib import Path
@@ -113,11 +114,415 @@ def chain(sh, a1, l1, a2, l2):
     return el, wr
 
 
+# ───────────────────────── 이모티콘 동작 (박수 · 화이팅 · 사랑해 · 뿔났어 · 신나 · 갸우뚱) ─────────────────────────
+def _angry_head():
+    """기본 머리 + 찌푸린 눈썹 + 빨간 핏대"""
+    from PIL import ImageDraw
+    h = HEADS["full"].copy()
+    d = ImageDraw.Draw(h)
+    for a, b in (((76, 100), (126, 120)), ((232, 100), (184, 120))):
+        d.line([a, b], fill=(11, 11, 11, 255), width=9, joint="curve")
+        for p in (a, b):
+            d.ellipse([p[0] - 4, p[1] - 4, p[0] + 4, p[1] + 4], fill=(11, 11, 11, 255))
+    cx, cy = 248, 46  # 💢
+    for sx, sy in ((-1, -1), (1, -1), (-1, 1), (1, 1)):
+        d.arc([cx + sx * 14 - 11, cy + sy * 14 - 11, cx + sx * 14 + 11, cy + sy * 14 + 11],
+              start={(-1, -1): 0, (1, -1): 90, (-1, 1): 270, (1, 1): 180}[(sx, sy)], end={(-1, -1): 90, (1, -1): 180, (-1, 1): 360, (1, 1): 270}[(sx, sy)],
+              fill=(230, 40, 50, 255), width=6)
+    return h
+
+
+HEADS["angry"] = _angry_head()
+
+EMO = ("clap", "cheer", "heart", "angry", "dance", "huh")
+FONT = "NanumBarunpen, 'Nanum Pen Script', 'Malgun Gothic', sans-serif"
+
+
+def say_text(x, y, s, size=46, rot=0, op=1.0, col=INK):
+    return (f'<text x="{x:.1f}" y="{y:.1f}" font-family="{FONT}" font-weight="bold" font-size="{size:.0f}" text-anchor="middle" '
+            f'transform="rotate({rot:.1f} {x:.1f} {y:.1f})" fill="{col}" stroke="#ffffff" stroke-width="7" paint-order="stroke" '
+            f'opacity="{op:.2f}">{s}</text>')
+
+
+def heart_path(hx, hy, k=1.0, fill="#ff8fa3", sw=3, op=1.0):
+    return (f'<path transform="translate({hx:.1f} {hy:.1f}) scale({k:.3f})" d="M0 12 C-22 -4 -12 -18 0 -6 C12 -18 22 -4 0 12Z" '
+            f'fill="{fill}" stroke="{INK}" stroke-width="{sw / k:.2f}" stroke-linejoin="round" opacity="{op:.2f}"/>')
+
+
+def stand_legs(cx, btm, gy, spread=54, lift=(0, 0)):
+    legs = []
+    for i, side in enumerate((-1, 1)):
+        y = gy - lift[i]
+        hip = (cx + side * 36, btm - 24)
+        ft = (cx + side * spread, y)
+        knee = (cx + side * (spread + 9), (hip[1] + y) / 2 + 2)
+        legs.append(tarm([hip, knee, ft], 36, 24))
+        legs.append(foot(ft[0] + side * 8, y + 1, side * 12, 15, 9))
+    return legs
+
+
+def chin_fist(cx, hb, side, nm, front, behind, hands):
+    """기본 포즈 팔: 위팔은 몸 옆, 아래팔이 올라와 턱 아래 주먹"""
+    sh = (cx + side * 72, hb + 22)
+    el = (cx + side * 96, hb + 70)
+    wr = (cx + side * 40, hb + 24)
+    behind.append(tarm([sh, (cx + side * 92, hb + 46), el], 34, 30))
+    front.append(f'E:{el[0]:.1f},{el[1]:.1f}')
+    front.append(tarm([el, (cx + side * 76, hb + 58), wr], 30, 22))
+    hands.append((nm, wr[0] - side * 2, wr[1] - 6, side * 6))
+
+
+def up_arm(cx, hb, side, nm, a1, a2, l1, l2, behind, hands, hand_rot=0.0):
+    sh = (cx + side * 68, hb + 22)
+    el, wr = chain(sh, a1, l1, a2, l2)
+    behind.append(tarm([sh, el, wr]))
+    hands.append((nm, wr[0] + math.sin(a2) * 9, wr[1] + math.cos(a2) * 12, hand_rot))
+
+
+def pose_emo(kind, t):
+    cx = W / 2
+    ph = t * 2 * math.pi
+    back, front, hands, behind = [], [], [], []
+    head_kind, head_rot, head_dx = "full", 0.0, 0.0
+    tilt, bob, spread, lift = 0.0, math.sin(ph) * 2, 54, (0, 0)
+
+    if kind == "clap":
+        # 가슴 앞에서 짝짝 (한 바퀴에 두 번)
+        c = 0.5 + 0.5 * math.cos(ph * 2)
+        gap = 16 + 46 * c
+        bob = -abs(math.sin(ph * 2)) * 8
+        hb = GROUND - 154 + bob
+        for side, nm in ((-1, "palmL"), (1, "palmR")):
+            sh = (cx + side * 72, hb + 22)
+            el = (cx + side * 100, hb + 72)
+            wr = (cx + side * gap, hb + 50)
+            behind.append(tarm([sh, (cx + side * 94, hb + 48), el], 34, 30))
+            front.append(f'E:{el[0]:.1f},{el[1]:.1f}')
+            front.append(tarm([el, (cx + side * (gap + 36), hb + 70), wr], 30, 22))
+            hands.append((nm, wr[0] + side * 2, wr[1] - 14, side * -(20 + 25 * (1 - c))))
+        if c < 0.25:
+            for k, a in enumerate((-0.9, -0.3, 0.3, 0.9)):
+                sd = -1 if a < 0 else 1
+                aa = sd * 1.3 + a * 0.6
+                r0, r1 = 52, 74
+                x0, y0 = cx + math.sin(aa) * r0, hb + 36 - math.cos(aa) * r0
+                x1, y1 = cx + math.sin(aa) * r1, hb + 36 - math.cos(aa) * r1
+                front.append(f'<path d="M{x0:.1f} {y0:.1f} L{x1:.1f} {y1:.1f}" stroke="{INK}" stroke-width="5" stroke-linecap="round"/>')
+            front.append(say_text(cx + 150, hb - 190, "짝!", 52, 10))
+        else:
+            front.append(say_text(cx - 150, hb - 190, "짝짝", 44, -10, 0.85))
+
+    elif kind == "cheer":
+        # 주먹 불끈 쥐고 위로 쭉쭉 + "화이팅!"
+        p = 0.5 + 0.5 * math.sin(ph * 2)
+        bob = -p * 22
+        hb = GROUND - 154 + bob
+        lift = (p * 8, p * 8)
+        chin_fist(cx, hb, -1, "fistL", front, behind, hands)
+        up_arm(cx, hb, 1, "fistR", 2.05 + p * 0.25, math.pi - 0.2 + p * 0.1, 84, 56 + p * 14, behind, hands, -8)
+        front.append(say_text(cx - 118, hb - 200 - p * 10, "화이팅!", 50, -8))
+        for k in range(3):  # 반짝
+            q = (t * 2 + k / 3) % 1
+            sx, sy = cx + 120 + k * 34, hb - 200 - k * 22
+            r = 10 * math.sin(q * math.pi)
+            front.append(f'<path d="M{sx:.1f} {sy - r * 1.6:.1f} L{sx + r * 0.4:.1f} {sy:.1f} L{sx:.1f} {sy + r * 1.6:.1f} L{sx - r * 0.4:.1f} {sy:.1f} Z '
+                         f'M{sx - r * 1.6:.1f} {sy:.1f} L{sx:.1f} {sy - r * 0.4:.1f} L{sx + r * 1.6:.1f} {sy:.1f} L{sx:.1f} {sy + r * 0.4:.1f} Z" fill="#ffd84d" stroke="{INK}" stroke-width="2.5"/>')
+
+    elif kind == "heart":
+        # 큰 하트를 두 손으로 꼭 안고 두근두근
+        sw = math.sin(ph)
+        hb = GROUND - 154 + bob
+        tilt = sw * 3
+        beat = 1 + 0.09 * max(0.0, math.sin(ph * 2)) ** 2
+        hx, hy = cx, hb + 46
+        for side, nm in ((-1, "fistL"), (1, "fistR")):
+            sh = (cx + side * 72, hb + 22)
+            el = (cx + side * 98, hb + 72)
+            wr = (cx + side * 62, hb + 46)
+            behind.append(tarm([sh, (cx + side * 94, hb + 48), el], 34, 30))
+            front.append(f'E:{el[0]:.1f},{el[1]:.1f}')
+            front.append(tarm([el, (cx + side * 86, hb + 64), wr], 30, 22))
+            hands.append((nm, wr[0] - side * 2, wr[1] - 2, side * 30))
+        front.append(heart_path(hx, hy, 3.6 * beat, "#ff6f8a", 4.5))
+        front.append(f'<path transform="translate({hx:.1f} {hy:.1f}) scale({3.6 * beat:.3f})" d="M-8 -6 Q-10 -10 -6 -11" stroke="#ffffff" stroke-width="{2.2 / (3.6 * beat):.2f}" fill="none" stroke-linecap="round"/>')
+        for k in range(3):
+            q = (t + k / 3) % 1
+            front.append(heart_path(cx + (-140, 135, 160)[k] + math.sin(q * 6) * 6, hb - 130 - q * 80, 1.1 + q * 0.4, "#ff8fa3", 3, math.sin(q * math.pi)))
+        front.append(say_text(cx + 150, hb - 222, "사랑해", 44, 8))
+        head_kind, head_rot = "shy", sw * 5
+
+    elif kind == "angry":
+        # 허리에 손 올리고 발 쿵쿵 + 머리에서 김
+        st = math.sin(ph * 2)
+        hb = GROUND - 154 + abs(st) * -4
+        lift = (max(0.0, st) * 16, max(0.0, -st) * 16)
+        tilt = st * 2
+        for side, nm in ((-1, "fistL"), (1, "fistR")):
+            sh = (cx + side * 72, hb + 22)
+            el = (cx + side * 122, hb + 52)
+            wr = (cx + side * 88, hb + 92)
+            behind.append(tarm([sh, (cx + side * 104, hb + 32), el, wr], 34, 26))
+            hands.append((nm, wr[0] + side * 4, wr[1] + 2, side * -40))
+        for k, side in enumerate((-1, 1)):  # 김 푹푹
+            q = (t * 2 + k * 0.5) % 1
+            sx, sy = cx + side * (110 + q * 30), hb - 230 - q * 50
+            r = 12 + q * 14
+            front.append(f'<g opacity="{1 - q:.2f}"><circle cx="{sx:.1f}" cy="{sy:.1f}" r="{r:.1f}" fill="#ffffff" stroke="{INK}" stroke-width="3.5"/>'
+                         f'<circle cx="{sx + side * r * 0.9:.1f}" cy="{sy + r * 0.5:.1f}" r="{r * 0.6:.1f}" fill="#ffffff" stroke="{INK}" stroke-width="3.5"/></g>')
+        front.append(say_text(cx + 6, hb - 262, "흥!", 56, st * 4))
+        head_kind, head_rot = "angry", st * 3
+
+    elif kind == "dance":
+        # 팔 번갈아 번쩍, 몸 흔들흔들 폴짝
+        s = math.sin(ph)
+        bob = -abs(math.sin(ph)) * 20
+        hb = GROUND - 154 + bob
+        tilt = s * 8
+        lift = (max(0.0, s) * 14, max(0.0, -s) * 14)
+        for side, nm, up in ((-1, "palmL", max(0.0, -s)), (1, "palmR", max(0.0, s))):
+            a1 = side * (1.25 + up * 0.95)
+            a2 = side * (1.75 + up * 0.95)
+            up_arm(cx + tilt * 1.5, hb, side, nm, a1, a2, 58 + up * 8, 50 + up * 14, behind, hands, side * -10 - side * up * 30)
+        for k in range(2):  # 음표
+            q = (t + k / 2) % 1
+            nx, ny = cx + (-150 if k else 150) + math.sin(q * 7) * 8, hb - 150 - q * 70
+            front.append(say_text(nx, ny, "♪" if k else "♫", 54, math.sin(q * 6) * 15, math.sin(q * math.pi)))
+        head_kind = "shy" if s > 0.6 else "full"
+        head_rot, head_dx = -s * 9, s * 6
+
+    elif kind == "huh":
+        # 고개 갸우뚱 + 머리 긁적 + 물음표
+        w = math.sin(ph)
+        hb = GROUND - 154 + bob
+        chin_fist(cx, hb, -1, "fistL", front, behind, hands)
+        sh = (cx + 70, hb + 22)
+        el = (cx + 136, hb - 8)
+        wr = (cx + 128 + w * 4, hb - 104 + abs(w) * 6)
+        behind.append(tarm([sh, (cx + 120, hb + 22), el, wr], 34, 24))
+        hands.append(("fistR", wr[0] + 2, wr[1] - 4, -150 + w * 10))
+        front.append(say_text(cx - 132, hb - 196 + w * 4, "?", 78, -14 + w * 6))
+        front.append(say_text(cx - 86, hb - 230 - w * 4, "?", 50, 12, 0.8))
+        head_kind, head_rot, head_dx = "full", 12 + w * 2, -8
+
+    gy = GROUND - 10
+    legs = stand_legs(cx, hb + 108, gy, spread, lift)
+    back = legs + behind + [torso(cx, hb - 20, hb + 108, 80, 92, tilt), glow(cx, hb - 4)]
+    return back, front, hands, (head_kind, hb, head_rot, head_dx)
+
+
+# ───────────────────────── 이모티콘 2탄 (브이 · 엄지척 · 노래 · 안 돼요 · 꽃 선물 · 잘 먹었어요 · 뭐해? · 꽃받침) ─────────────────────────
+EMO2 = ("v", "thumb", "sing", "no", "flower", "yum", "what", "cute")
+
+
+def finger(x, y, ang, ln=34, w=13):
+    """손가락 하나 (ang: 위쪽 0도, +는 시계 방향). 뿌리는 주먹 그림에 가려짐"""
+    return (f'<g transform="translate({x:.1f} {y:.1f}) rotate({ang:.1f})"><rect x="{-w / 2:.1f}" y="{-ln:.1f}" width="{w:.1f}" height="{ln + 8:.1f}" '
+            f'rx="{w / 2:.1f}" fill="{SK}" stroke="{INK}" stroke-width="4"/></g>')
+
+
+def sparkle(sx, sy, r, col="#ffd84d"):
+    return (f'<path d="M{sx:.1f} {sy - r * 1.6:.1f} L{sx + r * 0.4:.1f} {sy:.1f} L{sx:.1f} {sy + r * 1.6:.1f} L{sx - r * 0.4:.1f} {sy:.1f} Z '
+            f'M{sx - r * 1.6:.1f} {sy:.1f} L{sx:.1f} {sy - r * 0.4:.1f} L{sx + r * 1.6:.1f} {sy:.1f} L{sx:.1f} {sy + r * 0.4:.1f} Z" fill="{col}" stroke="{INK}" stroke-width="2.5"/>')
+
+
+def raise_hand(cx, hb, side, a1, a2, l1, l2, behind):
+    """팔을 올리고 손(주먹 자리) 중심을 돌려줌"""
+    sh = (cx + side * 68, hb + 22)
+    el, wr = chain(sh, a1, l1, a2, l2)
+    behind.append(tarm([sh, el, wr]))
+    return wr[0] + math.sin(a2) * 9, wr[1] + math.cos(a2) * 12
+
+
+def bubble(x, y, s, rx=76, ry=42, size=40):
+    """말풍선"""
+    return (f'<path d="M{x - 18:.1f} {y + ry - 6:.1f} L{x + 6:.1f} {y + ry + 26:.1f} L{x + 14:.1f} {y + ry - 8:.1f} Z" fill="#fff" stroke="{INK}" stroke-width="4" stroke-linejoin="round"/>'
+            f'<ellipse cx="{x:.1f}" cy="{y:.1f}" rx="{rx}" ry="{ry}" fill="#fff" stroke="{INK}" stroke-width="4"/>'
+            f'<path d="M{x - 24:.1f} {y + ry - 4:.1f} L{x + 10:.1f} {y + ry - 4:.1f}" stroke="#fff" stroke-width="8"/>'
+            + say_text(x, y + size * 0.35, s, size))
+
+
+def hips(cx, hb, behind, hands, sides=(-1, 1)):
+    """허리에 손"""
+    for side in sides:
+        nm = "fistL" if side < 0 else "fistR"
+        sh = (cx + side * 72, hb + 22)
+        el = (cx + side * 122, hb + 52)
+        wr = (cx + side * 88, hb + 92)
+        behind.append(tarm([sh, (cx + side * 104, hb + 32), el, wr], 34, 26))
+        hands.append((nm, wr[0] + side * 4, wr[1] + 2, side * -40))
+
+
+def pose_emo2(kind, t):
+    cx = W / 2
+    ph = t * 2 * math.pi
+    front, hands, behind, bg = [], [], [], []
+    head_kind, head_rot, head_dx = "full", 0.0, 0.0
+    tilt, bob, lift = 0.0, math.sin(ph) * 2, (0, 0)
+    s = math.sin(ph)
+
+    if kind == "v":
+        # 얼굴 옆에서 브이~ (손을 까딱까딱)
+        bob = -abs(s) * 6
+        hb = GROUND - 154 + bob
+        chin_fist(cx, hb, -1, "fistL", front, behind, hands)
+        hx, hy = raise_hand(cx, hb, 1, 2.3, math.pi - 0.12, 80, 60, behind)
+        w = s * 8
+        front.append(finger(hx - 8, hy - 8, -16 + w, 46, 15))
+        front.append(finger(hx + 9, hy - 8, 14 + w, 46, 15))
+        hands.append(("fistR", hx, hy, -10 + w))
+        for k in range(3):
+            q = (t * 2 + k / 3) % 1
+            front.append(sparkle(cx + 196 - k * 6, hy - 70 + k * 46, 10 * math.sin(q * math.pi)))
+        front.append(say_text(cx - 140, hb - 206, "브이~", 50, -10))
+        head_rot, head_dx = 8 + s * 2, 6
+
+    elif kind == "thumb":
+        # 엄지척! 최고!
+        p = max(0.0, math.sin(ph))
+        bob = -p * 10
+        hb = GROUND - 154 + bob
+        chin_fist(cx, hb, -1, "fistL", front, behind, hands)
+        hx, hy = raise_hand(cx, hb, 1, 1.85, 2.75 + p * 0.1, 84, 58, behind)
+        front.append(finger(hx - 8, hy - 12, -8, 30, 19))
+        hands.append(("fistR", hx, hy, -6))
+        for k in range(3):
+            q = (t * 2 + k / 3) % 1
+            front.append(sparkle(hx + (-30, 34, 0)[k], hy - 70 - (0, 16, 46)[k], 10 * math.sin(q * math.pi)))
+        front.append(say_text(cx - 124, hb - 204 - p * 6, "최고!", 54, -8))
+        head_rot = -4
+
+    elif kind == "sing":
+        # 마이크 잡고 노래 ♪
+        bob = math.sin(ph) * 4
+        hb = GROUND - 154 + bob
+        tilt = s * 4
+        sh = (cx + 72, hb + 22)
+        el = (cx + 98, hb + 70)
+        wr = (cx + 46, hb + 18)
+        behind.append(tarm([sh, (cx + 92, hb + 46), el], 34, 30))
+        front.append(f'E:{el[0]:.1f},{el[1]:.1f}')
+        front.append(tarm([el, (cx + 78, hb + 52), wr], 30, 22))
+        mx, my = wr[0] - 14, wr[1] - 44
+        front.append(f'<path d="M{wr[0]:.1f} {wr[1]:.1f} L{mx:.1f} {my:.1f}" stroke="{INK}" stroke-width="15" stroke-linecap="round"/>'
+                     f'<path d="M{wr[0]:.1f} {wr[1]:.1f} L{mx:.1f} {my:.1f}" stroke="#5b5b66" stroke-width="8" stroke-linecap="round"/>'
+                     f'<circle cx="{mx:.1f}" cy="{my:.1f}" r="16" fill="#9a9aa6" stroke="{INK}" stroke-width="4"/>'
+                     f'<path d="M{mx - 9:.1f} {my - 5:.1f} L{mx + 9:.1f} {my - 5:.1f} M{mx - 10:.1f} {my + 3:.1f} L{mx + 10:.1f} {my + 3:.1f}" stroke="{INK}" stroke-width="2"/>')
+        hands.append(("fistR", wr[0], wr[1] - 2, 20))
+        up = 0.5 + 0.5 * s
+        hx, hy = raise_hand(cx, hb, -1, -1.75 - up * 0.35, -2.0 - up * 0.4, 70, 56, behind)
+        hands.append(("palmL", hx, hy, 30 + up * 20))
+        for k in range(3):
+            q = (t + k / 3) % 1
+            nx, ny = cx + (-160, 150, 120)[k] + math.sin(q * 7) * 8, hb - 140 - q * 80 - k * 10
+            front.append(say_text(nx, ny, "♪♫♬"[k], 50, math.sin(q * 6) * 15, math.sin(q * math.pi)))
+        head_kind = "shy" if s > 0.3 else "full"
+        head_rot, head_dx = -s * 7, s * 4
+
+    elif kind == "no":
+        # 두 팔 쫙 펴고 도리도리 "안 돼요!"
+        st = math.sin(ph * 2)
+        hb = GROUND - 154 - abs(st) * 3
+        for side, nm in ((-1, "palmL"), (1, "palmR")):
+            hx, hy = raise_hand(cx, hb, side, side * 1.55, side * 1.95, 70, 56, behind)
+            hands.append((nm, hx, hy, side * (-70 + st * 8)))
+        front.append(say_text(cx, hb - 262, "안 돼요!", 56, st * 3, col="#d6263a"))
+        head_kind, head_rot, head_dx = "sad", st * 7, st * 8
+
+    elif kind == "flower":
+        # 꽃 한 송이 선물
+        sw = math.sin(ph)
+        hb = GROUND - 154 + bob
+        tilt = sw * 2
+        for side, nm in ((-1, "fistL"), (1, "fistR")):
+            sh = (cx + side * 72, hb + 22)
+            el = (cx + side * 98, hb + 72)
+            wr = (cx + side * 22 + 4, hb + 58)
+            behind.append(tarm([sh, (cx + side * 94, hb + 48), el], 34, 30))
+            front.append(f'E:{el[0]:.1f},{el[1]:.1f}')
+            front.append(tarm([el, (cx + side * 66, hb + 74), wr], 30, 22))
+            hands.append((nm, wr[0] - side * 2, wr[1] - 2, side * 30))
+        fx, fy = cx + 96 + sw * 8, hb - 70
+        front.append(f'<path d="M{cx + 4:.1f} {hb + 80:.1f} Q{cx + 40:.1f} {hb:.1f} {fx:.1f} {fy:.1f}" stroke="{INK}" stroke-width="11" fill="none" stroke-linecap="round"/>'
+                     f'<path d="M{cx + 4:.1f} {hb + 80:.1f} Q{cx + 40:.1f} {hb:.1f} {fx:.1f} {fy:.1f}" stroke="#4caf50" stroke-width="5" fill="none" stroke-linecap="round"/>'
+                     f'<path d="M{cx + 40:.1f} {hb + 8:.1f} q26 -18 44 -4 q-22 18 -44 4Z" fill="#6cc96f" stroke="{INK}" stroke-width="3.5"/>')
+        rot = sw * 12
+        petals = "".join(f'<ellipse cx="0" cy="-24" rx="15" ry="20" transform="rotate({a})" fill="#ffd84d" stroke="{INK}" stroke-width="3.5"/>' for a in range(0, 360, 60))
+        front.append(f'<g transform="translate({fx:.1f} {fy:.1f}) rotate({rot:.1f})">{petals}<circle r="15" fill="#ff9c3c" stroke="{INK}" stroke-width="3.5"/></g>')
+        for k in range(2):
+            q = (t + k / 2) % 1
+            front.append(heart_path(cx - 140 + k * 20, hb - 140 - q * 70 - k * 30, 1.0 + q * 0.4, "#ff8fa3", 3, math.sin(q * math.pi)))
+        front.append(say_text(cx - 128, hb - 214, "선물이야", 44, -8))
+        head_kind, head_rot = "shy", -6 + sw * 3
+
+    elif kind == "yum":
+        # 바나나 껍질 머리에 얹고 배 통통 "잘 먹었어요!"
+        pat = max(0.0, math.sin(ph * 2))
+        hb = GROUND - 154 + bob
+        chin_fist(cx, hb, -1, "fistL", front, behind, hands)
+        sh = (cx + 72, hb + 22)
+        el = (cx + 104, hb + 80)
+        wr = (cx + 34, hb + 82 - pat * 10)
+        behind.append(tarm([sh, (cx + 100, hb + 52), el], 34, 30))
+        front.append(f'E:{el[0]:.1f},{el[1]:.1f}')
+        front.append(tarm([el, (cx + 72, hb + 92 - pat * 4), wr], 30, 22))
+        hands.append(("palmR", wr[0] - 4, wr[1] - 6, -100))
+        px, py = cx + 14, hb - 236  # 바나나 껍질
+        peel = (f'<g transform="translate({px:.1f} {py:.1f}) rotate({s * 4:.1f})">'
+                f'<path d="M-6 -2 Q-48 4 -62 46 Q-40 30 -14 12Z" fill="#ffe14d" stroke="{INK}" stroke-width="4" stroke-linejoin="round"/>'
+                f'<path d="M6 -2 Q48 6 60 44 Q38 30 14 12Z" fill="#ffe14d" stroke="{INK}" stroke-width="4" stroke-linejoin="round"/>'
+                f'<path d="M-4 4 Q-6 34 -18 54 Q4 40 8 6Z" fill="#ffd21f" stroke="{INK}" stroke-width="4" stroke-linejoin="round"/>'
+                f'<path d="M-12 -2 Q-4 -30 0 -40 L10 -38 Q8 -20 12 -2Z" fill="#ffe14d" stroke="{INK}" stroke-width="4" stroke-linejoin="round"/>'
+                f'<path d="M-2 -42 L10 -40 L9 -32 L-1 -34Z" fill="#6b4a2a" stroke="{INK}" stroke-width="3"/></g>')
+        front.append(peel)
+        if pat > 0.6:
+            front.append(say_text(cx + 120, hb + 70, "통통", 34, 10, 0.9))
+        front.append(say_text(cx - 104, hb - 254, "잘 먹었어요!", 48, -6))
+        head_kind, head_rot = ("eat1" if s > 0 else "full"), s * 3
+
+    elif kind == "what":
+        # 빼꼼 "뭐해?" 말풍선 + 손 흔들
+        w = math.sin(ph * 2)
+        hb = GROUND - 154 + bob
+        chin_fist(cx, hb, -1, "fistL", front, behind, hands)
+        hx, hy = raise_hand(cx, hb, 1, 2.2 + w * 0.1, math.pi - 0.25 + w * 0.35, 78, 56, behind)
+        hands.append(("palmR", hx, hy, -10 + w * 22))
+        front.append(bubble(cx - 128, hb - 236 + s * 3, "뭐해?", 78, 42, 42))
+        head_rot, head_dx = -10 + s * 2, 8
+
+    elif kind == "cute":
+        # 꽃받침 + 분홍 반짝 배경
+        bob = -abs(s) * 8
+        hb = GROUND - 154 + bob
+        for side, nm in ((-1, "palmL"), (1, "palmR")):
+            sh = (cx + side * 72, hb + 22)
+            el = (cx + side * 100, hb + 70)
+            wr = (cx + side * 66, hb + 4)
+            behind.append(tarm([sh, (cx + side * 96, hb + 46), el], 34, 30))
+            front.append(f'E:{el[0]:.1f},{el[1]:.1f}')
+            front.append(tarm([el, (cx + side * 88, hb + 40), wr], 30, 22))
+            hands.append((nm, wr[0] - side * 4, wr[1] - 20, side * -28))
+        bg.append(f'<ellipse cx="{cx:.1f}" cy="{hb - 60:.1f}" rx="{196 + s * 8:.1f}" ry="{220 + s * 8:.1f}" fill="#ffc2d6" opacity="0.75" filter="url(#glow)"/>')
+        for k in range(4):
+            q = (t * 2 + k / 4) % 1
+            a = k * 1.6 + 0.4
+            front.append(sparkle(cx + math.cos(a) * 190, hb - 110 + math.sin(a) * 150, 11 * math.sin(q * math.pi), "#fff4a8"))
+        head_kind, head_rot = ("shy" if s > -0.2 else "full"), s * 6
+
+    gy = GROUND - 10
+    legs = stand_legs(cx, hb + 108, gy, 54, lift)
+    back = ["B:" + b for b in bg] + legs + behind + [torso(cx, hb - 20, hb + 108, 80, 92, tilt), glow(cx, hb - 4)]
+    return back, front, hands, (head_kind, hb, head_rot, head_dx)
+
+
 def pose(kind, t):
     cx = W / 2
     ph = t * 2 * math.pi
     back, front, hands, behind = [], [], [], []
     head_kind, head_rot, head_dx = "full", 0.0, 0.0
+    if kind in EMO:
+        return pose_emo(kind, t)
+    if kind in EMO2:
+        return pose_emo2(kind, t)
     if kind == "eat":
         return pose_eat(t)
     if kind == "eat_milk":
@@ -406,7 +811,9 @@ def blob(page, parts, erase=()):
 
 def make(page, kind, t):
     back, front, hands, (hk, hb, hrot, hdx) = pose(kind, t)
-    img = blob(page, back)
+    bgs = [p[2:] for p in back if p.startswith("B:")]  # 몸 뒤 배경 (분홍 반짝 등)
+    img = blob(page, bgs) if bgs else Image.new("RGBA", (W, H))
+    img.alpha_composite(blob(page, [p for p in back if not p.startswith("B:")]))
     head = HEADS[hk]
     pad = 60
     hc = Image.new("RGBA", (head.width + pad * 2, head.height + pad * 2))
@@ -426,7 +833,9 @@ def make(page, kind, t):
     return img
 
 
-SEQ = {"wave": 8, "eat": 8, "eat_milk": 8, "eat_cake": 8, "shy": 8, "punish": 6, "walk": 8, "idle": 6, "blink": 1, "laugh": 8, "sit": 6, "sitblink": 1, "sleep": 12}
+SEQ = {"wave": 8, "eat": 8, "eat_milk": 8, "eat_cake": 8, "shy": 8, "punish": 6, "walk": 8, "idle": 6, "blink": 1, "laugh": 8, "sit": 6, "sitblink": 1, "sleep": 12,
+       "clap": 8, "cheer": 8, "heart": 8, "angry": 8, "dance": 8, "huh": 8,
+       "v": 8, "thumb": 8, "sing": 8, "no": 8, "flower": 8, "yum": 8, "what": 8, "cute": 8}
 
 if __name__ == "__main__":
     import sys
@@ -435,7 +844,10 @@ if __name__ == "__main__":
     with sync_playwright() as p:
         b = p.chromium.launch()
         pg = b.new_page(viewport={"width": W, "height": H})
+        only = sys.argv[2:]  # 이름을 주면 그 동작만 (예: python tools/compose.py frames clap heart)
         for name, n in SEQ.items():
+            if only and name not in only:
+                continue
             for k in range(n):
                 make(pg, name, k / n).save(f"{out}/{name}_{k}.png")
     print("compose: done ->", out)
