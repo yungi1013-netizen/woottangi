@@ -47,6 +47,16 @@ var achievements = []achievement{
 	{"lv20", "💫", "전설의 시작", "Lv.20 달성", 40, "", func() bool { return lvNow() >= 20 }},
 	{"items3", "🎀", "멋쟁이", "꾸미기 아이템 3개 모으기", 10, "", func() bool { return len(S.Owned) >= 3 }},
 	{"itemsAll", "💎", "패셔니스타", "파는 꾸미기 아이템 전부 모으기", 30, "", ownsAllShop},
+	{"items15", "👗", "옷장 부자", "꾸미기 아이템 15개 모으기 · 반짝 티아라 선물", 30, "tiara", func() bool { return len(S.Owned) >= 15 }},
+	{"outfit1", "💾", "나만의 코디", "코디를 처음 저장했어요", 3, "", func() bool {
+		for _, o := range S.Outfits {
+			if outfitLabel(o) != "" {
+				return true
+			}
+		}
+		return false
+	}},
+	{"random10", "🎲", "오늘 뭐 입지?", "오늘의 코디 10번", 10, "", func() bool { return S.RandomCnt >= 10 }},
 	{"focus1", "⏱️", "집중 시작", "집중 타이머를 처음 끝냈어요", 5, "", func() bool { return S.FocusCnt >= 1 }},
 	{"focus10", "🎯", "집중왕", "집중 타이머 10번 끝내기 · 헤드폰 선물", 20, "headphones", func() bool { return S.FocusCnt >= 10 }},
 	{"rich300", "💰", "바나나 부자", "바나나 300개 모으기", 15, "", func() bool { return S.Bananas >= 300 }},
@@ -122,7 +132,7 @@ func initAch() {
 	if S.SeenVer != newsID {
 		if S.Day != "" {
 			notices = append(notices, updateNews)
-			toast("우땅이 "+appVersion+" 업데이트!", "우땅이랑 AI 대화 · 새 이모티콘 8개 · 두더지 잡기 · 바나나 요리 · 음악 춤")
+			toast("우땅이 "+appVersion+" 업데이트!", "꾸미기 8개 추가 · 코디 저장 · 오늘의 코디 · AI 대화 · 새 이모티콘")
 		}
 		S.SeenVer = newsID
 	}
@@ -137,9 +147,11 @@ func initAch() {
 
 // 업데이트 소식 (말풍선). 폰 앱 MainActivity.NEWS 와 같은 내용
 // 소식 번호: 같은 버전 안에서 소식이 늘면 뒤를 바꿔 한 번 더 보여 줌 (폰 MainActivity.newsId 와 같게)
-var newsID = appVersion + "-ai"
+var newsID = appVersion + "-deco"
 
 const updateNews = "업데이트 됐어! 새로 생긴 것:\n" +
+	"· 꾸미기 8개 (고양이 귀·토끼 귀·밀짚모자·진주 목걸이…)\n" +
+	"· 코디 저장 3칸 · 오늘의 코디 (꾸미기 → 코디)\n" +
 	"· 나랑 AI 대화하기 (메뉴 → 우땅이랑 대화하기)\n" +
 	"· 이모티콘 8개 (브이·엄지척·노래…)\n" +
 	"· 두더지 잡기 · 바나나 요리 도감\n" +

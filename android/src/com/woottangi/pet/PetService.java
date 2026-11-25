@@ -75,7 +75,7 @@ public class PetService extends Service implements Choreographer.FrameCallback {
     boolean gaming = false;
     final android.os.Handler h = new android.os.Handler(android.os.Looper.getMainLooper());
     BubbleView bubble;
-    LinearLayout menu;
+    View menu;
     WindowManager.LayoutParams lp, blp, mlp;
     boolean shown = false, hidden = false, screenOn = true, looping = false, bubbleOn = false;
     long lastFrame = 0, bubbleUntil = 0, lastSave = 0, lastClock = 0;
@@ -780,9 +780,18 @@ public class PetService extends Service implements Choreographer.FrameCallback {
         return v;
     }
 
+    TextView note(String s) {
+        TextView t = new TextView(this);
+        t.setText(s);
+        t.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+        t.setTextColor(0xFF8A6A40);
+        t.setPadding((int) (14 * dp), (int) (6 * dp), (int) (14 * dp), (int) (6 * dp));
+        return t;
+    }
+
     void openMenu() { openMenu(0); }
 
-    /** page 0 메인 · 1 간식 · 2 놀아주기 · 3 꾸미기 · 4 돌봄 · 집중 · 5 이모티콘 */
+    /** page 0 메인 · 1 간식 · 2 놀아주기 · 3 꾸미기 · 4 돌봄 · 집중 · 5 이모티콘 · 6 꾸미기 상점 · 7 코디 저장 */
     void openMenu(int page) {
         closeMenu();
         if (pet.hiding) { pet.tap(); return; } // 숨바꼭질 중에 꾹 = 찾았다
@@ -870,7 +879,34 @@ public class PetService extends Service implements Choreographer.FrameCallback {
                 m.addView(item("⏱️ 50분 집중하기", () -> pet.startFocus(50, System.currentTimeMillis())));
             }
             m.addView(item("‹ 뒤로", () -> openMenu(0)));
+        } else if (page == 6) {
+            m.addView(note("🛍️ 꾸미기 상점 · 사면 바로 써요"));
+            for (int i = 0; i < Pet.ITEM_IDS.length; i++) {
+                final int k = i;
+                String id = Pet.ITEM_IDS[i];
+                if (pet.owns(id)) {
+                    if (Pet.ITEM_PRICE[i] > 0) m.addView(item("✔ " + Pet.ITEM_NAMES[i] + "  (가지고 있음)", () -> { pet.toggleWear(k); openMenu(6); }));
+                } else if (Pet.ITEM_PRICE[i] > 0) {
+                    TextView v = item("🛒 " + Pet.ITEM_NAMES[i] + "  (🍌 " + Pet.ITEM_PRICE[i] + ")", () -> { pet.buyItem(k); openMenu(6); });
+                    if (pet.bananas < Pet.ITEM_PRICE[i]) v.setAlpha(0.45f);
+                    m.addView(v);
+                } else {
+                    TextView v = item("🎁 " + Pet.ITEM_NAMES[i] + "  (" + Pet.giftFrom(id) + ")", () -> pet.buyItem(k));
+                    v.setAlpha(0.45f);
+                    m.addView(v);
+                }
+            }
+            m.addView(item("‹ 꾸미기로", () -> openMenu(3)));
+        } else if (page == 7) {
+            m.addView(note("💾 지금 모습을 어느 칸에 저장할까요?"));
+            for (int i = 0; i < Pet.OUTFIT_SLOTS; i++) {
+                final int k = i;
+                String l = Pet.outfitLabel(pet.outfit(i));
+                m.addView(item("코디 " + (i + 1) + (l.isEmpty() ? " (비어 있음)" : " (지금: " + l + " → 바꾸기)"), () -> { pet.saveOutfit(k); openMenu(3); }));
+            }
+            m.addView(item("‹ 꾸미기로", () -> openMenu(3)));
         } else {
+            m.addView(note("🎀 꾸미기 " + pet.ownedCount() + "/" + Pet.ITEM_IDS.length + "  ·  누르면 쓰기/벗기"));
             int have = 0;
             for (int i = 0; i < Pet.ITEM_IDS.length; i++) {
                 if (!pet.owns(Pet.ITEM_IDS[i])) continue;
@@ -879,13 +915,16 @@ public class PetService extends Service implements Choreographer.FrameCallback {
                 boolean on = java.util.Arrays.asList(pet.wear).contains(Pet.ITEM_IDS[i]);
                 m.addView(item((on ? "✅ " : "⬜ ") + Pet.ITEM_NAMES[i], () -> { pet.toggleWear(k); openMenu(3); }));
             }
-            if (have == 0) {
-                TextView t = new TextView(this);
-                t.setText("아직 꾸미기 아이템이 없어요.\n바나나 뽑기에서 가끔 나오고,\n업적을 깨면 선물로 받아요!");
-                t.setTextColor(0xFF8A6A40);
-                t.setPadding((int) (14 * dp), (int) (8 * dp), (int) (14 * dp), (int) (8 * dp));
-                m.addView(t);
+            if (have == 0) m.addView(note("아직 꾸미기 아이템이 없어요.\n상점에서 바나나로 사 보세요!"));
+            m.addView(item("🛍️ 꾸미기 상점  ›", () -> openMenu(6)));
+            m.addView(item("🎲 오늘의 코디 (아무거나 골라 입기)", () -> pet.randomOutfit()));
+            for (int i = 0; i < Pet.OUTFIT_SLOTS; i++) {
+                final int k = i;
+                String l = Pet.outfitLabel(pet.outfit(i));
+                if (!l.isEmpty()) m.addView(item("👗 코디 " + (i + 1) + " 입기: " + l, () -> pet.wearOutfit(k)));
             }
+            m.addView(item("💾 지금 모습 코디로 저장  ›", () -> openMenu(7)));
+            if (have > 0) m.addView(item("🙅 모두 벗기", () -> pet.takeOffAll()));
             m.addView(item("‹ 뒤로", () -> openMenu(0)));
         }
 
@@ -893,18 +932,31 @@ public class PetService extends Service implements Choreographer.FrameCallback {
                 WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH);
         m.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
         int mw = m.getMeasuredWidth(), mh = m.getMeasuredHeight();
+        // 화면보다 길면 (상점 · 이모티콘) 스크롤되게
+        View root = m;
+        int maxH = (int) (pet.floorY - pet.ceilY - 8 * dp);
+        if (maxH > 0 && mh > maxH) {
+            android.widget.ScrollView sv = new android.widget.ScrollView(this);
+            sv.setBackground(m.getBackground());
+            m.setBackground(null);
+            sv.setElevation(8 * dp);
+            sv.addView(m);
+            root = sv;
+            mh = maxH;
+            mlp.height = maxH;
+        }
         float right = pet.x + pet.winW(), left = pet.x;
         int x = right + mw < pet.scrW - 4 * dp ? (int) (right - pet.winW() * 0.1f) : (int) (left - mw + pet.winW() * 0.1f);
         x = (int) Math.max(4 * dp, Math.min(pet.scrW - mw - 4 * dp, x));
         int y = (int) Math.max(pet.ceilY + 4 * dp, Math.min(pet.floorY - mh - 4 * dp, pet.y + pet.winH() * 0.5f - mh / 2f));
         mlp.x = x;
         mlp.y = y;
-        m.setOnTouchListener((v, e) -> {
+        root.setOnTouchListener((v, e) -> {
             if (e.getActionMasked() == MotionEvent.ACTION_OUTSIDE) { closeMenu(); return true; }
             return false;
         });
-        menu = m;
-        try { wm.addView(m, mlp); } catch (Exception ex) { menu = null; }
+        menu = root;
+        try { wm.addView(root, mlp); } catch (Exception ex) { menu = null; }
         if (!pet.mode.equals("sleep") && pet.q == 0 && !pet.bathing && !pet.focusing()) pet.setMode("st_me", 9999);
     }
 

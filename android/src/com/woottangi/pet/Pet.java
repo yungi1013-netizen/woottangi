@@ -726,15 +726,45 @@ public class Pet {
             "세상이 다 하트로 보여~ 사랑해!", "포근포근 따뜻해~"};
     float gachaLeft = 0;
 
-    /** 꾸미기 전부: 앞 4개 = 뽑기, 뒤 = 업적 보상 (ACH 6번째 칸) */
-    public static final String[] ITEM_IDS = {"starpin", "halo", "heartglasses", "scarf",
-            "rainbow", "bananaband", "medal", "headphones", "flowercrown", "chefhat"};
-    public static final String[] ITEM_NAMES = {"반짝 별 핀", "천사 링", "하트 안경", "줄무늬 목도리",
-            "무지개 핀", "바나나 머리띠", "금메달", "헤드폰", "꽃 화관", "요리사 모자"};
-    static final int[] ITEM_SLOT = {0, 0, 1, 2, 0, 0, 2, 0, 0, 0};
-    static final String[] ITEM_LINE = {"반짝반짝 작은 별~ 나 빛나지?", "오늘은 천사 우땅이야~ 착하게 살게!",
-            "세상이 다 하트로 보여~ 사랑해!", "포근포근 따뜻해~", "무지개처럼 반짝반짝!", "100일 동안 고마워! 바나나 왕이다!",
-            "놀이 대장 금메달! 반짝반짝~", "쿵짝쿵짝~ 집중 모드 ON!", "쓰담쓰담 고마워~ 꽃 화관 예쁘지?", "오늘은 우땅이 셰프! 맛있게 해 줄게~"};
+    /** 꾸미기 전부 (PC shop.go 와 같은 그림·이름). 가격 0 = 팔지 않음 (뽑기 · 업적 선물) */
+    public static final String[] ITEM_IDS = {
+            "ribbon", "flower", "sprout", "partyhat", "catears", "bunnyears", "strawhat", "beanie", "santa", "crown",
+            "glasses", "sunglasses", "blush", "mustache", "bowtie", "bandana", "pearl",
+            "starpin", "halo", "heartglasses", "scarf",
+            "rainbow", "bananaband", "medal", "headphones", "flowercrown", "chefhat", "tiara"};
+    public static final String[] ITEM_NAMES = {
+            "빨간 리본", "꽃 핀", "새싹", "파티 고깔모자", "고양이 귀", "토끼 귀", "밀짚모자", "털모자", "산타 모자", "왕관",
+            "동그란 안경", "선글라스", "발그레 볼터치", "신사 콧수염", "나비넥타이", "반다나", "진주 목걸이",
+            "반짝 별 핀", "천사 링", "하트 안경", "줄무늬 목도리",
+            "무지개 핀", "바나나 머리띠", "금메달", "헤드폰", "꽃 화관", "요리사 모자", "반짝 티아라"};
+    public static final int[] ITEM_PRICE = {8, 10, 12, 15, 18, 18, 22, 25, 25, 40, 15, 20, 10, 12, 15, 14, 30,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    static final int[] ITEM_SLOT = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2,
+            0, 0, 1, 2, 0, 0, 2, 0, 0, 0, 0};
+    public static final String[] ITEM_LINE = {
+            "리본 예뻐? 히히", "꽃 냄새 난다~ 향기롭지?", "머리에서 새싹이 났어! 쑥쑥 클게!", "오늘은 파티다! 빵빠레~",
+            "야옹~ 아니 우땅~ 헷갈리지?", "깡총깡총! 귀가 쫑긋~", "여름 바다 가고 싶다~ 출발!", "따뜻하다~ 겨울 준비 끝!",
+            "호호호! 선물 줄게~", "나 이제 우땅이 왕이야!", "똑똑해 보여? 에헴!", "멋있지? 우땅 스웩~",
+            "히히 볼이 발그레~ 부끄러워", "에헴! 우땅 신사라네~", "오늘은 신사 우땅이야!", "반다나 두르니까 모험가 같지?",
+            "반짝반짝 진주! 우아하지?",
+            "반짝반짝 작은 별~ 나 빛나지?", "오늘은 천사 우땅이야~ 착하게 살게!", "세상이 다 하트로 보여~ 사랑해!", "포근포근 따뜻해~",
+            "무지개처럼 반짝반짝!", "100일 동안 고마워! 바나나 왕이다!", "놀이 대장 금메달! 반짝반짝~", "쿵짝쿵짝~ 집중 모드 ON!",
+            "쓰담쓰담 고마워~ 꽃 화관 예쁘지?", "오늘은 우땅이 셰프! 맛있게 해 줄게~", "옷장 부자 우땅이! 공주님 같지?"};
+
+    /** 팔지 않는 아이템을 받는 방법 (메뉴 표시용) */
+    public static String giftFrom(String id) {
+        switch (id) {
+            case "starpin": case "halo": case "heartglasses": case "scarf": return "바나나 뽑기";
+            case "rainbow": return "누적 출석 30일 선물";
+            case "bananaband": return "누적 출석 100일 선물";
+            case "medal": return "업적 '놀이 대장' 선물";
+            case "headphones": return "업적 '집중왕' 선물";
+            case "flowercrown": return "업적 '쓰담쓰담 장인' 선물";
+            case "chefhat": return "업적 '바나나 요리사' 선물";
+            case "tiara": return "업적 '옷장 부자' 선물";
+        }
+        return "";
+    }
 
     public static int itemIndex(String id) {
         for (int i = 0; i < ITEM_IDS.length; i++) if (ITEM_IDS[i].equals(id)) return i;
@@ -812,6 +842,116 @@ public class Pet {
             setMode("shy", rd(2, 2.6f));
             say("바나나 " + n + "개… 다음엔 더 좋은 거!", 3);
         }
+    }
+
+    // ───────── 꾸미기 상점 · 코디 (PC shop.go 와 같음) ─────────
+    public String outfits = "";   // 코디 3칸: "머리,얼굴,목|머리,얼굴,목|..." (빈 칸 = "")
+    public int randomCnt = 0;     // 오늘의 코디 횟수
+    public static final int OUTFIT_SLOTS = 3;
+    static final int EXP_BUY = 10;
+
+    /** 상점에서 사기 (i = ITEM_IDS 번호). 사면 바로 씀 */
+    public boolean buyItem(int i) {
+        if (i < 0 || i >= ITEM_IDS.length) return false;
+        String id = ITEM_IDS[i];
+        if (owns(id)) { toggleWear(i); return false; }
+        if (ITEM_PRICE[i] == 0) { say(ITEM_NAMES[i] + "은 " + giftFrom(id) + "이야!", 3); return false; }
+        if (bananas < ITEM_PRICE[i]) {
+            setMode("st_cry", 2.5f);
+            say(ITEM_NAMES[i] + " 갖고 싶은데…\n바나나가 " + (ITEM_PRICE[i] - bananas) + "개 모자라…", 3.5f);
+            return false;
+        }
+        bananas -= ITEM_PRICE[i];
+        owned = owned.isEmpty() ? id : owned + "," + id;
+        wear[ITEM_SLOT[i]] = id;
+        mood = Math.min(100, mood + 15);
+        addExp(EXP_BUY);
+        setMode("laugh", rd(2.5f, 3.2f));
+        say("우와! " + ITEM_NAMES[i] + " 샀다!\n" + ITEM_LINE[i], 4.5f);
+        return true;
+    }
+
+    public boolean ownsAllShop() {
+        for (int i = 0; i < ITEM_IDS.length; i++) if (ITEM_PRICE[i] > 0 && !owns(ITEM_IDS[i])) return false;
+        return true;
+    }
+
+    public void takeOffAll() {
+        wear[0] = wear[1] = wear[2] = "";
+        setMode("idle", 2);
+        say("다 벗었어! 가뿐하다~", 2.5f);
+    }
+
+    /** 코디 i 칸 (자리별 id 3개, 없으면 빈 문자열 3개) */
+    public String[] outfit(int i) {
+        String[] all = outfits.split("\\|", -1);
+        String[] o = {"", "", ""};
+        if (i < all.length) {
+            String[] w = all[i].split(",", -1);
+            for (int s = 0; s < 3 && s < w.length; s++) o[s] = w[s];
+        }
+        return o;
+    }
+
+    /** "고양이 귀 · 진주 목걸이" (아무것도 없으면 "") */
+    public static String outfitLabel(String[] o) {
+        StringBuilder b = new StringBuilder();
+        for (String id : o) {
+            int k = itemIndex(id);
+            if (k < 0) continue;
+            if (b.length() > 0) b.append(" · ");
+            b.append(ITEM_NAMES[k]);
+        }
+        return b.toString();
+    }
+
+    public void saveOutfit(int i) {
+        if (outfitLabel(wear).isEmpty()) { say("아무것도 안 썼어~\n먼저 꾸며 줘!", 3); return; }
+        String[] all = new String[OUTFIT_SLOTS];
+        for (int k = 0; k < OUTFIT_SLOTS; k++) {
+            String[] o = k == i ? wear : outfit(k);
+            all[k] = o[0] + "," + o[1] + "," + o[2];
+        }
+        outfits = String.join("|", all);
+        setMode("st_me", 2.2f);
+        say("코디 " + (i + 1) + "에 저장했어!\n" + outfitLabel(wear), 3.5f);
+    }
+
+    public void wearOutfit(int i) {
+        String[] o = outfit(i);
+        if (outfitLabel(o).isEmpty()) { say("코디 " + (i + 1) + "은 비어 있어~", 2.5f); return; }
+        for (int s = 0; s < 3; s++) wear[s] = owns(o[s]) ? o[s] : "";
+        setMode("st_me", 2.2f);
+        say(pick("짠! 코디 " + (i + 1) + " 변신!", "이 옷 좋아~ 어때?", "오늘은 이걸로 결정!"), 3);
+    }
+
+    public boolean hasOutfit() {
+        for (int i = 0; i < OUTFIT_SLOTS; i++) if (!outfitLabel(outfit(i)).isEmpty()) return true;
+        return false;
+    }
+
+    /** 가진 아이템으로 자리마다 하나씩 (가끔 비워 둠) 골라 입기 */
+    public void randomOutfit() {
+        java.util.List<java.util.List<String>> have = new java.util.ArrayList<>();
+        for (int s = 0; s < 3; s++) have.add(new java.util.ArrayList<>());
+        for (int i = 0; i < ITEM_IDS.length; i++) if (owns(ITEM_IDS[i])) have.get(ITEM_SLOT[i]).add(ITEM_IDS[i]);
+        if (have.get(0).isEmpty() && have.get(1).isEmpty() && have.get(2).isEmpty()) {
+            say("꾸미기 아이템이 하나도 없어~\n상점에서 하나 사 줄래?", 3);
+            return;
+        }
+        String old = String.join(",", wear);
+        for (int t = 0; t < 8; t++) {
+            for (int s = 0; s < 3; s++) {
+                int n = have.get(s).size();
+                wear[s] = n > 0 && rng.nextInt(n + 1) > 0 ? have.get(s).get(rng.nextInt(n)) : "";
+            }
+            if (!outfitLabel(wear).isEmpty() && !String.join(",", wear).equals(old)) break;
+        }
+        if (outfitLabel(wear).isEmpty())
+            for (int s = 0; s < 3; s++) if (!have.get(s).isEmpty()) { wear[s] = have.get(s).get(rng.nextInt(have.get(s).size())); break; }
+        randomCnt++;
+        setMode("laugh", rd(2, 2.6f));
+        say("오늘의 코디는…\n" + outfitLabel(wear) + "!", 3.5f);
     }
 
     /** 꾸미기 아이템 켜고 끄기 (i = ITEM_IDS 번호, 가진 것만) */
@@ -1296,6 +1436,7 @@ public class Pet {
         bathDay = s.getString("bathDay", ""); tuckDay = s.getString("tuckDay", ""); toyDay = s.getString("toyDay", "");
         gifts = s.getString("gifts", ""); ach = s.getString("ach", "");
         cooked = s.getString("cooked", ""); cookCnt = s.getInt("cookCnt", 0); danceCnt = s.getInt("danceCnt", 0); chatCnt = s.getInt("chatCnt", 0);
+        outfits = s.getString("outfits", ""); randomCnt = s.getInt("randomCnt", 0);
         for (String[] a : ACH) // 보상이 생기기 전에 깬 업적: 아이템만 조용히 챙겨 줌
             if (a.length > 5 && hasAch(a[0]) && !owns(a[5])) owned = owned.isEmpty() ? a[5] : owned + "," + a[5];
         focusUntil = s.getLong("focusUntil", 0); focusLen = s.getInt("focusLen", 0);
@@ -1308,6 +1449,7 @@ public class Pet {
         s.put("whackBest", whackBest); s.put("whackCnt", whackCnt); s.put("gifSaved", gifSaved);
         s.put("bathDay", bathDay); s.put("tuckDay", tuckDay); s.put("toyDay", toyDay); s.put("gifts", gifts); s.put("ach", ach);
         s.put("cooked", cooked); s.put("cookCnt", cookCnt); s.put("danceCnt", danceCnt); s.put("chatCnt", chatCnt);
+        s.put("outfits", outfits); s.put("randomCnt", randomCnt);
         s.put("focusUntil", focusUntil); s.put("focusLen", focusLen);
     }
 
@@ -1997,6 +2139,11 @@ public class Pet {
             {"dance10", "🎶", "음악 친구", "음악에 맞춰 10번 춤췄어요", "10"},
             {"chat1", "💬", "말이 통했어", "우땅이랑 AI 대화를 처음 했어요", "3"},
             {"chat30", "🗨️", "수다쟁이 우땅이", "우땅이랑 AI 대화 30번", "15"},
+            {"items3", "🎀", "멋쟁이", "꾸미기 아이템 3개 모으기", "10"},
+            {"itemsAll", "💎", "패셔니스타", "파는 꾸미기 아이템 전부 모으기", "30"},
+            {"items15", "👗", "옷장 부자", "꾸미기 아이템 15개 모으기 · 반짝 티아라 선물", "30", "tiara"},
+            {"outfit1", "💾", "나만의 코디", "코디를 처음 저장했어요", "3"},
+            {"random10", "🎲", "오늘 뭐 입지?", "오늘의 코디 10번", "10"},
     };
 
     // ---- AI 대화 (Claude): 답 다듬기 · 시스템 프롬프트는 여기, 인터넷 요청은 AiChat ----
@@ -2073,6 +2220,11 @@ public class Pet {
             case "dance10": return danceCnt >= 10;
             case "chat1": return chatCnt >= 1;
             case "chat30": return chatCnt >= 30;
+            case "items3": return ownedCount() >= 3;
+            case "itemsAll": return ownsAllShop();
+            case "items15": return ownedCount() >= 15;
+            case "outfit1": return hasOutfit();
+            case "random10": return randomCnt >= 10;
             case "friend1": return friendCnt >= 1;
             case "friend10": return friendCnt >= 10;
             case "toy1": return toyCnt >= 1;

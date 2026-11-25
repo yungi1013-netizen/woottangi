@@ -175,7 +175,7 @@ public class PetTest {
         got = p.ownedCount();
         check(p.gachaCnt == 300 && got == 4, "gacha all items " + got);
         check(p.wearing("idle").size() == 3 && p.wearing("st_me").size() == 2, "wear slots / no face");
-        int idx = java.util.Arrays.asList(Pet.GACHA_POOL).indexOf(p.wear[2]);
+        int idx = Pet.itemIndex(p.wear[2]);
         p.toggleWear(idx); check(p.wear[2].isEmpty(), "take off");
         // 저장
         st = new MapStore(); p.save(st, now); q = new Pet(new Random(1)); q.load(st, now);
@@ -458,6 +458,47 @@ public class PetTest {
         check(p.mode.equals("heart") && p.chatCnt == 1 && "나도 좋아!".equals(p.sayText), "ai reply " + p.mode);
         st = new MapStore(); p.save(st, now); q = new Pet(new Random(1)); q.load(st, now);
         check(q.chatCnt == 1 && q.achDone("chat1"), "ai chatCnt saved");
+
+        // ── 1.2: 꾸미기 상점 · 코디 ──
+        check(Pet.ITEM_IDS.length == Pet.ITEM_NAMES.length && Pet.ITEM_IDS.length == Pet.ITEM_PRICE.length
+                && Pet.ITEM_IDS.length == Pet.ITEM_LINE.length, "item arrays same length");
+        for (String[] ac : Pet.ACH) if (ac.length > 5) check(Pet.itemIndex(ac[5]) >= 0, "ach item " + ac[5]);
+        for (String gp : Pet.GACHA_POOL) check(Pet.itemIndex(gp) >= 0 && Pet.ITEM_PRICE[Pet.itemIndex(gp)] == 0, "gacha item " + gp);
+        for (int i = 0; i < Pet.ITEM_IDS.length; i++) if (Pet.ITEM_PRICE[i] == 0) check(!Pet.giftFrom(Pet.ITEM_IDS[i]).isEmpty(), "giftFrom " + Pet.ITEM_IDS[i]);
+        p = fresh(66); run(p, 3, now); p.bananas = 30;
+        int crown = Pet.itemIndex("crown"), cat = Pet.itemIndex("catears"), blush = Pet.itemIndex("blush"), pearl = Pet.itemIndex("pearl");
+        check(!p.buyItem(crown) && !p.owns("crown") && p.bananas == 30, "can't buy crown with 30");
+        check(!p.buyItem(Pet.itemIndex("halo")) && !p.owns("halo"), "gift item not sold");
+        p.bananas = 200;
+        check(p.buyItem(cat) && p.owns("catears") && p.wear[0].equals("catears") && p.bananas == 182, "buy catears " + p.bananas);
+        check(p.buyItem(blush) && p.buyItem(pearl) && p.wear[1].equals("blush") && p.wear[2].equals("pearl"), "buy blush pearl");
+        p.saveOutfit(1);
+        check(Pet.outfitLabel(p.outfit(1)).equals("고양이 귀 · 발그레 볼터치 · 진주 목걸이") && p.hasOutfit(), "outfit saved " + p.outfits);
+        check(Pet.outfitLabel(p.outfit(0)).isEmpty() && Pet.outfitLabel(p.outfit(2)).isEmpty(), "other outfits empty");
+        p.takeOffAll();
+        check(Pet.outfitLabel(p.wear).isEmpty(), "take off all");
+        p.wearOutfit(1);
+        check(p.wear[0].equals("catears") && p.wear[2].equals("pearl"), "wear outfit");
+        p.wearOutfit(2);
+        check(p.wear[0].equals("catears"), "empty outfit keeps clothes");
+        for (int i = 0; i < 30; i++) {
+            p.randomOutfit();
+            check(!Pet.outfitLabel(p.wear).isEmpty(), "random not empty");
+            for (String w : p.wear) check(w.isEmpty() || p.owns(w), "random owns " + w);
+        }
+        check(p.randomCnt == 30 && p.achDone("random10") && p.achDone("outfit1") && p.achDone("items3") && !p.achDone("items15"), "deco ach");
+        st = new MapStore(); p.save(st, now); q = new Pet(new Random(1)); q.load(st, now);
+        check(q.outfits.equals(p.outfits) && q.randomCnt == 30 && q.owns("pearl"), "outfits saved");
+        // 예전 기록 (outfits 키 없음) 도 그대로 열림
+        q = fresh(67);
+        check(q.outfits.isEmpty() && !q.hasOutfit() && Pet.outfitLabel(q.outfit(0)).isEmpty(), "old save ok");
+        // 옷장 부자: 15개 모으면 티아라
+        p.bananas = 2000;
+        for (int i = 0; i < Pet.ITEM_IDS.length; i++) if (Pet.ITEM_PRICE[i] > 0 && !p.owns(Pet.ITEM_IDS[i])) p.buyItem(i);
+        check(p.ownsAllShop() && p.achDone("itemsAll") && p.achDone("items15"), "all shop");
+        p.sayText = null; p.setMode("idle", 30);
+        for (int i = 0; i < 40 && !p.owns("tiara"); i++) { p.sayText = null; run(p, 2.1f, now); }
+        check(p.owns("tiara"), "tiara from items15");
 
         if (fails == 0) System.out.println("ok: all Pet tests passed");
         else { System.out.println(fails + " failed"); System.exit(1); }

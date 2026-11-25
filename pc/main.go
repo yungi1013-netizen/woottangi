@@ -840,7 +840,7 @@ func showMenu() {
 	default:
 		if cmd >= idShopBase && cmd < idShopBase+uintptr(len(items)) {
 			doItem(int(cmd - idShopBase))
-		} else if !onCareCmd(cmd) && !onSeasonCmd(cmd) && !onPlayCmd(cmd) && !onClimbCmd(cmd) && !onToyCmd(cmd) && !onEmoCmd(cmd) && !onHelperCmd(cmd) {
+		} else if !onOutfitCmd(cmd) && !onCareCmd(cmd) && !onSeasonCmd(cmd) && !onPlayCmd(cmd) && !onClimbCmd(cmd) && !onToyCmd(cmd) && !onEmoCmd(cmd) && !onHelperCmd(cmd) {
 			onSettingsCmd(cmd)
 		}
 	}

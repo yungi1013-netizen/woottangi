@@ -80,3 +80,71 @@ func TestShopFlow(t *testing.T) {
 		t.Fatal("모두 벗기 실패")
 	}
 }
+
+// 새 꾸미기 · 코디 저장 · 오늘의 코디
+func TestOutfits(t *testing.T) {
+	loadSeq("idle")
+	linkAnchors()
+	statePathOverride = t.TempDir()
+	S = petState{Bananas: 500, Full: 70, Mood: 50}
+	loadAccessories()
+	for _, it := range items {
+		if accSprites[it.id] == nil {
+			t.Fatalf("%s 그림 없음", it.id)
+		}
+	}
+	buy := func(id string) {
+		for i, it := range items {
+			if it.id == id {
+				doItem(i)
+			}
+		}
+		if !owns(id) {
+			t.Fatalf("%s 못 삼", id)
+		}
+	}
+	saveOutfit(0) // 아무것도 안 썼으면 저장 안 함
+	if outfitLabel(outfitAt(0)) != "" {
+		t.Fatal("빈 모습이 저장됨")
+	}
+	buy("catears")
+	buy("blush")
+	buy("pearl")
+	if S.Wear[slotHead] != "catears" || S.Wear[slotFace] != "blush" || S.Wear[slotNeck] != "pearl" {
+		t.Fatalf("산 아이템을 안 씀: %v", S.Wear)
+	}
+	saveOutfit(1)
+	if got := outfitLabel(outfitAt(1)); got != "고양이 귀 · 발그레 볼터치 · 진주 목걸이" {
+		t.Fatalf("코디 2: %q", got)
+	}
+	takeOffAll()
+	wearOutfit(1)
+	if S.Wear[slotHead] != "catears" || S.Wear[slotNeck] != "pearl" || worn[slotHead] == nil {
+		t.Fatalf("코디 입기 실패: %v", S.Wear)
+	}
+	wearOutfit(2) // 빈 칸: 그대로
+	if S.Wear[slotHead] != "catears" {
+		t.Fatal("빈 코디가 옷을 벗김")
+	}
+	for i := 0; i < 30; i++ {
+		randomOutfit()
+		if outfitLabel(S.Wear) == "" {
+			t.Fatal("오늘의 코디가 빈 모습")
+		}
+		for _, w := range S.Wear {
+			if w != "" && !owns(w) {
+				t.Fatalf("없는 아이템을 입음: %s", w)
+			}
+		}
+	}
+	if S.RandomCnt != 30 {
+		t.Fatalf("RandomCnt %d", S.RandomCnt)
+	}
+	// 저장 후 다시 읽어도 코디가 남아 있음
+	saveState()
+	S = petState{}
+	loadState()
+	if outfitLabel(outfitAt(1)) == "" || S.RandomCnt != 30 {
+		t.Fatalf("코디가 저장 안 됨: %v", S.Outfits)
+	}
+}

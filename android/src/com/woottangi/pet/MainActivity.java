@@ -119,6 +119,7 @@ public class MainActivity extends Activity {
                 + "• 놀아주기: 바나나 받기, 짝 맞추기, 바나나 탑 쌓기, 두더지 잡기, 숨바꼭질, 바나나 뽑기, 친구 땅콩이(Lv.5부터)\n"
                 + "• 바나나 요리: 바나나 3개로 요리 8가지를 모아요 (요리 도감)\n"
                 + "• 음악을 틀면 우땅이가 춤춰요 · 업적을 깨면 꾸미기 아이템 선물\n"
+                + "• 꾸미기: 상점에서 바나나로 사서 씌워 줘요 · 코디 3칸 저장 · 오늘의 코디\n"
                 + "• 장난감: 공·풍선을 꺼내 주면 우땅이가 차고 머리로 통통! 장난감도 톡 누르거나 던질 수 있어요\n"
                 + "• 선물: 우땅이가 가끔 발밑에 두고 가는 선물을 톡 눌러 주워요 (계절마다 달라요)\n"
                 + "• 돌봄: 꼬질꼬질해지면 씻기기(손가락으로 문질문질), 졸려 하면 이불 덮어 재우기\n"
@@ -148,7 +149,7 @@ public class MainActivity extends Activity {
     }
 
     /** 소식 번호: 같은 버전 안에서 소식이 늘면 뒤를 바꿔 한 번 더 보여 줌 (PC ach.go newsID 와 같게) */
-    String newsId() { return appVersion() + "-ai"; }
+    String newsId() { return appVersion() + "-deco"; }
 
     String appVersion() {
         try { return getPackageManager().getPackageInfo(getPackageName(), 0).versionName; }
@@ -157,7 +158,11 @@ public class MainActivity extends Activity {
 
     /** 이번 버전에서 새로워진 점 (공지사항과 같은 내용) */
     static final String NEWS =
-            "💬 우땅이랑 AI 대화하기 (새로!)\n"
+            "🎀 꾸미기 업그레이드 (새로!)\n"
+            + "   꾹 → 꾸미기 → 🛍️ 꾸미기 상점: 바나나로 리본 · 왕관 · 고양이 귀 · 토끼 귀 · 밀짚모자 · 진주 목걸이 등 17가지를 살 수 있어요\n"
+            + "   💾 코디 저장 3칸 · 🎲 오늘의 코디 (가진 아이템으로 아무거나 골라 입기)\n"
+            + "   새 업적: 👗 옷장 부자 (아이템 15개 · 반짝 티아라 선물), 💾 나만의 코디, 🎲 오늘 뭐 입지?\n\n"
+            + "💬 우땅이랑 AI 대화하기 (새로!)\n"
             + "   앱 화면이나 꾹 → 메뉴의 '우땅이랑 대화하기'에서 말을 걸면 우땅이가 대답하고 동작도 해요\n"
             + "   내 Anthropic API 키를 넣어야 켜져요 (사용 요금은 내 계정에서 나가요). 키가 없어도 지금처럼 잘 놀아요\n\n"
             +             "😊 새 이모티콘 8개\n"

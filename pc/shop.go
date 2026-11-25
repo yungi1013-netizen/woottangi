@@ -10,6 +10,8 @@ import (
 	"embed"
 	"fmt"
 	"math"
+	"slices"
+	"strings"
 	"time"
 )
 
@@ -44,6 +46,15 @@ var items = []item{
 	{"glasses", "동그란 안경", 15, slotFace, "똑똑해 보여? 에헴!"},
 	{"sunglasses", "선글라스", 20, slotFace, "멋있지? 우땅 스웩~"},
 	{"bowtie", "나비넥타이", 15, slotNeck, "오늘은 신사 우땅이야!"},
+	// 꾸미기 업그레이드 (v1.2)
+	{"partyhat", "파티 고깔모자", 15, slotHead, "오늘은 파티다! 빵빠레~"},
+	{"catears", "고양이 귀", 18, slotHead, "야옹~ 아니 우땅~ 헷갈리지?"},
+	{"bunnyears", "토끼 귀", 18, slotHead, "깡총깡총! 귀가 쫑긋~"},
+	{"strawhat", "밀짚모자", 22, slotHead, "여름 바다 가고 싶다~ 출발!"},
+	{"blush", "발그레 볼터치", 10, slotFace, "히히 볼이 발그레~ 부끄러워"},
+	{"mustache", "신사 콧수염", 12, slotFace, "에헴! 우땅 신사라네~"},
+	{"bandana", "반다나", 14, slotNeck, "반다나 두르니까 모험가 같지?"},
+	{"pearl", "진주 목걸이", 30, slotNeck, "반짝반짝 진주! 우아하지?"},
 	// 가격 0 = 팔지 않는 선물 (ach.go 의 출석 업적으로 받음)
 	{"rainbow", "무지개 핀", 0, slotHead, "무지개처럼 반짝반짝!"},
 	{"bananaband", "바나나 머리띠", 0, slotHead, "100일 동안 고마워! 바나나 왕이다!"},
@@ -61,6 +72,7 @@ var items = []item{
 	{"headphones", "헤드폰", 0, slotHead, "쿵짝쿵짝~ 집중 모드 ON!"},
 	{"flowercrown", "꽃 화관", 0, slotHead, "쓰담쓰담 고마워~ 꽃 화관 예쁘지?"},
 	{"chefhat", "요리사 모자", 0, slotHead, "오늘은 우땅이 셰프! 맛있게 해 줄게~"},
+	{"tiara", "반짝 티아라", 0, slotHead, "옷장 부자 우땅이! 공주님 같지?"},
 }
 
 // 선물 아이템을 받는 방법 (메뉴·수첩 표시용)
@@ -78,6 +90,7 @@ var giftFrom = map[string]string{
 	"headphones":   "업적 '집중왕' 선물",
 	"flowercrown":  "업적 '쓰담쓰담 장인' 선물",
 	"chefhat":      "업적 '바나나 요리사' 선물",
+	"tiara":        "업적 '옷장 부자' 선물",
 }
 
 // 아이템을 그냥 손에 넣음 (선물). 이미 있으면 false
@@ -225,7 +238,125 @@ func wearLine() string {
 }
 
 const idShopBase = 1100 // + items 번호
-const idTakeOff = 1199
+const (
+	idOutfitWear = 1180 // + 칸 번호
+	idOutfitSave = 1185 // + 칸 번호
+	idRandomWear = 1190
+	idTakeOff    = 1199
+	outfitSlots  = 3
+)
+
+// ── 코디 저장 · 오늘의 코디 ──
+
+// 코디 한 칸의 이름 (예: "리본 · 안경"), 빈 칸이면 ""
+func outfitLabel(o []string) string {
+	var n []string
+	for _, id := range o {
+		if it, ok := findItem(id); ok && id != "" {
+			n = append(n, it.name)
+		}
+	}
+	return strings.Join(n, " · ")
+}
+
+func outfitAt(i int) []string {
+	if i < len(S.Outfits) {
+		return S.Outfits[i]
+	}
+	return nil
+}
+
+// 지금 모습을 코디 i 칸에 저장
+func saveOutfit(i int) {
+	ensureWearSlots()
+	if outfitLabel(S.Wear) == "" {
+		say("아무것도 안 썼어~\n먼저 꾸며 줘!", 3*time.Second)
+		return
+	}
+	for len(S.Outfits) <= i {
+		S.Outfits = append(S.Outfits, nil)
+	}
+	S.Outfits[i] = slices.Clone(S.Wear[:slotCount])
+	saveState()
+	setMode("st_me", 2200*time.Millisecond)
+	say(fmt.Sprintf("코디 %d에 저장했어!\n%s", i+1, outfitLabel(S.Outfits[i])), 3500*time.Millisecond)
+}
+
+// 코디 i 칸 입기 (그 사이에 없어진 아이템은 빼고)
+func wearOutfit(i int) {
+	o := outfitAt(i)
+	if outfitLabel(o) == "" {
+		say("코디 "+fmt.Sprint(i+1)+"은 비어 있어~", 2500*time.Millisecond)
+		return
+	}
+	ensureWearSlots()
+	for s := 0; s < slotCount; s++ {
+		S.Wear[s] = ""
+		if s < len(o) && owns(o[s]) {
+			S.Wear[s] = o[s]
+		}
+	}
+	saveState()
+	applyWear()
+	setMode("st_me", 2200*time.Millisecond)
+	say(pick([]string{"짠! 코디 " + fmt.Sprint(i+1) + " 변신!", "이 옷 좋아~ 어때?", "오늘은 이걸로 결정!"}), 3*time.Second)
+	nextTalk = time.Now().Add(rd(60, 120))
+}
+
+// 가진 아이템으로 자리마다 하나씩 (가끔 비워 둠) 골라 입기
+func randomOutfit() {
+	var have [slotCount][]string
+	for _, it := range items {
+		if owns(it.id) {
+			have[it.slot] = append(have[it.slot], it.id)
+		}
+	}
+	if len(have[0])+len(have[1])+len(have[2]) == 0 {
+		say("꾸미기 아이템이 하나도 없어~\n상점에서 하나 사 줄래?", 3*time.Second)
+		return
+	}
+	ensureWearSlots()
+	old := slices.Clone(S.Wear[:slotCount])
+	for try := 0; try < 8; try++ {
+		for s := 0; s < slotCount; s++ {
+			S.Wear[s] = ""
+			if n := len(have[s]); n > 0 && rng.Intn(n+1) > 0 { // n+1 중 하나는 "안 씀"
+				S.Wear[s] = have[s][rng.Intn(n)]
+			}
+		}
+		if outfitLabel(S.Wear) != "" && !slices.Equal(S.Wear[:slotCount], old) {
+			break
+		}
+	}
+	if outfitLabel(S.Wear) == "" { // 계속 다 비었으면 하나는 꼭
+		for s := 0; s < slotCount; s++ {
+			if len(have[s]) > 0 {
+				S.Wear[s] = have[s][rng.Intn(len(have[s]))]
+				break
+			}
+		}
+	}
+	S.RandomCnt++
+	saveState()
+	applyWear()
+	setMode("laugh", rd(2, 2.6))
+	say("오늘의 코디는…\n"+outfitLabel(S.Wear)+"!", 3500*time.Millisecond)
+	nextTalk = time.Now().Add(rd(60, 120))
+}
+
+func onOutfitCmd(cmd uintptr) bool {
+	switch {
+	case cmd >= idOutfitWear && cmd < idOutfitWear+outfitSlots:
+		wearOutfit(int(cmd - idOutfitWear))
+	case cmd >= idOutfitSave && cmd < idOutfitSave+outfitSlots:
+		saveOutfit(int(cmd - idOutfitSave))
+	case cmd == idRandomWear:
+		randomOutfit()
+	default:
+		return false
+	}
+	return true
+}
 
 func appendShopMenu(m uintptr) {
 	sh, _, _ := pCreatePopupMenu.Call()
@@ -258,6 +389,21 @@ func appendShopMenu(m uintptr) {
 			appendMenu(sh, fl, uintptr(idShopBase+i), label)
 		}
 	}
+	appendMenu(sh, MF_SEPARATOR, 0, "")
+	appendMenu(sh, MF_GRAYED, 0, "─ 코디 ─")
+	appendMenu(sh, MF_STRING, idRandomWear, "🎲 오늘의 코디 (아무거나 골라 입기)")
+	sv, _, _ := pCreatePopupMenu.Call()
+	for i := 0; i < outfitSlots; i++ {
+		l := outfitLabel(outfitAt(i))
+		if l == "" {
+			appendMenu(sh, MF_GRAYED, 0, fmt.Sprintf("👗 코디 %d (비어 있음)", i+1))
+			appendMenu(sv, MF_STRING, uintptr(idOutfitSave+i), fmt.Sprintf("코디 %d에 저장", i+1))
+		} else {
+			appendMenu(sh, MF_STRING, uintptr(idOutfitWear+i), fmt.Sprintf("👗 코디 %d 입기: %s", i+1, l))
+			appendMenu(sv, MF_STRING, uintptr(idOutfitSave+i), fmt.Sprintf("코디 %d에 저장 (지금: %s → 바꾸기)", i+1, l))
+		}
+	}
+	appendMenu(sh, MF_POPUP, sv, "💾 지금 모습 코디로 저장")
 	appendMenu(sh, MF_SEPARATOR, 0, "")
 	appendMenu(sh, MF_STRING, idTakeOff, "모두 벗기")
 	appendMenu(m, MF_POPUP, sh, "꾸미기")

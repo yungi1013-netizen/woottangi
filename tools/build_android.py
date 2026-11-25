@@ -142,7 +142,16 @@ def make_art(res, assets):
 
 
 # 앱 꾸미기 그림: 뽑기 4개 + 업적 보상 (Pet.ITEM_IDS 와 같음)
-GACHA = ["starpin", "halo", "heartglasses", "scarf", "rainbow", "bananaband", "medal", "headphones", "flowercrown", "chefhat"]
+def acc_ids():
+    """폰에 넣을 꾸미기 그림 = Pet.java 의 ITEM_IDS (한 곳에서만 고치도록)"""
+    import re
+    src = (ROOT / "android" / "src" / "com" / "woottangi" / "pet" / "Pet.java").read_text(encoding="utf-8")
+    m = re.search(r"ITEM_IDS\s*=\s*\{(.*?)\};", src, re.S)
+    ids = re.findall(r'"(\w+)"', m.group(1))
+    assert len(ids) >= 20, ids
+    return ids
+
+
 FRIEND_SEQ = ["idle", "walk", "laugh", "wave", "sit", "shy"]
 
 # 게임 페이지가 PC 에서는 작은 서버에 fetch 하는데, 앱에서는 Woo(자바)로 바로 전달
@@ -204,7 +213,7 @@ def make_play_art(assets):
         {n: [[round(v, 2) for v in a] for a in lst] for n, lst in anchors.items()}), encoding="utf-8")
     ad = assets / "acc"
     ad.mkdir()
-    for k in GACHA:
+    for k in acc_ids():
         Image.open(A.OUT / f"{k}.png").convert("RGBA").save(ad / f"{k}.webp", "WEBP", quality=90, method=4)
     Image.open(ROOT / "pc" / "acc" / "dirt.png").convert("RGBA").save(ad / "dirt.webp", "WEBP", quality=90, method=4)
 

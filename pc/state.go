@@ -32,8 +32,10 @@ type petState struct {
 	NoToast     bool `json:"noToast"`
 	NoNeedAlert bool `json:"noNeedAlert"`
 	// 꾸미기 (shop.go)
-	Owned []string `json:"owned,omitempty"` // 산 아이템 id
-	Wear  []string `json:"wear,omitempty"`  // 자리별 착용 id (머리·얼굴·목)
+	Owned     []string   `json:"owned,omitempty"`     // 산 아이템 id
+	Wear      []string   `json:"wear,omitempty"`      // 자리별 착용 id (머리·얼굴·목)
+	Outfits   [][]string `json:"outfits,omitempty"`   // 저장한 코디 (칸마다 자리별 id, 빈 칸 = nil)
+	RandomCnt int        `json:"randomCnt,omitempty"` // 오늘의 코디(랜덤) 횟수
 	// 레벨 · 친밀도 (level.go)
 	Exp      int    `json:"exp"`
 	LvShown  int    `json:"lvShown"`  // 축하까지 마친 레벨

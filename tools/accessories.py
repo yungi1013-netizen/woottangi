@@ -433,6 +433,183 @@ def chefhat():
     return p.done()
 
 
+# ── 꾸미기 업그레이드 (v1.2) ──
+BAND = (0, -112, 140, 124)      # 머리띠가 지나가는 타원 (cx, cy, rx, ry)
+
+
+def band_pt(deg, out=0.0):
+    """머리띠 타원 위의 점 (deg: 270 = 정수리), out 만큼 바깥으로"""
+    cx, cy, rx, ry = BAND
+    a = math.radians(deg)
+    x, y = cx + rx * math.cos(a), cy + ry * math.sin(a)
+    nx, ny = math.cos(a) / rx, math.sin(a) / ry
+    l = math.hypot(nx, ny)
+    return x + nx / l * out, y + ny / l * out
+
+
+def headband(p, col, w=20):
+    band = arc_pts(*BAND, 198, 342)
+    p.line(band, w)
+    p.line(band, w - 9, col)
+
+
+def partyhat():
+    """파티 고깔모자 (머리)"""
+    p = Pen()
+    base = [(-72, -218), (74, -208)]
+    tip = (24, -318)
+    cone = [base[0], tip, base[1]]
+    p.poly(cone, (110, 190, 255, 255))
+    # 줄무늬 (고깔 안쪽에만: 위로 갈수록 좁아지는 띠)
+    def at(t, side):
+        b = base[side]
+        return (b[0] + (tip[0] - b[0]) * t, b[1] + (tip[1] - b[1]) * t)
+    for t0, c in ((0.18, (255, 214, 77, 255)), (0.50, (255, 120, 160, 255)), (0.78, (255, 214, 77, 255))):
+        t1 = t0 + 0.13
+        p.poly([at(t0, 0), at(t1, 0), at(t1, 1), at(t0, 1)], c, 0)
+    p.line([base[0], tip, base[1], base[0]], OW)
+    for k in range(5):                                  # 털 방울
+        a = math.radians(k * 72 - 90)
+        p.ell(tip[0] + math.cos(a) * 11, tip[1] + math.sin(a) * 11, 12, 12, (255, 255, 255, 255))
+    p.ell(tip[0], tip[1], 12, 12, (255, 255, 255, 255), 0)
+    return p.done()
+
+
+def ears(p, deg, length, width, fill, inner, rounded):
+    """머리띠 위에 귀 하나 (deg: 붙는 자리)"""
+    b0, b1 = band_pt(deg - width), band_pt(deg + width)
+    tx, ty = band_pt(deg, length)
+    mx, my = (b0[0] + b1[0]) / 2, (b0[1] + b1[1]) / 2
+    if rounded:   # 토끼 귀: 길쭉한 타원
+        cx, cy = (mx + tx) / 2, (my + ty) / 2
+        h = math.hypot(tx - mx, ty - my) / 2 + 8
+        ang = math.degrees(math.atan2(ty - my, tx - mx)) - 90
+        el = lambda rx, ry, k=0: rot([(cx + rx * math.cos(t), cy + ry * math.sin(t))
+                                      for t in [i * 2 * math.pi / 48 for i in range(48)]], cx, cy, ang)
+        w = math.hypot(b1[0] - b0[0], b1[1] - b0[1]) / 2
+        p.poly(el(w, h), fill)
+        icy = cy - (cy - my) * -0.08
+        p.poly(rot([(cx + w * 0.5 * math.cos(t), icy + h * 0.72 * math.sin(t)) for t in [i * 2 * math.pi / 48 for i in range(48)]], cx, icy, ang), inner, 0)
+    else:         # 고양이 귀: 세모
+        p.poly([b0, (tx, ty), b1], fill)
+        k = 0.5
+        ib0 = (b0[0] + (mx - b0[0]) * 0.35, b0[1] + (my - b0[1]) * 0.35 - 2)
+        ib1 = (b1[0] + (mx - b1[0]) * 0.35, b1[1] + (my - b1[1]) * 0.35 - 2)
+        it = (mx + (tx - mx) * 0.72, my + (ty - my) * 0.72)
+        p.poly([ib0, it, ib1], inner, 0)
+
+
+def catears():
+    """고양이 귀 머리띠 (머리)"""
+    p = Pen()
+    fur, pink = (90, 80, 86, 255), (255, 160, 190, 255)
+    for d in (232, 308):
+        ears(p, d, 82, 15, fur, pink, False)
+    headband(p, fur)
+    return p.done()
+
+
+def bunnyears():
+    """토끼 귀 머리띠 (머리)"""
+    p = Pen()
+    white, pink = (255, 255, 255, 255), (255, 170, 200, 255)
+    for d in (244, 296):
+        ears(p, d, 150, 9, white, pink, True)
+    headband(p, (255, 140, 180, 255))
+    return p.done()
+
+
+def strawhat():
+    """밀짚모자 (머리)"""
+    p = Pen()
+    straw, straw2, red = (244, 206, 120, 255), (222, 178, 92, 255), (232, 70, 76, 255)
+    p.ell(0, -204, 196, 38, straw)
+    for r in (150, 110):
+        p.line(arc_pts(0, -204, r, r * 0.19, 20, 160), 2.5, straw2)
+    dome = arc_pts(0, -214, 100, 70, 180, 360)
+    p.poly(dome + [(100, -208), (-100, -208)], straw)
+    p.poly([(-101, -230), (101, -230), (100, -208), (-100, -208)], red)
+    for ry in (50, 32):                                  # 밀짚 결
+        p.line(arc_pts(0, -230, 88, ry, 200, 340), 2, straw2)
+    p.ell(84, -220, 14, 12, (255, 150, 170, 255), 3.5)   # 꽃
+    p.ell(84, -220, 5, 5, (255, 220, 90, 255), 0)
+    return p.done()
+
+
+def blush():
+    """발그레 볼터치 (얼굴)"""
+    p = Pen()
+    for x in (-92, 92):
+        p.ell(x, -66, 30, 17, (255, 110, 140, 120), 0)
+        p.ell(x, -66, 20, 11, (255, 110, 140, 70), 0)
+        for k in (-1, 0, 1):
+            p.line([(x + k * 12 - 4, -60), (x + k * 12 + 4, -72)], 3, (255, 255, 255, 200))
+    return p.done()
+
+
+def mustache():
+    """신사 콧수염 (얼굴)"""
+    p = Pen()
+    br = (92, 60, 36, 255)
+    for sgn in (-1, 1):
+        pts = [(0, -64)]
+        pts += [(sgn * x, y - 12) for x, y in ((14, -60), (34, -62), (54, -56), (70, -48), (80, -56), (84, -68), (90, -66),
+                                         (90, -54), (80, -40), (60, -36), (34, -40), (14, -44))]
+        if sgn < 0:
+            pts = pts[::-1]
+        p.poly(pts, br, 4)
+    return p.done()
+
+
+def bandana():
+    """반다나 (목)"""
+    p = Pen()
+    blue, white = (70, 140, 230, 255), (255, 255, 255, 255)
+    band = [(-96, 6), (-48, 20), (0, 24), (48, 20), (96, 6), (100, 28), (48, 40), (0, 44), (-48, 40), (-100, 28)]
+    p.poly(band, blue)
+    tri = [(-62, 30), (62, 30), (4, 104)]
+    p.poly(tri, blue)
+    for x, y in ((-30, 46), (0, 60), (30, 46), (6, 82), (-60, 18), (60, 18), (-22, 26), (26, 28)):
+        p.ell(x, y, 4.5, 4.5, white, 0)
+    p.ell(-84, 22, 14, 11, blue, 4)   # 매듭
+    return p.done()
+
+
+def pearl():
+    """진주 목걸이 (목)"""
+    p = Pen()
+    path = arc_pts(0, -4, 92, 44, 15, 165, 15)
+    p.line(path, 2, (180, 180, 180, 255))
+    for x, y in path:
+        p.ell(x, y, 8.5, 8.5, (252, 250, 244, 255), 3)
+        p.ell(x - 2.5, y - 3, 2.5, 2, (255, 255, 255, 255), 0)
+    p.poly([(0, 50), (-14, 64), (0, 84), (14, 64)], (255, 140, 180, 255), 3.5)
+    p.ell(-4, 62, 3, 3, (255, 220, 236, 255), 0)
+    return p.done()
+
+
+def tiara():
+    """업적 선물: 반짝 티아라 (머리) — 옷장 부자"""
+    p = Pen()
+    silver, light = (214, 222, 236, 255), (246, 248, 255, 255)
+    lo = [band_pt(d) for d in range(218, 323, 6)]
+    hi = []
+    for d in range(218, 323, 6):
+        t = abs(d - 270) / 52
+        h = 16 + (1 - t) * 30 + (12 if (d - 218) % 24 == 0 else 0)
+        hi.append(band_pt(d, h))
+    p.poly(lo + hi[::-1], silver)
+    for d, c, r in ((270, (255, 100, 150, 255), 12), (246, (120, 180, 255, 255), 8), (294, (120, 180, 255, 255), 8)):
+        x, y = band_pt(d, 22 if d == 270 else 16)
+        p.ell(x, y, r, r, c, 3.5)
+        p.ell(x - r * 0.3, y - r * 0.35, r * 0.3, r * 0.25, light, 0)
+    for d in (230, 258, 282, 310):
+        x, y = band_pt(d, 30)
+        p.line([(x - 6, y), (x + 6, y)], 2.5, light)
+        p.line([(x, y - 6), (x, y + 6)], 2.5, light)
+    return p.done()
+
+
 # id: (그림 함수)  — 이름·가격·자리는 pc/shop.go 에 있음
 ITEMS = {
     "ribbon": ribbon, "flower": flower, "sprout": sprout, "crown": crown,
@@ -441,8 +618,10 @@ ITEMS = {
     "rudolph": rudolph, "witch": witch, "bokjumeoni": bokjumeoni, "dirt": dirt,
     "starpin": starpin, "halo": halo, "heartglasses": heartglasses, "scarf": scarf,
     "medal": medal, "headphones": headphones, "flowercrown": flowercrown, "chefhat": chefhat,
+    "partyhat": partyhat, "catears": catears, "bunnyears": bunnyears, "strawhat": strawhat,
+    "blush": blush, "mustache": mustache, "bandana": bandana, "pearl": pearl, "tiara": tiara,
 }
-FACE_ITEMS = {"glasses", "sunglasses", "heartglasses"}
+FACE_ITEMS = {"glasses", "sunglasses", "heartglasses", "blush", "mustache"}
 
 
 # ───────────────────────── 프레임별 머리 위치 ─────────────────────────
