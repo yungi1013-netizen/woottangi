@@ -985,8 +985,10 @@ public class Pet {
     public static class Friend {
         public float x, y, dir = 1, modeT = 0, modeDur = 3600, speed = 1;
         public String mode = "walk", stage = "enter", act = "";
-        float stageLeft = 0, playLeft = 0;
+        float stageLeft = 0, playLeft = 0, vy = 0;
         boolean shared = false;
+        /** held = 손가락으로 잡고 있음 · perched = 바닥 말고 놓아 준 자리에 앉아 있음 · hurry = 집에 보냄 */
+        public boolean held = false, perched = false, hurry = false;
 
         void setMode(String m, float d) { mode = m; modeT = 0; modeDur = d; }
     }
@@ -1033,15 +1035,26 @@ public class Pet {
             return;
         }
         f.modeT += dt;
+        if (f.held) return; // 잡혀 있는 동안은 멈춤
         float fwid = fw();
-        f.y = floorY - fh();
-        if (f.mode.equals("walk")) f.x += f.dir * w * 0.19f * speedMul() * f.speed * dt;
+        float ground = floorY - fh();
+        boolean onGround = true;
+        if (f.perched) {
+            f.y = Math.max(ceilY, Math.min(ground, f.y));
+            if (f.mode.equals("walk")) f.setMode("sit", rd(4, 7)); // 놓아 준 자리에서는 안 걸어 다님
+            onGround = false;
+        } else if (f.y < ground - 1) { // 떨어지는 중
+            f.vy += 2600 * dp * dt;
+            f.y = Math.min(ground, f.y + f.vy * dt);
+            onGround = false;
+        } else { f.y = ground; f.vy = 0; }
+        if (onGround && f.mode.equals("walk")) f.x += f.dir * w * 0.19f * speedMul() * f.speed * dt;
         if (!f.mode.equals("walk") && f.modeT > f.modeDur) f.setMode("idle", 3600);
         float pc = x + w / 2, fc = f.x + fwid / 2, gap = w * 0.78f;
         f.stageLeft -= dt;
         switch (f.stage) {
             case "enter":
-                if (Math.abs(fc - pc) <= gap || f.dir > 0 && fc > pc - gap || f.dir < 0 && fc < pc + gap) {
+                if (f.perched || Math.abs(fc - pc) <= gap || f.dir > 0 && fc > pc - gap || f.dir < 0 && fc < pc + gap) {
                     f.stage = "greet"; f.stageLeft = 3.5f;
                     f.setMode("wave", 3.5f);
                     if (petOK()) setMode("wave", 3.5f);
@@ -1071,9 +1084,10 @@ public class Pet {
                 }
                 break;
             case "leave":
+                f.perched = false; // 갈 때는 내려와서 걸어감
                 if (f.stageLeft <= 0 && !f.mode.equals("walk")) {
                     f.dir = fc < scrW - fc ? -1 : 1;
-                    f.speed = 1.1f;
+                    f.speed = f.hurry ? 1.8f : 1.1f;
                     f.setMode("walk", 3600);
                     if (petOK()) setMode("idle", rd(2, 4));
                 }
@@ -1129,6 +1143,52 @@ public class Pet {
                 say(FRIEND + "가 바나나 나눠 줬어!\n냠냠 맛있다~ (바나나 +3)", 3.5f);
                 break;
         }
+    }
+
+    /** 땅콩이 잡기 (손가락으로 끌기 시작) */
+    public void grabFriend() {
+        Friend f = friend;
+        if (f == null) return;
+        f.held = true;
+        f.perched = false;
+        f.vy = 0;
+        f.setMode("shy", 9999);
+    }
+
+    public void dragFriend(float nx, float ny) {
+        Friend f = friend;
+        if (f == null || !f.held) return;
+        f.x = nx;
+        f.y = ny;
+    }
+
+    /** 땅콩이 놓기: 바닥보다 높으면 그 자리에 앉아 있고, 아니면 바닥으로 */
+    public void releaseFriend() {
+        Friend f = friend;
+        if (f == null || !f.held) return;
+        f.held = false;
+        float ground = floorY - fh();
+        f.x = Math.max(-fw() * 0.1f, Math.min(scrW - fw() * 0.9f, f.x));
+        f.y = Math.max(ceilY, Math.min(ground, f.y));
+        f.vy = 0;
+        f.perched = f.y < ground - fh() * 0.3f && !f.stage.equals("leave");
+        f.setMode(f.perched ? "sit" : "idle", rd(3, 5));
+        if (f.perched) say(pick(FRIEND + "가 거기 앉았어!", FRIEND + ": 여기 경치 좋다~"), 2.2f);
+    }
+
+    /** 땅콩이 집에 보내기 (메뉴) */
+    public void sendFriendHome() {
+        Friend f = friend;
+        if (f == null || f.stage.equals("leave")) return;
+        boolean met = !f.stage.equals("enter");
+        f.held = false;
+        f.perched = false;
+        f.hurry = true;
+        f.stage = "leave";
+        f.stageLeft = met ? 1.8f : 0;
+        f.setMode("wave", f.stageLeft);
+        if (met && petOK()) setMode("wave", 1.8f);
+        say(pick(FRIEND + " 안녕~ 또 놀러 와!", "잘 가 " + FRIEND + "! 다음에 또 놀자~"), 2.5f);
     }
 
     /** 땅콩이를 톡 누르면 수줍 */

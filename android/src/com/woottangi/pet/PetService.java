@@ -524,7 +524,7 @@ public class PetService extends Service implements Choreographer.FrameCallback {
             flp = params((int) pet.fw(), (int) pet.fh(), 0);
             flp.x = (int) f.x;
             flp.y = (int) f.y;
-            fview.setOnClickListener(v -> pet.tapFriend());
+            setupFriendTouch(fview);
             try { wm.addView(fview, flp); } catch (Exception e) { fview = null; return; }
             // 땅콩이가 우땅이·말풍선을 가리지 않게 다시 맨 위로
             try { wm.removeView(view); wm.addView(view, lp); } catch (Exception ignored) { }
@@ -538,6 +538,57 @@ public class PetService extends Service implements Choreographer.FrameCallback {
             flp.x = nx; flp.y = ny; flp.width = fw; flp.height = fh;
             safeUpdate(fview, flp);
         }
+    }
+
+    /** 땅콩이: 톡 = 수줍 · 끌기 = 옮기기 · 꾹 = 땅콩이 메뉴 (집에 보내기) */
+    void setupFriendTouch(View fv) {
+        final float[] st = new float[4]; // downX, downY, grabX, grabY
+        final boolean[] drag = {false};
+        GestureDetector fgd = new GestureDetector(this, new GestureDetector.SimpleOnGestureListener() {
+            @Override public boolean onDown(MotionEvent e) { return true; }
+
+            @Override public boolean onSingleTapUp(MotionEvent e) {
+                if (drag[0]) return false;
+                if (menu != null) { closeMenu(); return true; }
+                pet.tapFriend();
+                return true;
+            }
+
+            @Override public void onLongPress(MotionEvent e) {
+                if (drag[0] || pet.friend == null) return;
+                fv.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+                openMenu(8);
+            }
+        });
+        fv.setOnTouchListener((v, e) -> {
+            Pet.Friend f = pet.friend;
+            if (f == null) return false;
+            switch (e.getActionMasked()) {
+                case MotionEvent.ACTION_DOWN:
+                    drag[0] = false;
+                    st[0] = e.getRawX(); st[1] = e.getRawY();
+                    st[2] = st[0] - f.x; st[3] = st[1] - f.y;
+                    break;
+                case MotionEvent.ACTION_MOVE:
+                    if (!drag[0] && Math.hypot(e.getRawX() - st[0], e.getRawY() - st[1]) > slop * 1.5f) {
+                        drag[0] = true;
+                        closeMenu();
+                        pet.grabFriend();
+                        MotionEvent c = MotionEvent.obtain(e);
+                        c.setAction(MotionEvent.ACTION_CANCEL);
+                        fgd.onTouchEvent(c); // 꾹 누르기 취소
+                        c.recycle();
+                    }
+                    if (drag[0]) pet.dragFriend(e.getRawX() - st[2], e.getRawY() - st[3]);
+                    break;
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_CANCEL:
+                    if (drag[0]) { pet.releaseFriend(); drag[0] = false; return true; }
+                    break;
+            }
+            if (!drag[0]) fgd.onTouchEvent(e);
+            return true;
+        });
     }
 
     // ───────── 말풍선 ─────────
@@ -791,7 +842,7 @@ public class PetService extends Service implements Choreographer.FrameCallback {
 
     void openMenu() { openMenu(0); }
 
-    /** page 0 메인 · 1 간식 · 2 놀아주기 · 3 꾸미기 · 4 돌봄 · 집중 · 5 이모티콘 · 6 꾸미기 상점 · 7 코디 저장 */
+    /** page 0 메인 · 1 간식 · 2 놀아주기 · 3 꾸미기 · 4 돌봄 · 집중 · 5 이모티콘 · 6 꾸미기 상점 · 7 코디 저장 · 8 땅콩이 */
     void openMenu(int page) {
         closeMenu();
         if (pet.hiding) { pet.tap(); return; } // 숨바꼭질 중에 꾹 = 찾았다
@@ -857,9 +908,15 @@ public class PetService extends Service implements Choreographer.FrameCallback {
             m.addView(item("🎰 바나나 뽑기 (10개)", () -> pet.startGacha()));
             m.addView(item("🧗 벽 타기", () -> pet.goClimb(false)));
             m.addView(item("🙃 천장 매달리기", () -> pet.goClimb(true)));
-            m.addView(item(pet.level() >= Pet.FRIEND_LEVEL ? "🥜 친구 땅콩이 부르기" : "🥜 친구 땅콩이 (Lv." + Pet.FRIEND_LEVEL + "부터)",
+            if (pet.friend != null) m.addView(item("👋 땅콩이 집에 보내기", () -> pet.sendFriendHome()));
+            else m.addView(item(pet.level() >= Pet.FRIEND_LEVEL ? "🥜 친구 땅콩이 부르기" : "🥜 친구 땅콩이 (Lv." + Pet.FRIEND_LEVEL + "부터)",
                     () -> pet.startFriend(true, System.currentTimeMillis())));
             m.addView(item("‹ 뒤로", () -> openMenu(0)));
+        } else if (page == 8) {
+            m.addView(note("🥜 땅콩이 · 끌어서 옮길 수 있어요"));
+            m.addView(item("🤚 쓰다듬기", () -> pet.tapFriend()));
+            m.addView(item("👋 집에 보내기", () -> pet.sendFriendHome()));
+            m.addView(item("‹ 닫기", this::closeMenu));
         } else if (page == 5) {
             for (String[] e : Pet.EMOS) m.addView(item(e[1], () -> pet.playEmo(e[0])));
             m.addView(item("🖼️ 이모티콘 GIF로 저장하기", this::saveEmoGifs));

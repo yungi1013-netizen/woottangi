@@ -203,6 +203,26 @@ public class PetTest {
         p.nextFriendAt = now - 1; p.setMode("idle", 5);
         p.tick(1 / 60f, now, 14, 30);
         check(p.friend != null && p.nextFriendAt > now + 59 * 60000L, "auto friend visit");
+        // 땅콩이 조종: 끌어서 위에 놓으면 그 자리에 앉아 있고, 바닥 근처에 놓으면 내려옴, 집에 보내면 빨리 감
+        for (int i = 0; i < 60 * 30; i++) p.tick(1 / 60f, now, 14, 30);
+        check(p.friend != null, "friend still here");
+        p.grabFriend();
+        check(p.friend.held, "friend grabbed");
+        p.dragFriend(50, p.floorY * 0.3f);
+        for (int i = 0; i < 60; i++) p.tick(1 / 60f, now, 14, 30);
+        check(p.friend.x == 50 && p.friend.y == p.floorY * 0.3f, "friend follows finger");
+        p.releaseFriend();
+        for (int i = 0; i < 60 * 5; i++) p.tick(1 / 60f, now, 14, 30);
+        check(p.friend != null && p.friend.perched && p.friend.y < p.floorY - p.fh() * 2, "friend stays where put");
+        p.grabFriend(); p.dragFriend(120, p.floorY - p.fh() - 5); p.releaseFriend();
+        for (int i = 0; i < 60; i++) p.tick(1 / 60f, now, 14, 30);
+        check(!p.friend.perched && p.friend.y == p.floorY - p.fh(), "friend back on floor");
+        p.grabFriend(); p.dragFriend(60, p.floorY * 0.3f); p.releaseFriend();
+        p.sendFriendHome();
+        check(p.friend.stage.equals("leave") && !p.friend.perched, "friend sent home");
+        float lt = 0;
+        while (p.friend != null && lt < 60) { p.tick(1 / 60f, now, 14, 30); lt += 1 / 60f; }
+        check(p.friend == null && lt < 25, "friend went home in " + lt + "s");
 
         // ── 벽 타기: 메뉴로 부르면 가까운 벽으로 가서 올라감
         p = fresh(30); run(p, 3, now); p.sayText = null;

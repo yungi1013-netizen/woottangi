@@ -117,6 +117,7 @@ public class MainActivity extends Activity {
                 + "• 두 번 톡톡: 쓰다듬기 (기분 업!)\n"
                 + "• 꾹 누르기: 메뉴 (간식 · 바나나 요리, 놀아주기, 꾸미기, 출석 도장, 운세)\n"
                 + "• 놀아주기: 바나나 받기, 짝 맞추기, 바나나 탑 쌓기, 두더지 잡기, 숨바꼭질, 바나나 뽑기, 친구 땅콩이(Lv.5부터)\n"
+                + "• 땅콩이: 톡 = 수줍 · 끌기 = 옮기기 · 꾹 = 집에 보내기\n"
                 + "• 바나나 요리: 바나나 3개로 요리 8가지를 모아요 (요리 도감)\n"
                 + "• 음악을 틀면 우땅이가 춤춰요 · 업적을 깨면 꾸미기 아이템 선물\n"
                 + "• 꾸미기: 상점에서 바나나로 사서 씌워 줘요 · 코디 3칸 저장 · 오늘의 코디\n"
@@ -149,7 +150,7 @@ public class MainActivity extends Activity {
     }
 
     /** 소식 번호: 같은 버전 안에서 소식이 늘면 뒤를 바꿔 한 번 더 보여 줌 (PC ach.go newsID 와 같게) */
-    String newsId() { return appVersion() + "-deco"; }
+    String newsId() { return appVersion() + "-friend"; }
 
     String appVersion() {
         try { return getPackageManager().getPackageInfo(getPackageName(), 0).versionName; }
@@ -158,7 +159,10 @@ public class MainActivity extends Activity {
 
     /** 이번 버전에서 새로워진 점 (공지사항과 같은 내용) */
     static final String NEWS =
-            "🎀 꾸미기 업그레이드 (새로!)\n"
+            "🥜 땅콩이 조종 (새로!)\n"
+            + "   땅콩이를 끌어서 옮길 수 있어요 · 높은 곳에 놓으면 그 자리에 앉아 있어요 (자판 칠 때 비켜 주기)\n"
+            + "   땅콩이 꾹 → 👋 집에 보내기 · 놀아주기 메뉴에서도 보낼 수 있어요\n\n"
+            + "🎀 꾸미기 업그레이드\n"
             + "   꾹 → 꾸미기 → 🛍️ 꾸미기 상점: 바나나로 리본 · 왕관 · 고양이 귀 · 토끼 귀 · 밀짚모자 · 진주 목걸이 등 17가지를 살 수 있어요\n"
             + "   💾 코디 저장 3칸 · 🎲 오늘의 코디 (가진 아이템으로 아무거나 골라 입기)\n"
             + "   새 업적: 👗 옷장 부자 (아이템 15개 · 반짝 티아라 선물), 💾 나만의 코디, 🎲 오늘 뭐 입지?\n\n"
